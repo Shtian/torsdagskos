@@ -95,8 +95,8 @@
         "Verify in browser using browser-use"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Event detail page implemented with all event fields displayed, RSVP status lists grouped by status (Going/Maybe/Not Going), aggregated counts including No Response count, current user's RSVP status prominently shown, Europe/Oslo timezone formatting, clickable map links, and 404 handling. Typecheck passes. Authentication redirect verified."
     },
     {
       "id": "US-006",

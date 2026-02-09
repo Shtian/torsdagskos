@@ -159,3 +159,40 @@
 - Clerk test mode: Use test email test+clerk_test@example.com  and read the password from TEST_PASSWORD in .env in this folder. Verification code 424242 if needed.
 
 ---
+## 2026-02-09 22:31 - US-005
+
+**Implemented:** Event detail page with full event information and RSVP status display
+
+**Files changed:**
+- src/pages/events/[id].astro - Created event detail page with dynamic routing
+- prd.json - Updated US-005 to passes: true
+
+**Features:**
+- Dynamic route parameter handling (/events/[id])
+- Displays all event fields: title, description, date/time, location, map link
+- Current user's RSVP status prominently displayed at top of RSVP section
+- Aggregated RSVP counts in grid layout: Going, Maybe, Not Going, No Response
+- Lists of users grouped by RSVP status (Going/Maybe/Not Going)
+- Date/time formatting in Europe/Oslo timezone with full format (weekday, date, time)
+- Clickable map link opens in new tab if present
+- Back link to homepage for navigation
+- Proper 404 handling (returns 404 status code if event not found)
+- Responsive design: single column on mobile, two-column grid on tablet/desktop
+- Visual distinction for current user's status with colored badges
+- No Response count calculated as total users minus users who RSVPd
+
+**Learnings for future iterations:**
+- Dynamic routes in Astro: Use [param].astro syntax, access via Astro.params
+- Astro 404 handling: Return `new Response(null, { status: 404 })` instead of redirect
+- RSVP aggregation pattern: Fetch all RSVPs, then filter by status to group and count
+- No Response calculation: Total users - users with RSVPs (not stored in DB)
+- User joins: Fetch RSVPs first, then Promise.all to join with user data
+- Current user lookup: Query Users table by clerkUserId to get local database ID
+- Date formatting: Use long format for detail pages (weekday + full date + time)
+- Optional fields: Check `event.mapLink` before rendering the link element
+- Layout hierarchy: event-header (back link, title, date) → event-content (grid) → details + RSVPs
+- Status badges: Consistent color coding (green=going, orange=maybe, red=not going, gray=no response)
+- Grid responsiveness: 2 columns for RSVP counts on mobile, 4 columns on desktop
+- Authentication flow: Protected routes correctly redirect to Clerk sign-in via middleware
+---
+
