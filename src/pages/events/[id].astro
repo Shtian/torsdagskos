@@ -1,0 +1,395 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { db, Users, Events, Rsvps, eq } from 'astro:db';
+
+const { id } = Astro.params;
+const { userId } = Astro.locals.auth();
+
+// Fetch event
+const event = await db
+  .select()
+  .from(Events)
+  .where(eq(Events.id, Number(id)))
+  .get();
+
+// Return 404 if event not found
+if (!event) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+// Fetch all RSVPs with user information
+const rsvps = await db
+  .select()
+  .from(Rsvps)
+  .where(eq(Rsvps.eventId, event.id))
+  .all();
+
+// Get user details for all RSVPs
+const rsvpsWithUsers = await Promise.all(
+  rsvps.map(async (rsvp) => {
+    const user = await db
+      .select()
+      .from(Users)
+      .where(eq(Users.id, rsvp.userId))
+      .get();
+    return { ...rsvp, user };
+  })
+);
+
+// Get current user's local database ID
+const currentUser = await db
+  .select()
+  .from(Users)
+  .where(eq(Users.clerkUserId, userId!))
+  .get();
+
+// Find current user's RSVP
+const currentUserRsvp = rsvpsWithUsers.find(r => r.userId === currentUser?.id);
+
+// Calculate RSVP counts
+const goingRsvps = rsvpsWithUsers.filter(r => r.status === 'going');
+const maybeRsvps = rsvpsWithUsers.filter(r => r.status === 'maybe');
+const notGoingRsvps = rsvpsWithUsers.filter(r => r.status === 'not_going');
+
+// Calculate no response count (total users - users who RSVPd)
+const totalUsers = await db.select().from(Users).all();
+const noResponseCount = totalUsers.length - rsvpsWithUsers.length;
+
+// Format date in Europe/Oslo timezone
+function formatEventDate(date: Date): string {
+  return new Intl.DateTimeFormat('no-NO', {
+    timeZone: 'Europe/Oslo',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(date));
+}
+---
+
+<Layout title={event.title}>
+  <div class="container">
+    <div class="event-header">
+      <a href="/" class="back-link">&larr; Back to Events</a>
+      <h1 class="event-title">{event.title}</h1>
+      <p class="event-date">{formatEventDate(event.dateTime)}</p>
+    </div>
+
+    <div class="event-content">
+      <div class="event-details">
+        <div class="detail-section">
+          <h2>Description</h2>
+          <p class="description">{event.description}</p>
+        </div>
+
+        <div class="detail-section">
+          <h2>Location</h2>
+          <p class="location">{event.location}</p>
+          {event.mapLink && (
+            <a href={event.mapLink} target="_blank" rel="noopener noreferrer" class="map-link">
+              Open in Maps &rarr;
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div class="rsvp-section">
+        <h2>RSVPs</h2>
+
+        {currentUserRsvp && (
+          <div class="current-user-rsvp">
+            <strong>Your status:</strong>
+            <span class={`rsvp-status status-${currentUserRsvp.status.replace('_', '-')}`}>
+              {currentUserRsvp.status === 'going' && 'Going'}
+              {currentUserRsvp.status === 'maybe' && 'Maybe'}
+              {currentUserRsvp.status === 'not_going' && 'Not Going'}
+            </span>
+          </div>
+        )}
+
+        {!currentUserRsvp && (
+          <div class="current-user-rsvp no-response">
+            <strong>Your status:</strong>
+            <span class="rsvp-status status-no-response">No Response</span>
+          </div>
+        )}
+
+        <div class="rsvp-counts">
+          <div class="rsvp-count-item">
+            <span class="count">{goingRsvps.length}</span>
+            <span class="label">Going</span>
+          </div>
+          <div class="rsvp-count-item">
+            <span class="count">{maybeRsvps.length}</span>
+            <span class="label">Maybe</span>
+          </div>
+          <div class="rsvp-count-item">
+            <span class="count">{notGoingRsvps.length}</span>
+            <span class="label">Not Going</span>
+          </div>
+          <div class="rsvp-count-item">
+            <span class="count">{noResponseCount}</span>
+            <span class="label">No Response</span>
+          </div>
+        </div>
+
+        {goingRsvps.length > 0 && (
+          <div class="rsvp-list">
+            <h3 class="rsvp-list-title">Going ({goingRsvps.length})</h3>
+            <ul class="user-list">
+              {goingRsvps.map(rsvp => (
+                <li class="user-item">{rsvp.user?.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {maybeRsvps.length > 0 && (
+          <div class="rsvp-list">
+            <h3 class="rsvp-list-title">Maybe ({maybeRsvps.length})</h3>
+            <ul class="user-list">
+              {maybeRsvps.map(rsvp => (
+                <li class="user-item">{rsvp.user?.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {notGoingRsvps.length > 0 && (
+          <div class="rsvp-list">
+            <h3 class="rsvp-list-title">Not Going ({notGoingRsvps.length})</h3>
+            <ul class="user-list">
+              {notGoingRsvps.map(rsvp => (
+                <li class="user-item">{rsvp.user?.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-6);
+  }
+
+  .event-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--color-accent);
+    text-decoration: none;
+    margin-bottom: var(--space-4);
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent-dark);
+  }
+
+  .event-title {
+    font-size: 2.5rem;
+    margin: 0 0 var(--space-3) 0;
+    color: var(--color-accent-dark);
+  }
+
+  .event-date {
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .event-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 768px) {
+    .event-content {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .event-details,
+  .rsvp-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+  }
+
+  .detail-section {
+    margin-bottom: var(--space-6);
+  }
+
+  .detail-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-section h2,
+  .rsvp-section h2 {
+    font-size: 1.25rem;
+    margin: 0 0 var(--space-3) 0;
+    color: var(--color-accent-dark);
+  }
+
+  .description {
+    line-height: 1.6;
+    color: var(--color-text);
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  .location {
+    margin: 0 0 var(--space-3) 0;
+    color: var(--color-text);
+  }
+
+  .map-link {
+    display: inline-block;
+    color: var(--color-accent);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+  }
+
+  .map-link:hover {
+    color: var(--color-accent-dark);
+  }
+
+  .current-user-rsvp {
+    background: var(--color-primary);
+    border: 2px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .current-user-rsvp.no-response {
+    border-color: var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .rsvp-status {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  .status-going {
+    background: #e8f5e9;
+    color: var(--color-success);
+  }
+
+  .status-maybe {
+    background: #fff3e0;
+    color: var(--color-warning);
+  }
+
+  .status-not-going {
+    background: #ffebee;
+    color: var(--color-error);
+  }
+
+  .status-no-response {
+    background: var(--color-border);
+    color: var(--color-text-muted);
+  }
+
+  .rsvp-counts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .rsvp-counts {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .rsvp-count-item {
+    text-align: center;
+    padding: var(--space-4);
+    background: var(--color-primary);
+    border-radius: var(--radius-md);
+  }
+
+  .rsvp-count-item .count {
+    display: block;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-accent-dark);
+    margin-bottom: var(--space-2);
+  }
+
+  .rsvp-count-item .label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .rsvp-list {
+    margin-bottom: var(--space-6);
+  }
+
+  .rsvp-list:last-child {
+    margin-bottom: 0;
+  }
+
+  .rsvp-list-title {
+    font-size: 1rem;
+    margin: 0 0 var(--space-3) 0;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+  }
+
+  .user-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .user-item {
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-primary);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-2);
+    color: var(--color-text);
+  }
+
+  .user-item:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 640px) {
+    .container {
+      padding: var(--space-4);
+    }
+
+    .event-title {
+      font-size: 1.75rem;
+    }
+
+    .event-date {
+      font-size: 0.95rem;
+    }
+  }
+</style>
