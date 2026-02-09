@@ -1,0 +1,43 @@
+# Codebase Patterns
+
+## Database (Astro DB)
+- Use `defineTable`, `column` from 'astro:db' for schema definitions
+- Foreign keys: `column.number({ references: () => TableName.columns.id })`
+- Optional fields: `{ optional: true }` parameter
+- Composite unique indexes prevent duplicate entries (e.g., userEventIdx for one RSVP per user/event)
+- Running `pnpm astro check` generates types in `.astro/integrations/astro_db/db.d.ts`
+
+## TypeScript
+- Strict mode enabled - always ensure typecheck passes with `pnpm astro check`
+
+---
+
+## 2026-02-09 21:22 - US-001
+
+**Implemented:** Database schema setup for the Torsdagskos application
+
+**Files changed:**
+- db/config.ts - Defined all five database tables with proper schema
+- package.json - Added typecheck dependencies
+- pnpm-lock.yaml - Updated lockfile
+
+**Tables created:**
+1. Users (id, clerkUserId, email, name, createdAt)
+2. Events (id, title, description, dateTime, location, mapLink, createdAt, updatedAt)
+3. Rsvps (id, userId, eventId, status, createdAt, updatedAt)
+4. Invites (id, email, invitedBy, createdAt, acceptedAt)
+5. NotificationLog (id, userId, eventId, type, channel, sentAt)
+
+**Learnings for future iterations:**
+- Astro DB uses `defineTable`, `column` from 'astro:db' for schema definition
+- Primary keys use `column.number({ primaryKey: true })`
+- Foreign keys use `references: () => TableName.columns.id`
+- Optional fields use `{ optional: true }`
+- Indexes are defined in the `indexes` object within table definition
+- Unique indexes use `{ unique: true }` in the index config
+- Running `pnpm astro check` generates types in `.astro/integrations/astro_db/db.d.ts`
+- Composite unique indexes like userEventIdx prevent duplicate RSVPs per user/event
+- Date columns use `column.date()` with optional `default: new Date()`
+- The `astro db verify` command requires a remote database URL, but local dev works without it
+
+---
