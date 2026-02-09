@@ -1,11 +1,43 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import { db, Users, eq } from 'astro:db';
+import { clerkClient } from '@clerk/astro/server';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// Get authenticated user
+const { userId } = Astro.locals.auth();
+
+let user = null;
+
+// Sync user to local database if not exists
+if (userId) {
+  user = await clerkClient(Astro).users.getUser(userId);
+
+  const existingUser = await db
+    .select()
+    .from(Users)
+    .where(eq(Users.clerkUserId, userId))
+    .get();
+
+  if (!existingUser) {
+    await db.insert(Users).values({
+      clerkUserId: userId,
+      email: user.emailAddresses[0]?.emailAddress || '',
+      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User',
+      createdAt: new Date()
+    });
+  }
+}
 ---
 
 <Layout>
-	<Welcome />
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-4">Torsdagskos</h1>
+    <p class="text-lg">Welcome to the private meetup coordination app!</p>
+
+    {user && (
+      <div class="mt-4">
+        <p>Signed in as: {user.emailAddresses[0]?.emailAddress}</p>
+      </div>
+    )}
+  </div>
 </Layout>

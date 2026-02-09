@@ -58,7 +58,7 @@ const Invites = defineTable({
     acceptedAt: column.date({ optional: true }),
   },
   indexes: {
-    emailIdx: { on: ['email'] },
+    inviteEmailIdx: { on: ['email'] },
     invitedByIdx: { on: ['invitedBy'] },
   },
 });
@@ -73,8 +73,8 @@ const NotificationLog = defineTable({
     sentAt: column.date({ default: new Date() }),
   },
   indexes: {
-    userIdIdx: { on: ['userId'] },
-    eventIdIdx: { on: ['eventId'] },
+    notificationUserIdIdx: { on: ['userId'] },
+    notificationEventIdIdx: { on: ['eventId'] },
     sentAtIdx: { on: ['sentAt'] },
   },
 });

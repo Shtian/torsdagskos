@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SignUp as ClerkSignUp } from '@clerk/astro/components';
+
+// Redirect to home if already signed in
+const { userId } = Astro.locals.auth();
+if (userId) {
+  return Astro.redirect('/');
+}
+---
+
+<Layout title="Sign Up - Torsdagskos">
+  <div class="flex min-h-screen items-center justify-center">
+    <ClerkSignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
+  </div>
+</Layout>
