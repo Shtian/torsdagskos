@@ -337,6 +337,34 @@
       "priority": 18,
       "passes": false,
       "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Setup Playwright end-to-end testing with Clerk authentication",
+      "description": "As a developer, I need automated E2E tests to ensure the application works correctly.",
+      "acceptanceCriteria": [
+        "Install @playwright/test and @clerk/testing packages",
+        "Configure Playwright with projects for Chromium, Firefox, and WebKit",
+        "Create playwright.config.ts with proper environment variable handling",
+        "Implement global-setup.ts with clerkSetup() for testing token generation",
+        "Configure serial execution for test descriptions as per Clerk requirements",
+        "Create test fixtures for authenticated user sessions",
+        "Write E2E tests for authentication flow (sign-in, sign-up, sign-out)",
+        "Write E2E tests for events list page (view upcoming/past events)",
+        "Write E2E tests for event detail page (view event, see RSVPs)",
+        "Write E2E tests for RSVP functionality (change status, verify updates)",
+        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
+        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
+        "Add test isolation with independent test data/state",
+        "Configure CI-ready settings (parallel execution, trace on failure)",
+        "Add npm scripts for test execution (test, test:headed, test:debug)",
+        "Document test setup and execution in README or TESTING.md",
+        "All tests pass successfully",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
     }
   ]
 }
