@@ -124,3 +124,38 @@
 - HTML inspection via curl can verify layout when browser automation isn't available
 
 ---
+## 2026-02-09 22:17 - US-004
+
+**Implemented:** Events list page (homepage) with upcoming and past events sections
+
+**Files changed:**
+- src/pages/index.astro - Replaced placeholder content with events list functionality
+- db/seed.ts - Added sample events for testing (upcoming and past events)
+
+**Features:**
+- Fetches all events from database with RSVP count aggregation
+- Separates events into upcoming (future) and past sections
+- Upcoming events sorted by date ascending (soonest first)
+- Past events sorted by date descending (most recent first)
+- Event cards show: title, formatted date/time, location, RSVP counts (going/maybe/not going)
+- Links to individual event detail pages (/events/[id])
+- Empty state message when no events exist
+- Date/time formatting in Europe/Oslo timezone using Intl.DateTimeFormat
+- Responsive grid layout: 1 column (mobile), 2 columns (tablet 640px+), 3 columns (desktop 1024px+)
+- Hover effects and visual polish using design system tokens
+- Past events displayed with reduced opacity for visual distinction
+
+**Learnings for future iterations:**
+- Date comparison for upcoming/past: Use `new Date(event.dateTime) >= now` to filter
+- Intl.DateTimeFormat with timeZone: 'Europe/Oslo' ensures correct timezone formatting
+- RSVP aggregation pattern: Fetch rsvps per event, then filter by status to count
+- Grid layout: Use CSS Grid with responsive breakpoints for mobile-first design
+- Event cards as links: Use `<a>` with `display: block` for entire card clickability
+- Hover state: `transform: translateY(-2px)` creates subtle lift effect on hover
+- Empty state: Use dashed border to distinguish from regular content containers
+- TypeScript: Date objects from Astro DB can be passed directly to `new Date()`
+- Database seed data: Helpful to create sample data for testing UI without manual entry
+- Browser verification: Clerk authentication redirects work correctly (307 to sign-in page)
+- Clerk test mode: Use test email with +clerk_test suffix and verification code 424242
+
+---
