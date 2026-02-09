@@ -10,6 +10,17 @@
 ## TypeScript
 - Strict mode enabled - always ensure typecheck passes with `pnpm astro check`
 
+## Styling & Design System
+- CSS custom properties defined in `src/styles/global.css` for design tokens
+- Mobile-first approach: Base styles for mobile, use `@media (min-width: ...)` for larger screens
+- Breakpoints: 640px (tablet), 1024px (desktop)
+- Clerk components: Style the child button element, not the Clerk wrapper component
+
+## Authentication (Clerk)
+- Auth context available via `Astro.locals.auth()` in pages
+- User data fetched with `clerkClient(Astro).users.getUser(userId)`
+- Layout component can conditionally render UI based on auth status
+
 ---
 
 ## 2026-02-09 21:22 - US-001
