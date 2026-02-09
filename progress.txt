@@ -79,3 +79,37 @@
 
 ---
 
+## 2026-02-09 22:10 - US-003
+
+**Implemented:** Design system tokens and base layout with responsive header
+
+**Files changed:**
+- src/styles/global.css - Added comprehensive design system tokens (colors, typography, spacing, border radius, shadows)
+- src/layouts/Layout.astro - Added sticky header with app name, user profile, sign-out button, and responsive layout structure
+
+**Design system features:**
+- Color palette: Beige/sand primary (#faf9f7 to #b3a186), accent color #6B705C
+- Typography: Serif for headings (Georgia), sans-serif for body (system fonts)
+- Spacing scale: 4px base (--space-1 to --space-16)
+- Border radius: sm to full (--radius-sm to --radius-full)
+- Responsive breakpoints: 640px (tablet), 1024px (desktop)
+- Mobile-first approach with progressive enhancement
+
+**Header features:**
+- Sticky positioning with shadow
+- App name as clickable link to homepage
+- User profile section with name (hidden on mobile) and sign-out button
+- Responsive padding and font sizes
+- Only shows user profile when authenticated
+
+**Learnings for future iterations:**
+- CSS custom properties enable consistent design tokens across the app
+- Clerk's SignOutButton component wraps a button element - style the button, not the wrapper
+- Layout component receives auth context via Astro.locals.auth() - can conditionally show UI
+- Mobile-first CSS: Base styles for mobile, then @media (min-width:...) for larger screens
+- The sign-in/sign-up pages also use the Layout, so header appears there (without user profile)
+- User name display: Use user.firstName as fallback before email for better UX
+- Sticky header: Use position: sticky with top: 0 and z-index: 100 for persistent header
+- HTML inspection via curl can verify layout when browser automation isn't available
+
+---
