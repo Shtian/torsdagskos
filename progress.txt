@@ -14,21 +14,21 @@
 
 ## 2026-02-09 21:22 - US-001
 
-**Implemented:** Database schema setup for the Torsdagskos application
+**Implemented: ** Database schema setup for the Torsdagskos application
 
-**Files changed:**
+**Files changed: **
 - db/config.ts - Defined all five database tables with proper schema
 - package.json - Added typecheck dependencies
 - pnpm-lock.yaml - Updated lockfile
 
-**Tables created:**
+**Tables created: **
 1. Users (id, clerkUserId, email, name, createdAt)
 2. Events (id, title, description, dateTime, location, mapLink, createdAt, updatedAt)
 3. Rsvps (id, userId, eventId, status, createdAt, updatedAt)
 4. Invites (id, email, invitedBy, createdAt, acceptedAt)
 5. NotificationLog (id, userId, eventId, type, channel, sentAt)
 
-**Learnings for future iterations:**
+**Learnings for future iterations: **
 - Astro DB uses `defineTable`, `column` from 'astro:db' for schema definition
 - Primary keys use `column.number({ primaryKey: true })`
 - Foreign keys use `references: () => TableName.columns.id`
@@ -41,3 +41,41 @@
 - The `astro db verify` command requires a remote database URL, but local dev works without it
 
 ---
+## 2026-02-09 21:58 - US-002
+
+**Implemented:** Clerk authentication integration for the Torsdagskos application
+
+**Files changed:**
+- astro.config.mjs - Added Clerk integration, Node adapter, and enabled SSR
+- src/middleware.ts - Created middleware to protect all routes except auth pages
+- src/pages/sign-in.astro - Created sign-in page with Clerk SignIn component
+- src/pages/sign-up.astro - Created sign-up page with Clerk SignUp component
+- src/pages/index.astro - Added user sync logic on first load
+- src/pages/api/sync-user.ts - Created API endpoint for user sync (currently unused but available)
+- src/layouts/Layout.astro - Added title prop support
+- db/config.ts - Fixed duplicate index names (emailIdx → inviteEmailIdx, userIdIdx → notificationUserIdIdx, eventIdIdx → notificationEventIdIdx)
+- .env.example - Created template for Clerk environment variables
+- CLERK_SETUP.md - Created documentation for Clerk setup
+- package.json - Added @clerk/astro and @astrojs/node dependencies
+
+**Verification:**
+- Homepage (/) redirects to Clerk sign-in (307 redirect to accounts.dev/sign-in)
+- Sign-in page (/sign-in) accessible and returns 200 OK
+- Sign-up page (/sign-up) accessible and returns 200 OK
+- Typecheck passes with 0 errors
+
+**Learnings for future iterations:**
+- Clerk for Astro uses `@clerk/astro` package with SSR required (output: 'server')
+- Middleware uses `clerkMiddleware` from `@clerk/astro/server` with `createRouteMatcher` for public routes
+- To get user data: use `clerkClient(context).users.getUser(userId)` - the auth object only provides userId
+- Clerk components must be imported with aliases to avoid naming conflicts: `import { SignIn as ClerkSignIn } from '@clerk/astro/components'`
+- All routes are protected by default; use `createRouteMatcher` to define public routes
+- Auth object available via `Astro.locals.auth()` in pages and `context.locals.auth()` in API routes
+- Database index names must be unique across all tables (not just within a table)
+- User sync pattern: Check if user exists in local DB by clerkUserId, insert if not found
+- Clerk requires PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY environment variables
+- Clerk automatically handles redirect flow: unauthenticated users → Clerk hosted pages → back to app after auth
+- Clerk uses its own hosted UI by default (routing="path" sends users to accounts.dev subdomain)
+
+---
+
