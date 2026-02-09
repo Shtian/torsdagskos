@@ -112,7 +112,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 6,
+      "priority": 7,
       "passes": false,
       "notes": ""
     },
@@ -132,7 +132,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 7,
+      "priority": 8,
       "passes": false,
       "notes": ""
     },
@@ -150,7 +150,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 8,
+      "priority": 9,
       "passes": false,
       "notes": ""
     },
@@ -169,7 +169,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 9,
+      "priority": 10,
       "passes": false,
       "notes": ""
     },
@@ -187,7 +187,7 @@
         "Use friendly 'From' name in email",
         "Typecheck passes"
       ],
-      "priority": 10,
+      "priority": 11,
       "passes": false,
       "notes": ""
     },
@@ -203,7 +203,7 @@
         "Trigger automatically on event edit (no opt-out)",
         "Typecheck passes"
       ],
-      "priority": 11,
+      "priority": 12,
       "passes": false,
       "notes": ""
     },
@@ -221,7 +221,7 @@
         "Prevent duplicate reminders (check notification_log before sending)",
         "Typecheck passes"
       ],
-      "priority": 12,
+      "priority": 13,
       "passes": false,
       "notes": ""
     },
@@ -240,7 +240,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 13,
+      "priority": 14,
       "passes": false,
       "notes": ""
     },
@@ -259,7 +259,7 @@
         "Test notifications work on supported browsers",
         "Typecheck passes"
       ],
-      "priority": 14,
+      "priority": 15,
       "passes": false,
       "notes": ""
     },
@@ -278,7 +278,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 15,
+      "priority": 16,
       "passes": false,
       "notes": ""
     },
@@ -295,7 +295,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 16,
+      "priority": 17,
       "passes": false,
       "notes": ""
     },
@@ -314,7 +314,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 17,
+      "priority": 18,
       "passes": false,
       "notes": ""
     },
@@ -334,7 +334,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 18,
+      "priority": 19,
       "passes": false,
       "notes": ""
     },
@@ -362,7 +362,7 @@
         "All tests pass successfully",
         "Typecheck passes"
       ],
-      "priority": 19,
+      "priority": 6,
       "passes": false,
       "notes": ""
     }
