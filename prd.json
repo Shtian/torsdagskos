@@ -112,7 +112,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 7,
+      "priority": 11,
       "passes": false,
       "notes": ""
     },
@@ -132,7 +132,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 8,
+      "priority": 12,
       "passes": false,
       "notes": ""
     },
@@ -150,7 +150,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 9,
+      "priority": 13,
       "passes": false,
       "notes": ""
     },
@@ -169,7 +169,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 10,
+      "priority": 14,
       "passes": false,
       "notes": ""
     },
@@ -187,7 +187,7 @@
         "Use friendly 'From' name in email",
         "Typecheck passes"
       ],
-      "priority": 11,
+      "priority": 15,
       "passes": false,
       "notes": ""
     },
@@ -203,7 +203,7 @@
         "Trigger automatically on event edit (no opt-out)",
         "Typecheck passes"
       ],
-      "priority": 12,
+      "priority": 16,
       "passes": false,
       "notes": ""
     },
@@ -221,7 +221,7 @@
         "Prevent duplicate reminders (check notification_log before sending)",
         "Typecheck passes"
       ],
-      "priority": 13,
+      "priority": 17,
       "passes": false,
       "notes": ""
     },
@@ -240,7 +240,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 14,
+      "priority": 18,
       "passes": false,
       "notes": ""
     },
@@ -259,7 +259,7 @@
         "Test notifications work on supported browsers",
         "Typecheck passes"
       ],
-      "priority": 15,
+      "priority": 19,
       "passes": false,
       "notes": ""
     },
@@ -278,7 +278,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 16,
+      "priority": 20,
       "passes": false,
       "notes": ""
     },
@@ -295,7 +295,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 17,
+      "priority": 21,
       "passes": false,
       "notes": ""
     },
@@ -314,7 +314,7 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 18,
+      "priority": 22,
       "passes": false,
       "notes": ""
     },
@@ -334,14 +334,14 @@
         "Typecheck passes",
         "Verify in browser using browser-use"
       ],
-      "priority": 19,
+      "priority": 23,
       "passes": false,
       "notes": ""
     },
     {
       "id": "US-019",
-      "title": "Setup Playwright end-to-end testing with Clerk authentication",
-      "description": "As a developer, I need automated E2E tests to ensure the application works correctly.",
+      "title": "Setup Playwright testing infrastructure with Clerk authentication",
+      "description": "As a developer, I need Playwright configured with Clerk authentication support for E2E testing.",
       "acceptanceCriteria": [
         "Install @playwright/test and @clerk/testing packages",
         "Configure Playwright with projects for Chromium, Firefox, and WebKit",
@@ -349,20 +349,96 @@
         "Implement global-setup.ts with clerkSetup() for testing token generation",
         "Configure serial execution for test descriptions as per Clerk requirements",
         "Create test fixtures for authenticated user sessions",
-        "Write E2E tests for authentication flow (sign-in, sign-up, sign-out)",
-        "Write E2E tests for events list page (view upcoming/past events)",
-        "Write E2E tests for event detail page (view event, see RSVPs)",
-        "Write E2E tests for RSVP functionality (change status, verify updates)",
-        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
-        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
-        "Add test isolation with independent test data/state",
-        "Configure CI-ready settings (parallel execution, trace on failure)",
+        "Add test helpers and utilities (e.g., database seeding for tests)",
         "Add npm scripts for test execution (test, test:headed, test:debug)",
-        "Document test setup and execution in README or TESTING.md",
-        "All tests pass successfully",
+        "Create basic smoke test to verify setup works",
+        "Document test setup in TESTING.md",
         "Typecheck passes"
       ],
       "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Write E2E tests for authentication flows",
+      "description": "As a developer, I need E2E tests for user authentication to ensure sign-in/sign-up works correctly.",
+      "acceptanceCriteria": [
+        "Write test for successful sign-in with valid credentials",
+        "Write test for sign-in with invalid credentials",
+        "Write test for sign-up flow with new user",
+        "Write test for sign-out functionality",
+        "Write test for redirect to sign-in when accessing protected routes unauthenticated",
+        "Write test for redirect to homepage when authenticated user visits auth pages",
+        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
+        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
+        "All tests pass successfully",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Write E2E tests for events list and detail pages",
+      "description": "As a developer, I need E2E tests for event viewing functionality.",
+      "acceptanceCriteria": [
+        "Write test for viewing events list (upcoming and past sections)",
+        "Write test for empty state when no events exist",
+        "Write test for clicking event card to navigate to detail page",
+        "Write test for viewing event detail page with all fields displayed",
+        "Write test for viewing RSVP counts and user lists on detail page",
+        "Write test for back navigation from detail to list",
+        "Write test for 404 handling with non-existent event ID",
+        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
+        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
+        "Add test isolation with independent test data",
+        "All tests pass successfully",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Write E2E tests for RSVP functionality",
+      "description": "As a developer, I need E2E tests for RSVP functionality to ensure users can respond to events.",
+      "acceptanceCriteria": [
+        "Write test for RSVPing 'Going' to an event",
+        "Write test for changing RSVP status (Going → Maybe → Not Going)",
+        "Write test for RSVP counts updating after status change",
+        "Write test for current user's RSVP status displaying prominently",
+        "Write test for RSVP appearing in correct status list",
+        "Write test that past events cannot be RSVPd to",
+        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
+        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
+        "Add test isolation with independent test data",
+        "All tests pass successfully",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Configure CI/CD pipeline for Playwright tests",
+      "description": "As a developer, I need Playwright tests running in CI to catch regressions automatically.",
+      "acceptanceCriteria": [
+        "Configure GitHub Actions workflow for Playwright tests",
+        "Install Playwright browsers in CI environment",
+        "Run tests on pull requests and main branch pushes",
+        "Configure test sharding for faster CI runs (if needed)",
+        "Enable trace collection on test failures",
+        "Upload test artifacts (traces, screenshots, videos) on failure",
+        "Configure parallel test execution across browser projects",
+        "Add status badge to README showing test status",
+        "Ensure tests pass consistently in CI environment",
+        "Document CI setup and troubleshooting in TESTING.md"
+      ],
+      "priority": 10,
       "passes": false,
       "notes": ""
     }
