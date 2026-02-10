@@ -370,3 +370,43 @@
 
 ---
 
+## 2026-02-10 21:27 - US-023
+
+**Implemented:** CI/CD pipeline for Playwright tests with GitHub Actions
+
+**Files changed:**
+- .github/workflows/playwright.yml - Created GitHub Actions workflow with test sharding and artifact uploads
+- README.md - Added Playwright test status badge
+- TESTING.md - Added comprehensive CI configuration, troubleshooting, and setup documentation
+- prd.json - Updated US-023 to passes: true
+
+**Features:**
+- GitHub Actions workflow triggers on PR and main branch pushes
+- Test sharding across 3 parallel shards for faster CI execution
+- Playwright browsers automatically installed in CI environment
+- Trace collection enabled on test failures (configured in playwright.config.ts)
+- Artifact uploads for test reports, traces, screenshots, and videos
+- Merge reports job combines all shard reports into single HTML report
+- Status badge in README shows current test status
+- Parallel execution across all three browser projects (Chromium, Firefox, WebKit)
+- Comprehensive CI documentation in TESTING.md with setup instructions and troubleshooting
+
+**Learnings for future iterations:**
+- GitHub Actions workflow: Use matrix strategy for test sharding with shardIndex/shardTotal
+- pnpm in CI: Use pnpm/action-setup@v4 for package manager setup and caching
+- Playwright browser installation: Use `pnpm exec playwright install --with-deps` for CI
+- Test sharding: Pass `--shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}` to playwright test command
+- Artifact uploads: Use `actions/upload-artifact@v4` with `if: ${{ !cancelled() }}` to upload even on failure
+- Report merging: Use `playwright merge-reports` to combine shard reports into single HTML report
+- GitHub secrets: Configure Clerk API keys and test credentials as repository secrets for CI
+- Status badge: Use GitHub Actions badge URL pattern: `https://github.com/USER/REPO/actions/workflows/FILE.yml/badge.svg`
+- fail-fast: false: Allows all shards to complete even if one fails, useful for debugging
+- Artifact retention: Set retention-days to balance storage costs and debugging needs
+- Test timeout: Set job timeout-minutes to prevent runaway tests in CI
+- Frozen lockfile: Use `--frozen-lockfile` flag in CI to ensure reproducible builds
+- Download artifacts pattern: Use `pattern: playwright-report-*` to download all shard reports
+- CI environment variables: Tests use same environment variables as local development
+- Test consistency: 28/29 tests passing - one known flaky test doesn't block CI setup
+
+---
+
