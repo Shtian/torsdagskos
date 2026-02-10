@@ -21,6 +21,15 @@
 - User data fetched with `clerkClient(Astro).users.getUser(userId)`
 - Layout component can conditionally render UI based on auth status
 
+## Testing (Playwright)
+- Use `test` and `expect` from `./fixtures` for custom fixtures support
+- Clerk auth in tests: `await clerk.signIn({ page })` from '@clerk/testing/playwright'
+- Test fixtures: Extend `test as base` from '@playwright/test' for custom setup
+- Database helpers: Create helpers in `tests/helpers/` for test data management
+- Web-first assertions: Use `await expect(locator).toBeVisible()` instead of timeouts
+- User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
+- Serial execution: Use `test.describe.serial()` for Clerk auth tests (per documentation)
+
 ---
 
 ## 2026-02-09 21:22 - US-001
@@ -194,5 +203,45 @@
 - Status badges: Consistent color coding (green=going, orange=maybe, red=not going, gray=no response)
 - Grid responsiveness: 2 columns for RSVP counts on mobile, 4 columns on desktop
 - Authentication flow: Protected routes correctly redirect to Clerk sign-in via middleware
+---
+
+## 2026-02-10 08:28 - US-019
+
+**Implemented:** Playwright testing infrastructure with Clerk authentication support
+
+**Files changed:**
+- playwright.config.ts - Created Playwright configuration with Chromium, Firefox, and WebKit projects
+- tests/global-setup.ts - Implemented Clerk setup for test token generation
+- tests/fixtures.ts - Created custom Playwright fixtures for authenticated sessions
+- tests/helpers/db-helpers.ts - Added database utilities for test data seeding and cleanup
+- tests/smoke.spec.ts - Created basic smoke tests to verify setup
+- TESTING.md - Comprehensive testing documentation with examples and best practices
+- package.json - Added test scripts: test, test:headed, test:debug, test:ui
+- pnpm-lock.yaml - Added @playwright/test, @clerk/testing, and dotenv dependencies
+
+**Features:**
+- Playwright configured with 3 browser projects (Chromium, Firefox, WebKit)
+- Global setup with clerkSetup() for generating Clerk test tokens
+- Test fixtures extending base Playwright test for easy auth integration
+- Database helpers for creating test users, events, RSVPs, and cleanup
+- Smoke tests verifying unauthenticated redirects and auth page accessibility
+- Comprehensive documentation covering test running, writing, and troubleshooting
+- Environment variable handling via dotenv for test configuration
+- Web server auto-start configuration for running tests against dev server
+
+**Learnings for future iterations:**
+- Playwright global setup: Use `globalSetup: require.resolve('./tests/global-setup')` in config
+- Clerk testing setup: Call `clerkSetup()` in global-setup.ts to configure test tokens
+- Test fixtures: Extend `test as base` from '@playwright/test' for custom fixtures
+- Database helpers: Import from 'astro:db' works in test files when using proper Astro context
+- Test scripts: playwright test supports --headed, --debug, and --ui flags for different modes
+- Serial execution: Use `test.describe.serial()` for tests that must run sequentially
+- Environment variables: Load .env with dotenv.config() in playwright.config.ts
+- Web-first assertions: Use `await expect(locator).toBeVisible()` instead of manual waits
+- User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
+- Test documentation: Include examples, best practices, and troubleshooting in TESTING.md
+- Package manager: Playwright browsers installed with `pnpm exec playwright install`
+- Configuration: webServer.reuseExistingServer prevents conflicts when dev server already running
+
 ---
 
