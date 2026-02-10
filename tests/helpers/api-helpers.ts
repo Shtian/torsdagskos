@@ -7,6 +7,13 @@
 
 const API_BASE = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4321';
 
+/**
+ * Generate a unique email address for testing
+ */
+export function uniqueEmail(): string {
+  return `test+${Date.now()}_${Math.random().toString(36).substring(7)}@example.com`;
+}
+
 interface User {
   id: number;
   clerkUserId: string;

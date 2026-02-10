@@ -1,0 +1,392 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+// Ensure user is authenticated
+const { userId } = Astro.locals.auth();
+if (!userId) {
+  return Astro.redirect('/sign-in');
+}
+---
+
+<Layout title="Create New Event">
+  <div class="container">
+    <div class="event-header">
+      <a href="/" class="back-link">&larr; Back to Events</a>
+      <h1 class="page-title">Create New Event</h1>
+    </div>
+
+    <form id="event-form" class="event-form">
+      <div class="form-group">
+        <label for="title" class="form-label">
+          Event Title <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          class="form-input"
+          required
+          placeholder="e.g., Torsdagskos at John's place"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="form-label">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          class="form-textarea"
+          rows="5"
+          placeholder="What's the plan? Any special details?"
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="date" class="form-label">
+            Date <span class="required">*</span>
+          </label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            class="form-input"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="time" class="form-label">
+            Time <span class="required">*</span>
+          </label>
+          <input
+            type="time"
+            id="time"
+            name="time"
+            class="form-input"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="location" class="form-label">
+          Location <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="location"
+          name="location"
+          class="form-input"
+          required
+          placeholder="e.g., John's apartment, Oslo City Center"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="mapLink" class="form-label">
+          Map Link <span class="optional">(optional)</span>
+        </label>
+        <input
+          type="url"
+          id="mapLink"
+          name="mapLink"
+          class="form-input"
+          placeholder="https://maps.google.com/..."
+        />
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="submit-button">
+          Create Event
+        </button>
+        <a href="/" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</Layout>
+
+<style>
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: var(--space-6);
+  }
+
+  .event-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--color-accent);
+    text-decoration: none;
+    margin-bottom: var(--space-4);
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent-dark);
+  }
+
+  .page-title {
+    font-size: 2rem;
+    margin: 0;
+    color: var(--color-accent-dark);
+  }
+
+  .event-form {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+  }
+
+  .form-group {
+    margin-bottom: var(--space-6);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 640px) {
+    .form-row {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    color: var(--color-text);
+  }
+
+  .required {
+    color: var(--color-error);
+  }
+
+  .optional {
+    color: var(--color-text-muted);
+    font-weight: 400;
+    font-size: 0.9rem;
+  }
+
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+    background: var(--color-background);
+  }
+
+  .form-input:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: white;
+    border-color: var(--color-accent);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  .error-message {
+    position: fixed;
+    top: 100px;
+    right: var(--space-6);
+    background: var(--color-error);
+    color: white;
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+  }
+
+  .success-message {
+    position: fixed;
+    top: 100px;
+    right: var(--space-6);
+    background: var(--color-success);
+    color: white;
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .container {
+      padding: var(--space-4);
+    }
+
+    .event-form {
+      padding: var(--space-6);
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .form-actions {
+      flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('event-form') as HTMLFormElement;
+    const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const title = formData.get('title') as string;
+      const description = formData.get('description') as string;
+      const date = formData.get('date') as string;
+      const time = formData.get('time') as string;
+      const location = formData.get('location') as string;
+      const mapLink = formData.get('mapLink') as string;
+
+      // Validate required fields
+      if (!title || !date || !time || !location) {
+        showMessage('Please fill in all required fields.', 'error');
+        return;
+      }
+
+      // Combine date and time into ISO string (Europe/Oslo timezone)
+      // The date/time input values are in local timezone, so we need to interpret them as Europe/Oslo
+      const dateTimeString = `${date}T${time}:00`;
+      const dateTime = new Date(dateTimeString);
+
+      // Disable submit button during submission
+      submitButton.disabled = true;
+      submitButton.textContent = 'Creating...';
+
+      try {
+        const response = await fetch('/api/events/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title,
+            description: description || '',
+            dateTime: dateTime.toISOString(),
+            location,
+            mapLink: mapLink || null,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create event');
+        }
+
+        const result = await response.json();
+
+        showMessage('Event created successfully!', 'success');
+
+        // Redirect to event detail page after short delay
+        setTimeout(() => {
+          window.location.href = `/events/${result.eventId}`;
+        }, 1000);
+      } catch (error) {
+        console.error('Error creating event:', error);
+        showMessage('Failed to create event. Please try again.', 'error');
+
+        // Re-enable submit button on error
+        submitButton.disabled = false;
+        submitButton.textContent = 'Create Event';
+      }
+    });
+
+    function showMessage(text: string, type: 'success' | 'error') {
+      const message = document.createElement('div');
+      message.className = type === 'success' ? 'success-message' : 'error-message';
+      message.textContent = text;
+      document.body.appendChild(message);
+
+      setTimeout(() => {
+        message.remove();
+      }, 3000);
+    }
+  });
+</script>
