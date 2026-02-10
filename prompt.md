@@ -73,20 +73,25 @@ Only update AGENTS.md if you have **genuinely reusable knowledge** that would he
 ## Quality Requirements
 
 - ALL commits must pass your project's quality checks (typecheck, lint, test)
-- Do NOT commit broken code
+- Run `pnpm astro check` for typecheck before committing
+- Run `pnpm test` to ensure Playwright tests pass (if tests exist for the feature)
+- Do NOT commit broken code or failing tests
 - Keep changes focused and minimal
 - Follow existing code patterns
 
-## Browser Testing (Required for Frontend Stories)
+## Playwright Testing (Required for Frontend Stories)
 
-For any story that changes UI, you MUST verify it works in the browser:
+For any story that changes UI, you MUST write Playwright E2E tests:
 
-1. Load the `browser-use` skill
-2. Navigate to the relevant page
-3. Verify the UI changes work as expected
-4. Take a screenshot if helpful for the progress log
+1. Create or update test files in the `tests/` directory
+2. Write tests that verify the UI changes work as expected
+3. Use user-facing locators (roles, text) and web-first assertions
+4. Run tests with `pnpm test` to ensure they pass
+5. Include test file paths in the progress report
 
-A frontend story is NOT complete until browser verification passes.
+A frontend story is NOT complete until Playwright tests are written and passing.
+
+**Skip browser-use skill** - use Playwright tests instead for all UI verification.
 
 ## Stop Condition
 

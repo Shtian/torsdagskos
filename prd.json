@@ -35,7 +35,7 @@
         "Redirect authenticated users from auth pages to homepage",
         "Redirect unauthenticated users to /sign-in",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 2,
       "passes": true,
@@ -53,7 +53,7 @@
         "Add header with app name and user profile/sign out button",
         "Test layout renders correctly on mobile and desktop viewports",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 3,
       "passes": true,
@@ -72,7 +72,7 @@
         "Show empty state message when no events exist",
         "Format dates in Europe/Oslo timezone",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 4,
       "passes": true,
@@ -92,7 +92,7 @@
         "Make map link clickable if present",
         "Return 404 if event not found",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 5,
       "passes": true,
@@ -110,7 +110,7 @@
         "Update RSVP counts immediately after submission",
         "Show success feedback after RSVP change",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 11,
       "passes": false,
@@ -130,7 +130,7 @@
         "Redirect to event detail page after successful creation",
         "Add 'Create Event' button on homepage header",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 12,
       "passes": false,
@@ -148,7 +148,7 @@
         "Show clear indicator that form is pre-filled from duplication",
         "Disable button if no events exist yet",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 13,
       "passes": false,
@@ -167,7 +167,7 @@
         "Redirect to event detail page after successful update",
         "Add 'Edit Event' button on event detail page (only for upcoming events)",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 14,
       "passes": false,
@@ -238,7 +238,7 @@
         "Add 'Settings' link in header navigation",
         "Show success/error feedback after permission change",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 18,
       "passes": false,
@@ -276,7 +276,7 @@
         "Add 'My History' link in header navigation",
         "Show empty state if user has no RSVP history",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 20,
       "passes": false,
@@ -293,7 +293,7 @@
         "Style page with design system tokens",
         "Display when unauthenticated user tries to access protected route",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 21,
       "passes": false,
@@ -312,7 +312,7 @@
         "Ensure readability with appropriate font sizes",
         "Test on tablet viewport (768px-1024px)",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 22,
       "passes": false,
@@ -332,7 +332,7 @@
         "Verify color contrast meets WCAG AA standards",
         "Remove any console.log or debug code",
         "Typecheck passes",
-        "Verify in browser using browser-use"
+        "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 23,
       "passes": false,
