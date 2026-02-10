@@ -55,7 +55,17 @@ export async function createTestUser(data: {
   email: string;
   name: string;
 }): Promise<User> {
-  return seedAPI('create_user', data);
+  try {
+    return await seedAPI('create_user', data);
+  } catch (error) {
+    // If creation failed due to unique constraint, the server-side fix should prevent this
+    // But we keep this for backwards compatibility during transition
+    if (error instanceof Error && error.message.includes('UNIQUE constraint')) {
+      // Re-throw with more context
+      throw new Error(`User with clerkUserId ${data.clerkUserId} already exists. This should be handled by the seed endpoint now.`);
+    }
+    throw error;
+  }
 }
 
 export async function createTestEvent(data: {
@@ -78,4 +88,8 @@ export async function createTestRsvp(data: {
 
 export async function cleanupTestData(): Promise<void> {
   await seedAPI('cleanup');
+}
+
+export async function resetAllTestData(): Promise<void> {
+  await seedAPI('reset_all');
 }

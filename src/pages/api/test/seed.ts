@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { db, Users, Events, Rsvps, NotificationLog, Invites } from 'astro:db';
+import { db, Users, Events, Rsvps, NotificationLog, Invites, eq } from 'astro:db';
 
 /**
  * Test data seeding API endpoint
@@ -23,6 +23,22 @@ export const POST: APIRoute = async ({ request }) => {
 
     switch (action) {
       case 'create_user': {
+        // First check if user already exists
+        const existingUser = await db
+          .select()
+          .from(Users)
+          .where(eq(Users.clerkUserId, data.clerkUserId))
+          .get();
+
+        if (existingUser) {
+          // Return existing user instead of failing
+          return new Response(JSON.stringify(existingUser), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // User doesn't exist, create it
         const [user] = await db
           .insert(Users)
           .values({
@@ -32,6 +48,7 @@ export const POST: APIRoute = async ({ request }) => {
             createdAt: new Date(),
           })
           .returning();
+
         return new Response(JSON.stringify(user), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -82,6 +99,20 @@ export const POST: APIRoute = async ({ request }) => {
         await db.delete(Invites);
         // Don't delete users - they will be reused across tests
         // This prevents issues with the authenticated test user being re-synced
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'reset_all': {
+        // Delete ALL data including users (useful for test isolation)
+        await db.delete(NotificationLog);
+        await db.delete(Rsvps);
+        await db.delete(Events);
+        await db.delete(Invites);
+        await db.delete(Users); // Now also delete users
+
         return new Response(JSON.stringify({ success: true }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },

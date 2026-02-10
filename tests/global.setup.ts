@@ -53,5 +53,9 @@ setup("authenticate", async ({ page }) => {
   await page.goto("/");
   await page.waitForSelector("h1:has-text('Upcoming Events')");
 
+  // Verify auth state is properly saved and session is valid
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500); // Small delay to ensure Clerk session is stable
+
   await page.context().storageState({ path: authFile });
 });
