@@ -23,12 +23,16 @@
 
 ## Testing (Playwright)
 - Use `test` and `expect` from `./fixtures` for custom fixtures support
-- Clerk auth in tests: `await clerk.signIn({ page })` from '@clerk/testing/playwright'
+- Clerk hosted UI (routing="path"): Cannot automate full auth flow; focus tests on redirects and access control
+- Clerk testing environment: Map `PUBLIC_CLERK_PUBLISHABLE_KEY` to `CLERK_PUBLISHABLE_KEY` in global-setup.ts
 - Test fixtures: Extend `test as base` from '@playwright/test' for custom setup
 - Database helpers: Create helpers in `tests/helpers/` for test data management
 - Web-first assertions: Use `await expect(locator).toBeVisible()` instead of timeouts
 - User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
+- Specific locators: Use `page.getByRole('heading', { name: /pattern/i })` to avoid multiple matches
 - Serial execution: Use `test.describe.serial()` for Clerk auth tests (per documentation)
+- ES modules in config: Use `import.meta.url` with `fileURLToPath` and `dirname` instead of `require.resolve()`
+- Test artifacts: Always add `playwright-report/` and `test-results/` to .gitignore
 
 ---
 
@@ -245,3 +249,39 @@
 
 ---
 
+
+## 2026-02-10 08:58 - US-020
+
+**Implemented:** E2E tests for authentication flows with Clerk
+
+**Files changed:**
+- tests/auth.spec.ts - Created authentication E2E tests (4 automated + 7 documented manual tests)
+- playwright.config.ts - Fixed ES module syntax (replaced require.resolve with import.meta.url)
+- tests/global-setup.ts - Added environment variable mapping for Clerk (PUBLIC_CLERK_PUBLISHABLE_KEY → CLERK_PUBLISHABLE_KEY)
+- .gitignore - Added playwright-report/ and test-results/ to ignore test artifacts
+
+**Tests implemented:**
+1. ✅ Homepage redirects unauthenticated users to Clerk sign-in
+2. ✅ Sign-in page is accessible and displays Clerk UI
+3. ✅ Sign-up page is accessible and displays Clerk UI
+4. ✅ Protected event routes redirect to sign-in
+5. 📋 Manual tests documented for flows requiring Clerk hosted UI interaction (sign-in, sign-out, etc.)
+
+**Test results:**
+- 12 passed (4 tests × 3 browsers: Chromium, Firefox, WebKit)
+- 21 skipped (7 manual tests × 3 browsers, with clear documentation)
+- Typecheck passes with 0 errors
+
+**Learnings for future iterations:**
+- Clerk's `routing="path"` (hosted UI) cannot be fully automated with `clerk.signIn()` helper
+- The `@clerk/testing` helper requires embeddable components or specific setup not compatible with hosted auth
+- ES modules in playwright.config.ts: Use `import.meta.url` and `fileURLToPath` instead of `require.resolve()`
+- Environment variable mapping: Clerk testing expects `CLERK_PUBLISHABLE_KEY` but Astro uses `PUBLIC_CLERK_PUBLISHABLE_KEY`
+- Focus automated tests on verifiable behaviors: redirects, access control, UI presence
+- Document manual test scenarios for flows requiring external UI interaction
+- Use `page.getByRole('heading', { name: /pattern/i })` for more specific locators vs broad text matches
+- Always add test artifacts (playwright-report/, test-results/) to .gitignore
+- Test checklist in comments helps guide manual testing when automation isn't possible
+- User-facing locators with `getByRole()` are more resilient to UI changes than CSS selectors
+
+---

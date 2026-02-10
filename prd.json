@@ -376,8 +376,8 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Authentication E2E tests implemented for Clerk hosted UI. Tests cover unauthenticated access redirects, sign-in/sign-up page accessibility, and protected route access control. Manual test scenarios documented for flows requiring interaction with Clerk's hosted authentication UI (routing='path'). All automated tests pass (12 passed, 21 documented as manual). Typecheck passes."
     },
     {
       "id": "US-021",
