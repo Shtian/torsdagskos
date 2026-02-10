@@ -41,7 +41,7 @@ if (userId) {
 							<span class="user-name">
 								{user.firstName || user.emailAddresses[0]?.emailAddress}
 							</span>
-							<SignOutButton>
+							<SignOutButton asChild redirectUrl="/sign-in">
 								<button class="sign-out-button">Sign Out</button>
 							</SignOutButton>
 						</div>
