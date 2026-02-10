@@ -40,6 +40,11 @@
 ## Database Operations
 - User sync race conditions: Wrap inserts in try-catch to handle UNIQUE constraint errors gracefully
 - Unique constraints: Check for existing records before insert to avoid conflicts
+- BigInt serialization: `lastInsertRowid` returns BigInt - convert with `Number()` before JSON.stringify()
+
+## API Endpoints
+- Event creation: POST /api/events/create with { title, description, dateTime, location, mapLink }
+- Return pattern: Always convert BigInt IDs to Number before JSON serialization
 
 ---
 
