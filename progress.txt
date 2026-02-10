@@ -335,3 +335,38 @@
 
 ---
 
+## 2026-02-10 21:45 - US-006
+
+**Implemented:** RSVP functionality on event detail page
+
+**Files changed:**
+- src/pages/api/rsvp.ts - Created API endpoint for RSVP submission (insert/update)
+- src/pages/events/[id].astro - Added RSVP button group, past event detection, client-side JavaScript
+- tests/rsvp.spec.ts - Created 4 E2E tests for RSVP functionality
+- prd.json - Updated US-006 to passes: true
+
+**Features:**
+- RSVP button group (Going, Maybe, Not Going) with active state highlighting
+- Server-side API endpoint handles insert or update of RSVPs
+- Past events show read-only notice instead of RSVP buttons
+- Success message displays before page reload to show updated counts
+- Client-side JavaScript disables buttons during submission to prevent double-clicks
+- Button styling changes based on current user's RSVP status
+
+**Learnings for future iterations:**
+- API endpoint pattern: POST /api/rsvp with { eventId, status } body
+- Client-side script pattern: Disable all buttons during submission, show success message, reload after 1s
+- Past event detection: Compare `new Date(event.dateTime) >= now` in server-side code
+- RSVP status in HTML: Use data attributes (data-status, data-event-id) for JavaScript access
+- Active button styling: Apply classes dynamically based on `currentUserRsvp?.status` match
+- Page reload pattern: Use `window.location.reload()` after successful API call to show fresh data
+- Success message animation: Fixed position with slideIn CSS animation for user feedback
+- Button class logic: Use template literals with ternary for conditional classes
+- E2E test pattern: Use `exact: true` with getByRole to avoid matching "Going" in "Not Going"
+- E2E test waits: Use `page.waitForResponse()` to ensure API calls complete before assertions
+- Test user setup: Ensure authenticated user exists in database before RSVP tests
+- Test isolation issue: Parallel execution can cause race conditions with user creation - consider serial execution or better user management
+- Playwright exact matching: Always use `{ exact: true }` when button names overlap (e.g., "Going" vs "Not Going")
+
+---
+
