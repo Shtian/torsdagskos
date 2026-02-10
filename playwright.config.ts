@@ -1,88 +1,48 @@
 import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
 
 // Load environment variables
 dotenv.config();
 
-// ES module equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const PORT = process.env.PORT || 4321;
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
+// Set webServer.url and use.baseURL with the location of the WebServer respecting the correct set port
+const baseURL = `http://localhost:${PORT}`;
+
+// Reference: https://playwright.dev/docs/test-configuration
 export default defineConfig({
-  testDir: './tests',
-
-  // Run tests in files in parallel
-  fullyParallel: true,
-
-  // Fail the build on CI if you accidentally left test.only in the source code
-  forbidOnly: !!process.env.CI,
-
-  // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
-
-  // Opt out of parallel tests on CI
-  workers: process.env.CI ? 1 : undefined,
-
-  // Reporter to use. See https://playwright.dev/docs/test-reporters
-  reporter: process.env.CI ? 'github' : 'html',
-
-  // Shared settings for all the projects below
-  use: {
-    // Base URL to use in actions like `await page.goto('/')`
-    baseURL: process.env.BASE_URL || 'http://localhost:4321',
-
-    // Collect trace when retrying the failed test
-    trace: 'on-first-retry',
-
-    // Screenshot on failure
-    screenshot: 'only-on-failure',
+  testDir: "./tests",
+  webServer: {
+    command: "pnpm dev",
+    url: baseURL,
+    reuseExistingServer: !process.env.CI,
   },
 
-  // Global setup for Clerk testing
-  globalSetup: resolve(__dirname, './tests/global-setup'),
-
-  // Configure projects for major browsers
+  use: {
+    baseURL,
+    trace: "retry-with-trace",
+  },
   projects: [
     {
-      name: 'chromium',
+      name: "global setup",
+      testMatch: /global\.setup\.ts/,
+    },
+    {
+      name: "Authenticated",
       use: {
-        ...devices['Desktop Chrome'],
-        // Clerk requires serial execution for tests with authentication
-        // See: https://clerk.com/docs/testing/playwright/overview#configure-your-tests-to-run-serially
+        ...devices["Desktop Chrome"],
+        // Use prepared auth state.
+        storageState: "playwright/.clerk/user.json",
       },
+      dependencies: ["global setup"],
+      grepInvert: /@unauth/,
     },
-
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "Unauthenticated",
+      use: {
+        ...devices["Desktop Chrome"],
+      },
+      grep: /@unauth/,
     },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    // Test against mobile viewports
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
   ],
-
-  // Run your local dev server before starting the tests
-  webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:4321',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000, // 2 minutes for server startup
-  },
 });

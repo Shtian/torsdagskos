@@ -11,7 +11,7 @@ import { test, expect } from './fixtures';
  * Run with: pnpm test
  */
 
-test.describe('Smoke tests', () => {
+test.describe('Smoke tests @unauth', () => {
   test('homepage redirects unauthenticated users to Clerk sign-in', async ({ page }) => {
     // Attempt to visit the homepage without authentication
     await page.goto('/');

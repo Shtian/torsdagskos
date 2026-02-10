@@ -7,16 +7,19 @@ import { test, expect } from './fixtures';
  * - Protected route access control
  * - Sign-in and sign-up page accessibility
  * - Authentication redirects
+ * - Authenticated user access
  *
- * Note: Tests using Clerk's hosted UI (routing="path") cannot test
- * actual sign-in/sign-up flows without manual interaction, as Clerk
- * redirects to accounts.dev for authentication. These flows are best
- * tested manually or with Clerk's embeddable components.
+ * Setup Requirements:
+ * 1. Create a test user in your Clerk dashboard (https://dashboard.clerk.com)
+ * 2. Add credentials to .env file:
+ *    - E2E_CLERK_USER_USERNAME=test+clerk_test@example.com
+ *    - E2E_CLERK_USER_PASSWORD=YourSecurePassword123!
+ * 3. Ensure the test user is verified and active
  *
  * Run with: pnpm test tests/auth.spec.ts
  */
 
-test.describe('Authentication - Unauthenticated access', () => {
+test.describe('Authentication - Unauthenticated access @unauth', () => {
   test('homepage redirects unauthenticated users to Clerk sign-in', async ({ page }) => {
     // Attempt to visit the homepage without authentication
     await page.goto('/');
@@ -56,53 +59,80 @@ test.describe('Authentication - Unauthenticated access', () => {
   });
 });
 
-test.describe('Authentication - Manual flow tests', () => {
-  /**
-   * The following tests are skipped because they require manual interaction
-   * with Clerk's hosted authentication UI.
-   *
-   * To test these scenarios manually:
-   * 1. Run: pnpm dev
-   * 2. Navigate to http://localhost:4321
-   * 3. Test credentials: test+clerk_test@example.com / TorsdagsKos123!
-   * 4. Verification code (if needed): 424242
-   *
-   * Test checklist:
-   * - [ ] Sign in with valid credentials redirects to homepage
-   * - [ ] Sign in with invalid credentials shows error
-   * - [ ] Sign up with new account creates user
-   * - [ ] Authenticated user can see "Sign Out" button
-   * - [ ] Authenticated user redirected from /sign-in to /
-   * - [ ] Authenticated user redirected from /sign-up to /
-   * - [ ] Sign out redirects to sign-in page
-   * - [ ] After sign out, accessing / redirects to sign-in
-   */
+test.describe('Authentication - Authenticated access', () => {
+  // Use authenticated storage state for these tests
+  test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test.skip('successful sign-in with valid credentials', async () => {
-    // Manual test only - requires Clerk hosted UI interaction
+  test('authenticated user can access homepage without redirect', async ({ page }) => {
+    // Navigate to homepage with authenticated session
+    await page.goto('/');
+
+    // Should remain on homepage, not redirect to sign-in
+    await expect(page).toHaveURL('/');
+    await expect(page).toHaveTitle(/Torsdagskos/);
   });
 
-  test.skip('sign-in with invalid credentials shows error', async () => {
-    // Manual test only - requires Clerk hosted UI interaction
+  test('authenticated user can access protected event routes', async ({ page }) => {
+    // Navigate to a protected event detail page
+    await page.goto('/events/1');
+
+    // Should remain on the event page, not redirect to sign-in
+    // Note: This will 404 if event doesn't exist, but won't redirect to auth
+    await expect(page).toHaveURL(/\/events\/1/);
   });
 
-  test.skip('sign-up with new user account', async () => {
-    // Manual test only - requires unique email and Clerk hosted UI interaction
+  test('authenticated user is redirected from sign-in page to homepage', async ({ page }) => {
+    // Try to access sign-in page when already authenticated
+    await page.goto('/sign-in');
+
+    // Clerk should redirect authenticated users away from sign-in
+    // They typically redirect to the homepage or afterSignInUrl
+    await page.waitForURL('/', { timeout: 5000 });
+    await expect(page).toHaveURL('/');
   });
 
-  test.skip('authenticated user is redirected from sign-in to homepage', async () => {
-    // Manual test only - requires authenticated session
+  test('authenticated user is redirected from sign-up page to homepage', async ({ page }) => {
+    // Try to access sign-up page when already authenticated
+    await page.goto('/sign-up');
+
+    // Clerk should redirect authenticated users away from sign-up
+    // They typically redirect to the homepage or afterSignUpUrl
+    await page.waitForURL('/', { timeout: 5000 });
+    await expect(page).toHaveURL('/');
   });
 
-  test.skip('authenticated user is redirected from sign-up to homepage', async () => {
-    // Manual test only - requires authenticated session
-  });
+  test('authenticated user can see user button component', async ({ page }) => {
+    // Navigate to homepage
+    await page.goto('/');
 
-  test.skip('sign-out functionality works correctly', async () => {
-    // Manual test only - requires authenticated session
+    // Look for Clerk's UserButton component which shows user profile
+    // This typically renders as a button with the user's avatar
+    const userButton = page.locator('[data-clerk-element="userButton"]').first();
+    await expect(userButton).toBeVisible({ timeout: 10000 });
   });
+});
 
-  test.skip('accessing protected route after sign-out redirects to sign-in', async () => {
-    // Manual test only - requires sign-out action
+test.describe('Authentication - Sign out flow', () => {
+  // Use authenticated storage state for these tests
+  test.use({ storageState: './playwright/.clerk/user.json' });
+
+  test('sign-out functionality redirects to sign-in', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for user button to be visible
+    const userButton = page.locator('[data-clerk-element="userButton"]').first();
+    await expect(userButton).toBeVisible({ timeout: 10000 });
+
+    // Click user button to open menu
+    await userButton.click();
+
+    // Wait for menu to appear and click sign out
+    // Clerk's UserButton menu contains a "Sign out" option
+    const signOutButton = page.locator('button:has-text("Sign out"), [data-clerk-element="userButtonTrigger"]:has-text("Sign out")').first();
+    await expect(signOutButton).toBeVisible({ timeout: 5000 });
+    await signOutButton.click();
+
+    // After sign out, should redirect to sign-in page
+    await expect(page).toHaveURL(/sign-in/, { timeout: 10000 });
   });
 });
