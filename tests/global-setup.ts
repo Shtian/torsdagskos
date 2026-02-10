@@ -9,6 +9,12 @@ import { clerkSetup } from '@clerk/testing/playwright';
  * See: https://clerk.com/docs/testing/playwright/overview
  */
 export default async function globalSetup() {
+  // Map Astro's environment variables to what Clerk expects
+  // Astro uses PUBLIC_CLERK_PUBLISHABLE_KEY, but @clerk/testing expects CLERK_PUBLISHABLE_KEY
+  if (process.env.PUBLIC_CLERK_PUBLISHABLE_KEY && !process.env.CLERK_PUBLISHABLE_KEY) {
+    process.env.CLERK_PUBLISHABLE_KEY = process.env.PUBLIC_CLERK_PUBLISHABLE_KEY;
+  }
+
   await clerkSetup();
 
   console.log('✓ Clerk testing setup complete');

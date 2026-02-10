@@ -1,8 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
 // Load environment variables
 dotenv.config();
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -38,7 +44,7 @@ export default defineConfig({
   },
 
   // Global setup for Clerk testing
-  globalSetup: require.resolve('./tests/global-setup'),
+  globalSetup: resolve(__dirname, './tests/global-setup'),
 
   // Configure projects for major browsers
   projects: [
