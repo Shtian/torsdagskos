@@ -19,12 +19,19 @@ if (userId) {
     .get();
 
   if (!existingUser) {
-    await db.insert(Users).values({
-      clerkUserId: userId,
-      email: user.emailAddresses[0]?.emailAddress || '',
-      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User',
-      createdAt: new Date()
-    });
+    try {
+      await db.insert(Users).values({
+        clerkUserId: userId,
+        email: user.emailAddresses[0]?.emailAddress || '',
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User',
+        createdAt: new Date()
+      });
+    } catch (error) {
+      // Ignore unique constraint errors - user was already created by concurrent request
+      if (!(error instanceof Error && error.message.includes('UNIQUE constraint'))) {
+        throw error;
+      }
+    }
   }
 }
 
