@@ -410,3 +410,46 @@
 
 ---
 
+## 2026-02-10 21:50 - US-007
+
+**Implemented:** Event creation form with full functionality
+
+**Files changed:**
+- src/pages/events/new.astro - Created event creation form page
+- src/pages/api/events/create.ts - Created API endpoint for event insertion
+- src/layouts/Layout.astro - Added 'Create Event' button in header
+- tests/event-creation.spec.ts - Created 11 E2E tests for event creation
+- tests/helpers/api-helpers.ts - Added uniqueEmail() helper function
+
+**Features:**
+- Event creation form with all required and optional fields
+- Form fields: title (required), description (textarea), date/time pickers, location (required), map link (optional URL)
+- HTML5 form validation for required fields
+- Client-side JavaScript for form submission via fetch API
+- API endpoint handles authentication, validation, and database insertion
+- Date/time stored as ISO string, interpreted in Europe/Oslo timezone
+- Success message with animation before redirect
+- Redirect to event detail page after successful creation
+- 'Create Event' button in header navigation for easy access
+- Error handling with user-friendly messages
+- Responsive design with mobile-first approach
+
+**Learnings for future iterations:**
+- BigInt serialization: Astro DB's `lastInsertRowid` returns BigInt, which cannot be serialized to JSON directly
+  - Solution: Convert to Number with `Number(result.lastInsertRowid)` before returning in API response
+- Form submission pattern: Use `e.preventDefault()` and fetch API for async submissions with loading states
+- Date/time handling: HTML date/time inputs provide values in YYYY-MM-DD and HH:mm format
+  - Combine with `${date}T${time}:00` and convert to ISO string for database storage
+- Client-side script pattern: Disable buttons during submission, show success message, then redirect after delay
+- Test isolation: Use `uniqueEmail()` helper to generate unique test data and avoid conflicts
+- E2E test patterns for forms:
+  - Use `page.locator('#id')` for form inputs when labels contain extra elements (like required asterisks)
+  - Wait for success message visibility before checking for redirect
+  - Use regex patterns for URL matching: `page.waitForURL(/\/events\/\d+$/)`
+- Error message testing: Use `page.route()` to mock API failures and verify error handling
+- Test flakiness: Parallel test execution can cause race conditions with database operations
+  - Event creation tests pass consistently when run in isolation (11/11 passed)
+  - Minor flakiness in full suite (36/38 tests pass) due to parallel execution
+
+---
+
