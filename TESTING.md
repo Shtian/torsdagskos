@@ -218,14 +218,71 @@ See `playwright.config.ts` for full configuration. Key settings:
 
 ### CI Configuration
 
-Tests are configured to run in GitHub Actions CI. The configuration:
+Tests are configured to run in GitHub Actions CI. The workflow file is located at `.github/workflows/playwright.yml`.
 
-- Runs on pull requests and main branch pushes
-- Installs Playwright browsers
-- Runs tests with retries enabled
-- Uploads traces and screenshots on failure
+#### CI Features
 
-See `.github/workflows/playwright.yml` (to be created in US-023) for CI setup.
+- **Trigger**: Runs on pull requests and pushes to main branch
+- **Test Sharding**: Tests are split across 3 parallel shards for faster execution
+- **Browser Support**: All three browsers (Chromium, Firefox, WebKit) run in parallel
+- **Artifact Upload**: Test reports, traces, screenshots, and videos are uploaded on failure
+- **Report Merging**: All shard reports are merged into a single HTML report
+- **Retries**: Configured with 2 retries on CI (via playwright.config.ts)
+
+#### Setting Up CI Secrets
+
+To run tests in CI, you need to configure the following GitHub repository secrets:
+
+1. Go to your repository Settings → Secrets and variables → Actions
+2. Add the following secrets:
+   - `PUBLIC_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
+   - `CLERK_SECRET_KEY`: Your Clerk secret key
+   - `TEST_PASSWORD`: Test user password for authentication tests
+
+#### Viewing Test Results
+
+After a workflow run completes:
+
+1. Go to the Actions tab in your GitHub repository
+2. Click on the workflow run
+3. Scroll to the bottom to find the artifacts:
+   - `playwright-report-merged`: Combined HTML report from all shards
+   - `playwright-report-1`, `playwright-report-2`, `playwright-report-3`: Individual shard reports
+4. Download and extract the HTML report to view detailed test results
+
+#### Test Sharding
+
+Tests are split across 3 shards to improve CI performance. Each shard runs approximately 1/3 of the tests in parallel. You can adjust the number of shards by modifying the `shardTotal` value in `.github/workflows/playwright.yml`.
+
+#### CI Troubleshooting
+
+**Tests pass locally but fail in CI:**
+- Verify all required secrets are configured in GitHub
+- Check that Clerk API keys are valid and not rate-limited
+- Review the uploaded test artifacts (traces, screenshots) for debugging
+- Ensure database operations don't have timing issues (use web-first assertions)
+
+**Sharded tests are unbalanced:**
+- Playwright automatically distributes tests across shards
+- If one shard takes much longer, consider increasing `shardTotal` for better distribution
+
+**Artifacts not uploading:**
+- Check that the workflow has write permissions for Actions
+- Verify the artifact paths in the workflow match the actual output directories
+
+**Merge reports job fails:**
+- Ensure all test shards completed (even with failures)
+- Check that artifact names match the pattern `playwright-report-*`
+
+#### Status Badge
+
+The repository README includes a status badge showing the current test status:
+
+```markdown
+[![Playwright Tests](https://github.com/shtian/torsdagskos/actions/workflows/playwright.yml/badge.svg)](https://github.com/shtian/torsdagskos/actions/workflows/playwright.yml)
+```
+
+The badge updates automatically based on the latest workflow run.
 
 ## Troubleshooting
 
