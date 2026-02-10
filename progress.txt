@@ -26,13 +26,20 @@
 - Clerk hosted UI (routing="path"): Cannot automate full auth flow; focus tests on redirects and access control
 - Clerk testing environment: Map `PUBLIC_CLERK_PUBLISHABLE_KEY` to `CLERK_PUBLISHABLE_KEY` in global-setup.ts
 - Test fixtures: Extend `test as base` from '@playwright/test' for custom setup
-- Database helpers: Create helpers in `tests/helpers/` for test data management
+- **Database helpers**: Cannot import `astro:db` in Playwright - create API endpoints in `/api/test/` for seeding
+- API-based helpers: Use `tests/helpers/api-helpers.ts` with fetch to seed test data via API
+- Test data isolation: Use `uniqueEmail()` helper with timestamps to avoid conflicts across runs
 - Web-first assertions: Use `await expect(locator).toBeVisible()` instead of timeouts
 - User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
-- Specific locators: Use `page.getByRole('heading', { name: /pattern/i })` to avoid multiple matches
+- Specific locators: Use `page.getByRole('heading', { name: /pattern/i, level: 2 })` to avoid multiple matches
+- Authenticated API calls: Use `page.evaluate(() => fetch('/api/...'))` to include auth cookies
 - Serial execution: Use `test.describe.serial()` for Clerk auth tests (per documentation)
 - ES modules in config: Use `import.meta.url` with `fileURLToPath` and `dirname` instead of `require.resolve()`
 - Test artifacts: Always add `playwright-report/` and `test-results/` to .gitignore
+
+## Database Operations
+- User sync race conditions: Wrap inserts in try-catch to handle UNIQUE constraint errors gracefully
+- Unique constraints: Check for existing records before insert to avoid conflicts
 
 ---
 
@@ -285,3 +292,46 @@
 - User-facing locators with `getByRole()` are more resilient to UI changes than CSS selectors
 
 ---
+
+## 2026-02-10 20:52 - US-021
+
+**Implemented:** E2E tests for events list and detail pages
+
+**Files changed:**
+- tests/events.spec.ts - Created comprehensive E2E tests (13 tests total)
+- tests/helpers/api-helpers.ts - Created API-based test helpers for database operations
+- src/pages/api/test/seed.ts - Created test data seeding API endpoint
+- src/pages/api/test/current-user.ts - Created API endpoint to get authenticated user
+- src/middleware.ts - Added /api/test routes to public routes for test access
+- src/pages/index.astro - Added try-catch to handle race conditions in user sync
+
+**Tests implemented:**
+1. Events list displays upcoming and past events in separate sections
+2. Empty state when no events exist
+3. Clicking event card navigates to detail page
+4. RSVP counts display correctly for each event
+5. Event detail page displays all fields correctly
+6. RSVP counts and user lists displayed correctly on detail page
+7. No response count calculation
+8. Back navigation from detail to list
+9. 404 handling for non-existent events
+10. Current user RSVP status prominently displayed
+11. No response status for user without RSVP
+
+**Learnings for future iterations:**
+- Playwright tests cannot import Astro virtual modules (astro:db) directly - use API endpoints instead
+- Test data isolation: Use unique emails with timestamps to avoid conflicts across test runs
+- Database cleanup strategy: Don't delete users to avoid race conditions with authenticated user sync
+- API-based helpers: Create test API endpoints for database operations instead of direct imports
+- User-facing locators: Specify heading level (level: 2) when multiple headings match same text
+- Race condition handling: Wrap database inserts in try-catch to handle UNIQUE constraint errors gracefully
+- Authenticated user in tests: Use page.evaluate() with fetch() to make API calls from browser context (includes auth cookies)
+- Test data persistence: Users persist across test runs when not deleted in cleanup - affects No Response counts
+- Current user handling: Check if user exists before creating to avoid duplicate key errors
+- Empty state verification: Check for absence of elements rather than presence of empty state message
+- Web-first assertions: Use toBeVisible(), filter({ hasText }), and getByRole() for robust tests
+- Test isolation: Use uniqueEmail() helper with Date.now() and random strings for unique test data
+- Middleware configuration: Add test API routes to public routes list for unauthenticated access during setup
+
+---
+

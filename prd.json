@@ -398,8 +398,8 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Comprehensive E2E tests implemented for events list and detail pages. Created 13 tests covering all acceptance criteria including viewing events, empty states, navigation, RSVP counts, and 404 handling. Implemented API-based test helpers for database seeding to avoid Astro virtual module issues in Playwright context. All tests pass successfully. Typecheck passes."
     },
     {
       "id": "US-022",
