@@ -48,6 +48,7 @@
 - Return pattern: Always convert BigInt IDs to Number before JSON serialization
 - Notification pattern: Keep event creation successful even if email delivery fails; run notifications as best-effort and log only successful sends in `NotificationLog`
 - Event update pattern: POST `/api/events/update` should mirror create-route best-effort notifications and return a `notifications` summary payload
+- Cron reminder pattern: expose `/api/cron/event-reminders` as a public route gated by `CRON_SECRET`; schedule hourly and enforce `18:00 Europe/Oslo` inside the handler for DST-safe daily execution
 
 ---
 
@@ -563,4 +564,29 @@
 - The suite can fail in parallel due to shared test cleanup; stable verification is `pnpm test --workers=1`
 - Useful context (e.g., "the evaluation panel is in component X")
 - `src/pages/api/events/update.ts` now follows the same best-effort notification orchestration pattern as `src/pages/api/events/create.ts`
+---
+## 2026-02-11 12:32 CET - US-012
+- What was implemented
+  - Added reminder notification flow in `src/lib/event-notifications.ts` that targets events happening tomorrow in Europe/Oslo and sends reminder emails with title, description, date/time, location, and map link.
+  - Added duplicate-prevention by checking `NotificationLog` for existing `type='reminder'` + `channel='email'` entries per user/event before sending.
+  - Added cron API endpoint `GET /api/cron/event-reminders` with `CRON_SECRET` auth and an Oslo-time guard that only executes at 18:00 Europe/Oslo.
+  - Added scheduled GitHub Actions workflow `.github/workflows/event-reminders.yml` to call the cron endpoint hourly.
+  - Added cron route to public middleware matcher and documented `CRON_SECRET` in `.env.example`.
+  - Verified with `pnpm astro check` and `pnpm test --workers=1`.
+- Files changed
+  - `.env.example`
+  - `.github/workflows/event-reminders.yml`
+  - `src/lib/event-notifications.ts`
+  - `src/middleware.ts`
+  - `src/pages/api/cron/event-reminders.ts`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - For timezone-specific schedules, run cron hourly in UTC and enforce the business timezone/hour in the API handler to stay correct across DST changes.
+    - Notification dedupe is safest as a per-user/per-event lookup in `NotificationLog` before sending.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - New API route files under `src/pages/api/...` need correct relative imports to `src/lib/...`; wrong pathing fails `astro check` immediately.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Reminder endpoint is intentionally public in middleware but locked down with `CRON_SECRET`; scheduler integration relies on repository secrets `APP_BASE_URL` and `CRON_SECRET`.
 ---

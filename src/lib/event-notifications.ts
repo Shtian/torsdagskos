@@ -1,4 +1,4 @@
-import { db, NotificationLog, Users } from 'astro:db';
+import { db, Events, NotificationLog, Users, and, eq, gte } from 'astro:db';
 import { sendEmail } from './email';
 
 interface NewEventNotificationInput {
@@ -23,11 +23,20 @@ interface EventUpdateNotificationInput {
   updated: EventSnapshot;
 }
 
+interface ReminderNotificationInput {
+  now?: Date;
+}
+
 interface NotificationSummary {
   totalUsers: number;
   sent: number;
   failed: number;
   skipped: number;
+}
+
+interface ReminderNotificationSummary extends NotificationSummary {
+  eventsConsidered: number;
+  eventsTargeted: number;
 }
 
 function escapeHtml(value: string): string {
@@ -92,6 +101,50 @@ function buildNewEventEmailContent(input: NewEventNotificationInput): {
         <li><strong>Title:</strong> ${safeTitle}</li>
         <li><strong>Date &amp; time:</strong> ${formattedDate} (Europe/Oslo)</li>
         <li><strong>Location:</strong> ${safeLocation}</li>
+      </ul>
+      <p><strong>Description:</strong></p>
+      <p>${safeDescriptionHtml}</p>
+    `,
+  };
+}
+
+function buildReminderEmailContent(event: {
+  title: string;
+  description: string;
+  dateTime: Date;
+  location: string;
+  mapLink: string | null;
+}): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const formattedDate = formatEventDate(event.dateTime);
+  const safeTitle = escapeHtml(event.title);
+  const safeLocation = escapeHtml(event.location);
+  const safeDescription = event.description.trim() || 'No description provided.';
+  const safeDescriptionHtml = escapeHtml(safeDescription);
+  const safeMapLink = event.mapLink ? escapeHtml(event.mapLink) : null;
+
+  return {
+    subject: `Reminder: ${event.title} is tomorrow`,
+    text: [
+      'Reminder: You have an event tomorrow.',
+      '',
+      `Title: ${event.title}`,
+      `Date & time: ${formattedDate} (Europe/Oslo)`,
+      `Location: ${event.location}`,
+      `Description: ${safeDescription}`,
+      event.mapLink ? `Map link: ${event.mapLink}` : 'Map link: (not provided)',
+    ].join('\n'),
+    html: `
+      <h2>Torsdagskos Reminder</h2>
+      <p>Your event is happening tomorrow:</p>
+      <ul>
+        <li><strong>Title:</strong> ${safeTitle}</li>
+        <li><strong>Date &amp; time:</strong> ${formattedDate} (Europe/Oslo)</li>
+        <li><strong>Location:</strong> ${safeLocation}</li>
+        ${safeMapLink ? `<li><strong>Map link:</strong> <a href="${safeMapLink}">${safeMapLink}</a></li>` : '<li><strong>Map link:</strong> Not provided</li>'}
       </ul>
       <p><strong>Description:</strong></p>
       <p>${safeDescriptionHtml}</p>
@@ -222,6 +275,38 @@ function buildEventUpdateEmailContent(input: EventUpdateNotificationInput): {
   };
 }
 
+function getOsloDateKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Oslo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function getTomorrowOsloDateKey(now: Date): string {
+  const nowParts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Oslo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+
+  const year = Number(nowParts.find((part) => part.type === 'year')?.value || '0');
+  const month = Number(nowParts.find((part) => part.type === 'month')?.value || '1');
+  const day = Number(nowParts.find((part) => part.type === 'day')?.value || '1');
+
+  const osloTodayAsUtcMidnight = new Date(Date.UTC(year, month - 1, day));
+  osloTodayAsUtcMidnight.setUTCDate(osloTodayAsUtcMidnight.getUTCDate() + 1);
+
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(osloTodayAsUtcMidnight);
+}
+
 export async function sendNewEventNotifications(
   input: NewEventNotificationInput
 ): Promise<NotificationSummary> {
@@ -319,5 +404,114 @@ export async function sendEventUpdateNotifications(
     sent,
     failed,
     skipped,
+  };
+}
+
+export async function sendEventReminderNotifications(
+  input: ReminderNotificationInput = {}
+): Promise<ReminderNotificationSummary> {
+  const now = input.now || new Date();
+  const tomorrowOsloDateKey = getTomorrowOsloDateKey(now);
+
+  const users = await db.select().from(Users);
+  if (users.length === 0) {
+    return {
+      totalUsers: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+      eventsConsidered: 0,
+      eventsTargeted: 0,
+    };
+  }
+
+  const upcomingEvents = await db
+    .select()
+    .from(Events)
+    .where(gte(Events.dateTime, now));
+
+  const targetEvents = upcomingEvents.filter(
+    (event) => getOsloDateKey(new Date(event.dateTime)) === tomorrowOsloDateKey
+  );
+
+  if (targetEvents.length === 0) {
+    return {
+      totalUsers: users.length,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+      eventsConsidered: upcomingEvents.length,
+      eventsTargeted: 0,
+    };
+  }
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const event of targetEvents) {
+    const emailContent = buildReminderEmailContent({
+      title: event.title,
+      description: event.description || '',
+      dateTime: new Date(event.dateTime),
+      location: event.location,
+      mapLink: event.mapLink || null,
+    });
+
+    const results = await Promise.all(
+      users.map(async (user) => {
+        const alreadySent = await db
+          .select({ id: NotificationLog.id })
+          .from(NotificationLog)
+          .where(
+            and(
+              eq(NotificationLog.userId, user.id),
+              eq(NotificationLog.eventId, event.id),
+              eq(NotificationLog.type, 'reminder'),
+              eq(NotificationLog.channel, 'email')
+            )
+          )
+          .get();
+
+        if (alreadySent) {
+          return {
+            success: false,
+            skipped: true,
+          };
+        }
+
+        const sendResult = await sendEmail({
+          to: user.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+          text: emailContent.text,
+        });
+
+        if (sendResult.success) {
+          await db.insert(NotificationLog).values({
+            userId: user.id,
+            eventId: event.id,
+            type: 'reminder',
+            channel: 'email',
+            sentAt: new Date(),
+          });
+        }
+
+        return sendResult;
+      })
+    );
+
+    sent += results.filter((result) => result.success).length;
+    failed += results.filter((result) => !result.success && !result.skipped).length;
+    skipped += results.filter((result) => result.skipped).length;
+  }
+
+  return {
+    totalUsers: users.length,
+    sent,
+    failed,
+    skipped,
+    eventsConsidered: upcomingEvents.length,
+    eventsTargeted: targetEvents.length,
   };
 }

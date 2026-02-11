@@ -222,8 +222,8 @@
         "Typecheck passes"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented reminder cron pipeline with hourly scheduled GitHub Actions workflow calling `/api/cron/event-reminders`, guarded by `CRON_SECRET` and an Oslo-time check so reminders only run at 18:00 Europe/Oslo. Added reminder email templates including title/date-time/location/map link, target selection for events happening tomorrow in Europe/Oslo, and duplicate-prevention by checking `NotificationLog` before sending. Successful reminder sends are logged with `type='reminder'` and `channel='email'`. Typecheck and Playwright tests pass."
     },
     {
       "id": "US-013",
