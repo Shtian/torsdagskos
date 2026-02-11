@@ -1,446 +1,310 @@
 {
   "project": "Torsdagskos",
-  "branchName": "ralph/private-meetup-mvp",
-  "description": "Private meetup coordination website for monthly recurring events among close friends",
+  "branchName": "ralph/shadcn-migration",
+  "description": "Full Astro app migration to shadcn components for a cohesive, high-quality interface using Astro + React islands.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Setup database schema for users, events, RSVPs, and invites",
-      "description": "As a developer, I need the core database tables to store all application data.",
+      "title": "Configure React islands and shadcn scaffold in Astro",
+      "description": "As a developer, I want shadcn and React islands configured so migrated components can be rendered consistently in Astro pages.",
       "acceptanceCriteria": [
-        "Create users table with fields: id, clerkUserId, email, name, createdAt",
-        "Create events table with fields: id, title, description, dateTime, location, mapLink (optional), createdAt, updatedAt",
-        "Create rsvps table with fields: id, userId, eventId, status (going|maybe|not_going), createdAt, updatedAt",
-        "Create invites table with fields: id, email, invitedBy, createdAt, acceptedAt (nullable)",
-        "Create notification_log table with fields: id, userId, eventId, type, channel, sentAt",
-        "Add appropriate indexes for common queries",
-        "Generate and run migrations successfully",
-        "Typecheck passes"
+        "Install and configure required React integration for Astro and shadcn dependencies",
+        "Add shadcn base scaffold files (component config and utility entry points)",
+        "Render one generated shadcn component from an Astro page via a React island",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "Database schema implemented with all tables, foreign keys, and indexes. Types generated successfully and typecheck passes."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-002",
-      "title": "Integrate Clerk authentication",
-      "description": "As a user, I need to authenticate via Clerk to access the application.",
+      "title": "Establish global light-theme tokens and baseline styles",
+      "description": "As a developer, I want one tokenized light-theme baseline so all migrated UI shares the same spacing, typography, and color system.",
       "acceptanceCriteria": [
-        "Install and configure @clerk/astro package",
-        "Create Clerk app and add API keys to environment variables",
-        "Setup Clerk middleware to protect all routes except auth pages",
-        "Create sign-in page at /sign-in",
-        "Create sign-up page at /sign-up",
-        "Sync Clerk user data to local users table on first sign-in",
-        "Redirect authenticated users from auth pages to homepage",
-        "Redirect unauthenticated users to /sign-in",
+        "Define global design tokens for color, spacing, radius, typography, and elevation in one source",
+        "Apply tokens in global styles without introducing dark-mode requirements",
+        "Confirm legacy conflicting base styles are removed or neutralized",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "Clerk authentication fully integrated. All routes protected except /sign-in and /sign-up. User sync to local database working. Requires Clerk API keys in .env file - see CLERK_SETUP.md for instructions."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Create design system tokens and base layout",
-      "description": "As a developer, I need a consistent design system following the PRD specifications.",
+      "title": "Select and integrate Google Fonts serif and sans-serif pair",
+      "description": "As a user, I want a polished serif and sans-serif font pairing so the interface feels cohesive and visually refined.",
       "acceptanceCriteria": [
-        "Define CSS custom properties for colors: beige/sand primary, #6B705C accent, light mode palette",
-        "Define typography tokens: serif for headings, sans-serif for body",
-        "Define spacing scale (4px base) and border radius tokens",
-        "Update Layout.astro with design tokens and mobile-first responsive structure",
-        "Add header with app name and user profile/sign out button",
-        "Test layout renders correctly on mobile and desktop viewports",
+        "Evaluate and select one serif and one sans-serif family from Google Fonts suitable for UI readability",
+        "Add selected font imports and wire them into global typography tokens/styles",
+        "Apply the pair consistently so headings and body text follow the defined typography roles",
+        "Document the chosen fonts and usage roles in project documentation",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Design system tokens defined in global.css with beige/sand primary palette, #6B705C accent color, typography tokens (serif for headings, sans-serif for body), spacing scale (4px base), and border radius tokens. Layout.astro updated with sticky header, app name, user profile with sign-out button, and mobile-first responsive design with breakpoints at 640px and 1024px. Typecheck passes. Browser verification performed via HTML inspection."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-004",
-      "title": "Create events list page (homepage)",
-      "description": "As a user, I want to see all upcoming and past events on the homepage.",
+      "title": "Add core form primitives with shadcn",
+      "description": "As a developer, I want standard form primitives available so form UIs can be migrated without custom one-off controls.",
       "acceptanceCriteria": [
-        "Update index.astro to fetch and display events from database",
-        "Show upcoming events section first, sorted by date ascending",
-        "Show past events section below, sorted by date descending (most recent first)",
-        "Each event card shows: title, date/time, location, RSVP count summary",
-        "Link each event card to event detail page (/events/[id])",
-        "Show empty state message when no events exist",
-        "Format dates in Europe/Oslo timezone",
+        "Generate and wire shadcn Button, Input, Label, Textarea, and Select components",
+        "Export primitives through a consistent local UI component path",
+        "Replace at least one existing form control usage with the new primitives",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": "Events list homepage implemented with upcoming/past sections, RSVP counts, responsive grid layout, and Europe/Oslo timezone formatting. Typecheck passes. Browser verification confirmed authentication redirect works correctly."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Create event detail page",
-      "description": "As a user, I want to view full event details and RSVP status.",
+      "title": "Add surface and feedback primitives with shadcn",
+      "description": "As a developer, I want common display primitives so cards, badges, separators, and loading states are consistent across pages.",
       "acceptanceCriteria": [
-        "Create /events/[id].astro page",
-        "Display all event fields: title, description, date/time, location, map link (if present)",
-        "Show all users' RSVP statuses with names",
-        "Display aggregated RSVP counts (Going: X, Maybe: Y, Not Going: Z, No Response: W)",
-        "Show current user's RSVP status prominently",
-        "Format date/time in Europe/Oslo timezone with clear formatting",
-        "Make map link clickable if present",
-        "Return 404 if event not found",
+        "Generate and wire shadcn Card, Badge, Separator, and Skeleton components",
+        "Replace at least one existing display section with these primitives",
+        "No duplicate legacy primitive implementation remains for replaced elements",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": "Event detail page implemented with all event fields displayed, RSVP status lists grouped by status (Going/Maybe/Not Going), aggregated counts including No Response count, current user's RSVP status prominently shown, Europe/Oslo timezone formatting, clickable map links, and 404 handling. Typecheck passes. Authentication redirect verified."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Add RSVP functionality on event detail page",
-      "description": "As a user, I want to RSVP to events with Going/Maybe/Not Going options.",
+      "title": "Add interactive overlay primitives with shadcn",
+      "description": "As a developer, I want consistent overlay components so dialogs, menus, and tabs behave uniformly in migrated UI flows.",
       "acceptanceCriteria": [
-        "Add RSVP button group on event detail page: Going, Maybe, Not Going buttons",
-        "Highlight current user's selected RSVP status",
-        "Create server action to save RSVP (insert or update)",
-        "Only allow RSVP changes for upcoming events (past events read-only)",
-        "Update RSVP counts immediately after submission",
-        "Show success feedback after RSVP change",
+        "Generate and wire shadcn Dialog, DropdownMenu, and Tabs components",
+        "Integrate at least one dialog and one dropdown usage in existing UI",
+        "Keyboard interaction works for integrated dialog and menu usage",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 11,
-      "passes": true,
-      "notes": "RSVP functionality fully implemented with API endpoint, UI buttons, success feedback, and E2E tests. Note: Some E2E tests show flakiness in parallel execution due to test infrastructure issues, but functionality is verified and working."
+      "priority": 6,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Create event creation form",
-      "description": "As a user, I want to create new events.",
+      "title": "Migrate app shell layout (header, footer, wrappers)",
+      "description": "As a user, I want a consistent shell structure so every page shares cohesive top-level layout styling.",
       "acceptanceCriteria": [
-        "Create /events/new.astro page with event creation form",
-        "Form fields: title (required), description (textarea), date, time, location (required), map link (optional URL)",
-        "Add date/time picker inputs",
-        "Store date/time in Europe/Oslo timezone",
-        "Validate required fields before submission",
-        "Create server action to insert event into database",
-        "Redirect to event detail page after successful creation",
-        "Add 'Create Event' button on homepage header",
+        "Migrate shared page shell, header, footer, and layout wrappers to shadcn-based structure",
+        "All non-API routes render with updated shell without routing changes",
+        "Responsive behavior remains functional at mobile and desktop breakpoints",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 12,
-      "passes": true,
-      "notes": "Event creation form fully implemented with all required and optional fields. API endpoint handles event insertion with proper timezone handling. Fixed BigInt serialization issue. 11 E2E tests written and passing. Create Event button added to header. Typecheck passes."
+      "priority": 7,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Add duplicate event functionality",
-      "description": "As a user, I want to duplicate the most recent event to save time.",
+      "title": "Migrate homepage UI (src/pages/index.astro)",
+      "description": "As a user, I want the homepage to use shadcn components so the main entry experience matches the new design system.",
       "acceptanceCriteria": [
-        "Add 'Duplicate Last Event' button on homepage",
-        "Fetch most recent event (by createdAt)",
-        "Pre-fill creation form with: title, description, location, map link from last event",
-        "Leave date and time empty (user must set manually)",
-        "Show clear indicator that form is pre-filled from duplication",
-        "Disable button if no events exist yet",
+        "Migrate src/pages/index.astro to shadcn-based surface and interaction components",
+        "Current event listing behavior and links remain unchanged",
+        "Empty and populated states use shadcn-compatible patterns",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 13,
-      "passes": true,
-      "notes": "Duplicate event functionality fully implemented. Button on homepage fetches most recent event and pre-fills form. Banner indicates duplication. Date/time left empty for manual input. 8 E2E tests written and passing. Typecheck passes."
+      "priority": 8,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Create event edit page for upcoming events",
-      "description": "As a user, I want to edit upcoming events.",
+      "title": "Migrate access denied page UI (src/pages/access-denied.astro)",
+      "description": "As a user, I want the access denied page to match the rest of the interface so auth edge cases feel consistent.",
       "acceptanceCriteria": [
-        "Create /events/[id]/edit.astro page",
-        "Pre-fill form with existing event data",
-        "Only allow editing upcoming events (redirect if event is past)",
-        "Update event in database via server action",
-        "Update updatedAt timestamp on save",
-        "Redirect to event detail page after successful update",
-        "Add 'Edit Event' button on event detail page (only for upcoming events)",
+        "Migrate src/pages/access-denied.astro to shadcn-based components",
+        "Status messaging and navigation actions remain unchanged",
+        "Responsive layout remains functional on mobile and desktop",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 14,
-      "passes": true,
-      "notes": "Event edit flow implemented for upcoming events. Added /events/[id]/edit page with prefilled values, update API with updatedAt handling, upcoming-only edit access (page redirects for past events), and Edit Event button on detail page for upcoming events only. Added Playwright coverage in tests/event-edit.spec.ts."
+      "priority": 9,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Setup email provider and send new event notifications",
-      "description": "As a user, I want to receive email notifications when new events are created.",
+      "title": "Migrate sign-in page wrapper UI (src/pages/sign-in.astro)",
+      "description": "As a user, I want the sign-in page wrapper to use consistent layout and styling so authentication feels integrated with the app design.",
       "acceptanceCriteria": [
-        "Choose and configure email provider (Resend recommended for Astro)",
-        "Add email provider API key to environment variables",
-        "Create email template for new event notifications",
-        "Include event title, description, date/time, location in email",
-        "Send email to all users when event is created",
-        "Log sent notifications in notification_log table",
-        "Use friendly 'From' name in email",
-        "Typecheck passes"
+        "Migrate src/pages/sign-in.astro wrapper layout to shadcn-compatible patterns",
+        "Existing Clerk sign-in functionality and redirect behavior remain unchanged",
+        "Spacing, hierarchy, and feedback containers use shared tokenized styles",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 15,
-      "passes": true,
-      "notes": "Configured Resend-based email delivery for new event creation with environment variables (RESEND_API_KEY, EMAIL_FROM), added HTML/text new-event template containing title/description/date-time/location, sends to all users after event creation, and logs successful deliveries in NotificationLog as type='new_event' and channel='email'. Typecheck passes."
+      "priority": 10,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-011",
-      "title": "Send event update notifications",
-      "description": "As a user, I want to receive email notifications when events are updated.",
+      "title": "Migrate sign-up page wrapper UI (src/pages/sign-up.astro)",
+      "description": "As a user, I want the sign-up page wrapper to use consistent layout and styling so onboarding matches the new component system.",
       "acceptanceCriteria": [
-        "Create email template for event update notifications",
-        "Highlight what changed in the email (compare old vs new values)",
-        "Send email to all users when event is updated",
-        "Log sent notifications in notification_log table",
-        "Trigger automatically on event edit (no opt-out)",
-        "Typecheck passes"
+        "Migrate src/pages/sign-up.astro wrapper layout to shadcn-compatible patterns",
+        "Existing Clerk sign-up functionality and redirect behavior remain unchanged",
+        "Spacing, hierarchy, and feedback containers use shared tokenized styles",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 16,
-      "passes": true,
-      "notes": "Implemented event update email notifications triggered automatically from /api/events/update. Added change-diff email template comparing title, description, date/time, location, and map link (old vs new values), sends to all users, and logs successful sends in NotificationLog with type='event_update' and channel='email'. Notification sending is best-effort and does not block event updates. Typecheck passes."
+      "priority": 11,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-012",
-      "title": "Setup cron job for event reminders",
-      "description": "As a user, I want to receive reminder emails at 18:00 the day before events.",
+      "title": "Migrate new event page UI (src/pages/events/new.astro)",
+      "description": "As a user, I want event creation to use consistent form primitives so creating events feels cohesive and clear.",
       "acceptanceCriteria": [
-        "Create cron job/scheduled task that runs daily at 18:00 Europe/Oslo",
-        "Find all events with dateTime = tomorrow (in Europe/Oslo timezone)",
-        "Send reminder email to all users for each upcoming event",
-        "Create email template for reminders",
-        "Include event title, date/time, location, and map link if present",
-        "Log sent notifications in notification_log table",
-        "Prevent duplicate reminders (check notification_log before sending)",
-        "Typecheck passes"
+        "Migrate src/pages/events/new.astro form UI to shadcn form and feedback primitives",
+        "Validation, disabled, and loading states use shadcn-compatible patterns",
+        "Event creation submission behavior remains unchanged",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 17,
-      "passes": true,
-      "notes": "Implemented reminder cron pipeline with hourly scheduled GitHub Actions workflow calling `/api/cron/event-reminders`, guarded by `CRON_SECRET` and an Oslo-time check so reminders only run at 18:00 Europe/Oslo. Added reminder email templates including title/date-time/location/map link, target selection for events happening tomorrow in Europe/Oslo, and duplicate-prevention by checking `NotificationLog` before sending. Successful reminder sends are logged with `type='reminder'` and `channel='email'`. Typecheck and Playwright tests pass."
+      "priority": 12,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-013",
-      "title": "Create settings page with browser notification opt-in",
-      "description": "As a user, I want to enable browser push notifications.",
+      "title": "Migrate edit event page UI (src/pages/events/[id]/edit.astro)",
+      "description": "As a user, I want event editing to use the same component patterns so update flows feel consistent with event creation.",
       "acceptanceCriteria": [
-        "Create /settings.astro page",
-        "Add browser notification permission request button",
-        "Show current permission status (granted/denied/default)",
-        "Request notification permission on button click",
-        "Store notification preference in user table",
-        "Add 'Settings' link in header navigation",
-        "Show success/error feedback after permission change",
+        "Migrate src/pages/events/[id]/edit.astro form UI to shadcn form and feedback primitives",
+        "Validation, disabled, and loading states use shadcn-compatible patterns",
+        "Event update submission behavior remains unchanged",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 18,
-      "passes": true,
-      "notes": "Settings page implemented with browser notification permission flow. Added /settings UI with permission status and feedback, persisted preference in Users.browserNotificationsEnabled via /api/settings/notifications, added Settings link in header, and covered behavior with Playwright E2E tests in tests/settings.spec.ts. Typecheck passes and Playwright suite passes in stable mode (--workers=1)."
+      "priority": 13,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-014",
-      "title": "Implement browser push notifications via service worker",
-      "description": "As a user, I want to receive browser push notifications for events.",
+      "title": "Migrate event detail page UI (src/pages/events/[id].astro)",
+      "description": "As a user, I want event details and RSVP controls to use consistent components so reading and interacting with event information is cohesive.",
       "acceptanceCriteria": [
-        "Create service worker for handling push notifications",
-        "Register service worker on app load",
-        "Store push subscription in user table when granted",
-        "Send browser push notification when new event created (to opted-in users)",
-        "Send browser push notification when event updated (to opted-in users)",
-        "Include event reminder in push notification (at 18:00 day before)",
-        "Handle notification click to open event detail page",
-        "Test notifications work on supported browsers",
-        "Typecheck passes"
+        "Migrate src/pages/events/[id].astro to shadcn surface and interaction primitives",
+        "Current event data rendering and RSVP actions remain unchanged",
+        "State indicators and action feedback use shadcn-compatible patterns",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 19,
-      "passes": true,
-      "notes": "Implemented Web Push support with service worker handling (`/service-worker.js`) and click-through navigation to event detail links. Added automatic service worker registration for authenticated app loads in Layout, persisted push subscriptions in Users via `/api/settings/push-subscription`, and extended notification delivery to send push events (best-effort, deduplicated in NotificationLog with channel='push') for new events, event updates, and reminders. Added VAPID environment configuration in `.env.example`, made the service worker route public in middleware, and added Playwright coverage in `tests/push-notifications.spec.ts` for service worker availability plus push subscription store/clear behavior. Typecheck passes; Playwright suite passes in stable mode (`pnpm test --workers=1`)."
+      "priority": 14,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-015",
-      "title": "Create user RSVP history view",
-      "description": "As a user, I want to view my personal RSVP history.",
+      "title": "Migrate history page UI (src/pages/history.astro)",
+      "description": "As a user, I want the history page to use the same design primitives so browsing past events feels consistent.",
       "acceptanceCriteria": [
-        "Create /history.astro page",
-        "Show all events current user has RSVPd to, sorted by event date descending",
-        "Display event title, date, location, and user's RSVP status",
-        "Link each event to event detail page",
-        "Include both upcoming and past events",
-        "Add 'My History' link in header navigation",
-        "Show empty state if user has no RSVP history",
+        "Migrate src/pages/history.astro to shadcn list and surface patterns",
+        "Current historical data rendering behavior remains unchanged",
+        "Empty and populated states are visually consistent with the new system",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 20,
-      "passes": true,
-      "notes": "Implemented `/history` page showing the authenticated user's RSVPs across upcoming and past events, sorted by event date descending. Added status badges (Going/Maybe/Not Going), event metadata (title/date/location), and links to event detail pages. Added header navigation link (`My History`) in layout. Added Playwright coverage in `tests/history.spec.ts` for navigation, sorted filtering to current user, event links, and empty state. Typecheck passes and full Playwright suite passes with `pnpm test --workers=1`."
+      "priority": 15,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-016",
-      "title": "Create invite-only access page for unauthenticated users",
-      "description": "As a visitor, I should see a minimal access message if not authenticated.",
+      "title": "Migrate settings page UI (src/pages/settings.astro)",
+      "description": "As a user, I want account and notification settings to use the same design primitives so preferences management matches the rest of the app.",
       "acceptanceCriteria": [
-        "Create custom access denied page",
-        "Show message: 'This is an invite-only application'",
-        "Include link to sign-in page",
-        "Style page with design system tokens",
-        "Display when unauthenticated user tries to access protected route",
+        "Migrate src/pages/settings.astro to shadcn-based form and surface primitives",
+        "Notification and preferences controls maintain existing behavior",
+        "No API contract changes are introduced",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 21,
-      "passes": true,
-      "notes": "Implemented custom invite-only access page at `/access-denied` with the exact required message, sign-in link, and design-token-based styling. Updated Clerk middleware to redirect unauthenticated protected-route requests to `/access-denied` (including attempted path in `from` query). Added Playwright coverage in `tests/auth.spec.ts` and `tests/smoke.spec.ts` for redirect behavior, invite-only message rendering, and sign-in link navigation. Typecheck passes and Playwright suite passes with `pnpm test --workers=1`."
+      "priority": 16,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-017",
-      "title": "Polish mobile-first responsive design",
-      "description": "As a user, I want the app to work seamlessly on mobile devices.",
+      "title": "Translate user-facing interface text to Norwegian",
+      "description": "As a Norwegian-speaking user, I want all user-facing UI text in Norwegian so the application feels natural and consistent.",
       "acceptanceCriteria": [
-        "Test all pages on mobile viewport (320px-428px width)",
-        "Ensure touch targets are at least 44x44px",
-        "Fix any layout overflow or horizontal scroll issues",
-        "Optimize form inputs for mobile (proper input types, zoom prevention)",
-        "Test event cards, navigation, and forms on mobile",
-        "Ensure readability with appropriate font sizes",
-        "Test on tablet viewport (768px-1024px)",
+        "Translate all user-facing strings in non-API pages (src/pages/index.astro, src/pages/access-denied.astro, src/pages/sign-in.astro, src/pages/sign-up.astro, src/pages/events/new.astro, src/pages/events/[id]/edit.astro, src/pages/events/[id].astro, src/pages/history.astro, src/pages/settings.astro)",
+        "Preserve existing route paths, API payloads, and backend logic without introducing localization-related contract changes",
+        "Ensure labels, buttons, helper text, validation messages, and empty states are consistently translated to Norwegian",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
       ],
-      "priority": 22,
-      "passes": true,
-      "notes": "Polished mobile-first responsive behavior across shared layout and event forms/details. Header actions now adapt cleanly to 320px-428px screens with 44x44 touch targets, global overflow safeguards were added, and toast placement is mobile-safe. Added Playwright E2E coverage in tests/responsive.spec.ts for mobile and tablet viewports (touch targets, no horizontal scroll, form input usability). Typecheck passes. Playwright passes in stable mode (pnpm test --workers=1)."
+      "priority": 17,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-018",
-      "title": "Add final polish and accessibility improvements",
-      "description": "As a user, I want the app to be accessible and polished.",
+      "title": "Remove deprecated legacy UI assets",
+      "description": "As a developer, I want obsolete legacy UI artifacts removed so the codebase has one clear component system.",
       "acceptanceCriteria": [
-        "Add loading states for all async operations",
-        "Add error handling and user-friendly error messages",
-        "Ensure all interactive elements have proper focus states",
-        "Add aria-labels where needed for screen readers",
-        "Test keyboard navigation on all pages",
-        "Add page titles and meta descriptions",
-        "Verify color contrast meets WCAG AA standards",
-        "Remove any console.log or debug code",
+        "Remove deprecated custom UI component files fully replaced by shadcn equivalents",
+        "Remove unused legacy CSS rules/utilities tied to removed components",
+        "No duplicate implementation remains for migrated primitives",
         "Typecheck passes",
-        "Write Playwright E2E tests to verify functionality"
+        "Tests pass"
       ],
-      "priority": 23,
-      "passes": true,
-      "notes": "Added final accessibility and UX polish across shared layout and async interactions: global keyboard-visible focus treatment, skip link, per-page titles and meta descriptions, improved high-contrast token values, and user-friendly loading/error feedback for create/edit/RSVP/settings flows. Removed client-side debug logging from updated UI scripts. Added Playwright coverage in `tests/accessibility-polish.spec.ts` for metadata, keyboard navigation/focus visibility, async loading+error feedback, and WCAG AA contrast checks. Typecheck passes. Full Playwright suite passes in stable mode with `pnpm test --workers=1`."
+      "priority": 18,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-019",
-      "title": "Setup Playwright testing infrastructure with Clerk authentication",
-      "description": "As a developer, I need Playwright configured with Clerk authentication support for E2E testing.",
+      "title": "Document migration completion and usage guidelines",
+      "description": "As a maintainer, I want migration documentation and completion tracking so future work follows the new UI system consistently.",
       "acceptanceCriteria": [
-        "Install @playwright/test and @clerk/testing packages",
-        "Configure Playwright with projects for Chromium, Firefox, and WebKit",
-        "Create playwright.config.ts with proper environment variable handling",
-        "Implement global-setup.ts with clerkSetup() for testing token generation",
-        "Configure serial execution for test descriptions as per Clerk requirements",
-        "Create test fixtures for authenticated user sessions",
-        "Add test helpers and utilities (e.g., database seeding for tests)",
-        "Add npm scripts for test execution (test, test:headed, test:debug)",
-        "Create basic smoke test to verify setup works",
-        "Document test setup in TESTING.md",
-        "Typecheck passes"
+        "Add migration checklist mapping old UI patterns to shadcn replacements with completion status",
+        "Update README with shadcn usage conventions for this codebase",
+        "List any approved exceptions and follow-up items explicitly",
+        "Typecheck passes",
+        "Tests pass"
       ],
-      "priority": 6,
-      "passes": true,
-      "notes": "Playwright testing infrastructure fully configured with Clerk authentication support. Includes test fixtures, database helpers, smoke tests, and comprehensive documentation in TESTING.md. Test scripts added to package.json: test, test:headed, test:debug, test:ui. Typecheck passes."
-    },
-    {
-      "id": "US-020",
-      "title": "Write E2E tests for authentication flows",
-      "description": "As a developer, I need E2E tests for user authentication to ensure sign-in/sign-up works correctly.",
-      "acceptanceCriteria": [
-        "Write test for successful sign-in with valid credentials",
-        "Write test for sign-in with invalid credentials",
-        "Write test for sign-up flow with new user",
-        "Write test for sign-out functionality",
-        "Write test for redirect to sign-in when accessing protected routes unauthenticated",
-        "Write test for redirect to homepage when authenticated user visits auth pages",
-        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
-        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
-        "All tests pass successfully",
-        "Typecheck passes"
-      ],
-      "priority": 7,
-      "passes": true,
-      "notes": "Authentication E2E tests implemented for Clerk hosted UI. Tests cover unauthenticated access redirects, sign-in/sign-up page accessibility, and protected route access control. Manual test scenarios documented for flows requiring interaction with Clerk's hosted authentication UI (routing='path'). All automated tests pass (12 passed, 21 documented as manual). Typecheck passes."
-    },
-    {
-      "id": "US-021",
-      "title": "Write E2E tests for events list and detail pages",
-      "description": "As a developer, I need E2E tests for event viewing functionality.",
-      "acceptanceCriteria": [
-        "Write test for viewing events list (upcoming and past sections)",
-        "Write test for empty state when no events exist",
-        "Write test for clicking event card to navigate to detail page",
-        "Write test for viewing event detail page with all fields displayed",
-        "Write test for viewing RSVP counts and user lists on detail page",
-        "Write test for back navigation from detail to list",
-        "Write test for 404 handling with non-existent event ID",
-        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
-        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
-        "Add test isolation with independent test data",
-        "All tests pass successfully",
-        "Typecheck passes"
-      ],
-      "priority": 8,
-      "passes": true,
-      "notes": "Comprehensive E2E tests implemented for events list and detail pages. Created 13 tests covering all acceptance criteria including viewing events, empty states, navigation, RSVP counts, and 404 handling. Implemented API-based test helpers for database seeding to avoid Astro virtual module issues in Playwright context. All tests pass successfully. Typecheck passes."
-    },
-    {
-      "id": "US-022",
-      "title": "Write E2E tests for RSVP functionality",
-      "description": "As a developer, I need E2E tests for RSVP functionality to ensure users can respond to events.",
-      "acceptanceCriteria": [
-        "Write test for RSVPing 'Going' to an event",
-        "Write test for changing RSVP status (Going → Maybe → Not Going)",
-        "Write test for RSVP counts updating after status change",
-        "Write test for current user's RSVP status displaying prominently",
-        "Write test for RSVP appearing in correct status list",
-        "Write test that past events cannot be RSVPd to",
-        "Use user-facing locators (roles, test IDs) instead of CSS selectors",
-        "Implement web-first assertions (toBeVisible, toHaveText, etc.)",
-        "Add test isolation with independent test data",
-        "All tests pass successfully",
-        "Typecheck passes"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": "E2E tests implemented as part of US-006. Created tests/rsvp.spec.ts with 4 comprehensive tests covering all acceptance criteria: changing RSVP status, RSVP counts updating, current user status display, and past events being read-only. Tests use user-facing locators with exact matching and web-first assertions. Test isolation achieved via unique test data. Some parallel execution flakiness noted but functionality is verified."
-    },
-    {
-      "id": "US-023",
-      "title": "Configure CI/CD pipeline for Playwright tests",
-      "description": "As a developer, I need Playwright tests running in CI to catch regressions automatically.",
-      "acceptanceCriteria": [
-        "Configure GitHub Actions workflow for Playwright tests",
-        "Install Playwright browsers in CI environment",
-        "Run tests on pull requests and main branch pushes",
-        "Configure test sharding for faster CI runs (if needed)",
-        "Enable trace collection on test failures",
-        "Upload test artifacts (traces, screenshots, videos) on failure",
-        "Configure parallel test execution across browser projects",
-        "Add status badge to README showing test status",
-        "Ensure tests pass consistently in CI environment",
-        "Document CI setup and troubleshooting in TESTING.md"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "CI/CD pipeline fully configured with GitHub Actions. Tests run on PR and main pushes with 3-way sharding for performance. All acceptance criteria met: browser installation, test sharding, trace collection on failure, artifact uploads, parallel execution across browsers, status badge in README, and comprehensive CI documentation in TESTING.md. Tests passing 28/29 with one known flaky test."
+      "priority": 19,
+      "passes": false,
+      "notes": ""
     }
   ]
 }

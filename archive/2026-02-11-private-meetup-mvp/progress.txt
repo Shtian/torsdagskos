@@ -1,0 +1,766 @@
+# Codebase Patterns
+
+## Database (Astro DB)
+- Use `defineTable`, `column` from 'astro:db' for schema definitions
+- Foreign keys: `column.number({ references: () => TableName.columns.id })`
+- Optional fields: `{ optional: true }` parameter
+- Composite unique indexes prevent duplicate entries (e.g., userEventIdx for one RSVP per user/event)
+- Running `pnpm astro check` generates types in `.astro/integrations/astro_db/db.d.ts`
+
+## TypeScript
+- Strict mode enabled - always ensure typecheck passes with `pnpm astro check`
+
+## Styling & Design System
+- CSS custom properties defined in `src/styles/global.css` for design tokens
+- Mobile-first approach: Base styles for mobile, use `@media (min-width: ...)` for larger screens
+- Breakpoints: 640px (tablet), 1024px (desktop)
+- Clerk components: Style the child button element, not the Clerk wrapper component
+
+## Authentication (Clerk)
+- Auth context available via `Astro.locals.auth()` in pages
+- User data fetched with `clerkClient(Astro).users.getUser(userId)`
+- Layout component can conditionally render UI based on auth status
+- Unauthenticated protected-route requests are redirected by middleware to `/access-denied` (with optional `from` query) instead of directly to Clerk
+
+## Testing (Playwright)
+- Use `test` and `expect` from `./fixtures` for custom fixtures support
+- Clerk hosted UI (routing="path"): Cannot automate full auth flow; focus tests on redirects and access control
+- Clerk testing environment: Map `PUBLIC_CLERK_PUBLISHABLE_KEY` to `CLERK_PUBLISHABLE_KEY` in global-setup.ts
+- Test fixtures: Extend `test as base` from '@playwright/test' for custom setup
+- **Database helpers**: Cannot import `astro:db` in Playwright - create API endpoints in `/api/test/` for seeding
+- API-based helpers: Use `tests/helpers/api-helpers.ts` with fetch to seed test data via API
+- Test data isolation: Use `uniqueEmail()` helper with timestamps to avoid conflicts across runs
+- Web-first assertions: Use `await expect(locator).toBeVisible()` instead of timeouts
+- User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
+- Avoid adding `aria-label` on controls that already have visible text unless needed; it overrides accessible names and can break existing `getByRole({ name })` assertions
+- Project test IDs: Playwright is configured with `testIdAttribute: 'data-test-id'`; prefer `getByTestId(...)` over raw attribute locators
+- Responsive UI tests should set viewport sizes explicitly and assert `document.documentElement.scrollWidth <= window.innerWidth` to catch horizontal overflow regressions
+- Touch-target accessibility checks can be automated by asserting `locator.boundingBox()` width/height are both at least `44` pixels
+- Specific locators: Use `page.getByRole('heading', { name: /pattern/i, level: 2 })` to avoid multiple matches
+- Authenticated API calls: Use `page.evaluate(() => fetch('/api/...'))` to include auth cookies
+- Browser notification E2E tests: Override `window.Notification` with `page.addInitScript()` before navigation to make permission flows deterministic (`granted`/`denied`)
+- Serial execution: Use `test.describe.serial()` for Clerk auth tests (per documentation)
+- ES modules in config: Use `import.meta.url` with `fileURLToPath` and `dirname` instead of `require.resolve()`
+- Test artifacts: Always add `playwright-report/` and `test-results/` to .gitignore
+- Full-suite stability: Because multiple specs call shared DB cleanup endpoints, `pnpm test` can be flaky in parallel; use `pnpm test --workers=1` for stable verification unless test isolation is improved
+
+## Database Operations
+- User sync race conditions: Wrap inserts in try-catch to handle UNIQUE constraint errors gracefully
+- Unique constraints: Check for existing records before insert to avoid conflicts
+- BigInt serialization: `lastInsertRowid` returns BigInt - convert with `Number()` before JSON.stringify()
+
+## API Endpoints
+- Event creation: POST /api/events/create with { title, description, dateTime, location, mapLink }
+- Return pattern: Always convert BigInt IDs to Number before JSON serialization
+- Notification pattern: Keep event creation successful even if email delivery fails; run notifications as best-effort and log only successful sends in `NotificationLog`
+- Event update pattern: POST `/api/events/update` should mirror create-route best-effort notifications and return a `notifications` summary payload
+- Cron reminder pattern: expose `/api/cron/event-reminders` as a public route gated by `CRON_SECRET`; schedule hourly and enforce `18:00 Europe/Oslo` inside the handler for DST-safe daily execution
+- Push subscription persistence: use dedicated endpoint `POST /api/settings/push-subscription` storing serialized JSON in `Users.pushSubscription`; keep boolean preference in sync via `Users.browserNotificationsEnabled`
+- Service worker routing: add `/service-worker.js` to public Clerk middleware routes so worker fetch/update is never blocked by auth redirects
+
+---
+
+## 2026-02-09 21:22 - US-001
+
+**Implemented: ** Database schema setup for the Torsdagskos application
+
+**Files changed: **
+- db/config.ts - Defined all five database tables with proper schema
+- package.json - Added typecheck dependencies
+- pnpm-lock.yaml - Updated lockfile
+
+**Tables created: **
+1. Users (id, clerkUserId, email, name, createdAt)
+2. Events (id, title, description, dateTime, location, mapLink, createdAt, updatedAt)
+3. Rsvps (id, userId, eventId, status, createdAt, updatedAt)
+4. Invites (id, email, invitedBy, createdAt, acceptedAt)
+5. NotificationLog (id, userId, eventId, type, channel, sentAt)
+
+**Learnings for future iterations: **
+- Astro DB uses `defineTable`, `column` from 'astro:db' for schema definition
+- Primary keys use `column.number({ primaryKey: true })`
+- Foreign keys use `references: () => TableName.columns.id`
+- Optional fields use `{ optional: true }`
+- Indexes are defined in the `indexes` object within table definition
+- Unique indexes use `{ unique: true }` in the index config
+- Running `pnpm astro check` generates types in `.astro/integrations/astro_db/db.d.ts`
+- Composite unique indexes like userEventIdx prevent duplicate RSVPs per user/event
+- Date columns use `column.date()` with optional `default: new Date()`
+- The `astro db verify` command requires a remote database URL, but local dev works without it
+
+---
+## 2026-02-09 21:58 - US-002
+
+**Implemented:** Clerk authentication integration for the Torsdagskos application
+
+**Files changed:**
+- astro.config.mjs - Added Clerk integration, Node adapter, and enabled SSR
+- src/middleware.ts - Created middleware to protect all routes except auth pages
+- src/pages/sign-in.astro - Created sign-in page with Clerk SignIn component
+- src/pages/sign-up.astro - Created sign-up page with Clerk SignUp component
+- src/pages/index.astro - Added user sync logic on first load
+- src/pages/api/sync-user.ts - Created API endpoint for user sync (currently unused but available)
+- src/layouts/Layout.astro - Added title prop support
+- db/config.ts - Fixed duplicate index names (emailIdx → inviteEmailIdx, userIdIdx → notificationUserIdIdx, eventIdIdx → notificationEventIdIdx)
+- .env.example - Created template for Clerk environment variables
+- CLERK_SETUP.md - Created documentation for Clerk setup
+- package.json - Added @clerk/astro and @astrojs/node dependencies
+
+**Verification:**
+- Homepage (/) redirects to Clerk sign-in (307 redirect to accounts.dev/sign-in)
+- Sign-in page (/sign-in) accessible and returns 200 OK
+- Sign-up page (/sign-up) accessible and returns 200 OK
+- Typecheck passes with 0 errors
+
+**Learnings for future iterations:**
+- Clerk for Astro uses `@clerk/astro` package with SSR required (output: 'server')
+- Middleware uses `clerkMiddleware` from `@clerk/astro/server` with `createRouteMatcher` for public routes
+- To get user data: use `clerkClient(context).users.getUser(userId)` - the auth object only provides userId
+- Clerk components must be imported with aliases to avoid naming conflicts: `import { SignIn as ClerkSignIn } from '@clerk/astro/components'`
+- All routes are protected by default; use `createRouteMatcher` to define public routes
+- Auth object available via `Astro.locals.auth()` in pages and `context.locals.auth()` in API routes
+- Database index names must be unique across all tables (not just within a table)
+- User sync pattern: Check if user exists in local DB by clerkUserId, insert if not found
+- Clerk requires PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY environment variables
+- Clerk automatically handles redirect flow: unauthenticated users → Clerk hosted pages → back to app after auth
+- Clerk uses its own hosted UI by default (routing="path" sends users to accounts.dev subdomain)
+
+---
+
+## 2026-02-09 22:10 - US-003
+
+**Implemented:** Design system tokens and base layout with responsive header
+
+**Files changed:**
+- src/styles/global.css - Added comprehensive design system tokens (colors, typography, spacing, border radius, shadows)
+- src/layouts/Layout.astro - Added sticky header with app name, user profile, sign-out button, and responsive layout structure
+
+**Design system features:**
+- Color palette: Beige/sand primary (#faf9f7 to #b3a186), accent color #6B705C
+- Typography: Serif for headings (Georgia), sans-serif for body (system fonts)
+- Spacing scale: 4px base (--space-1 to --space-16)
+- Border radius: sm to full (--radius-sm to --radius-full)
+- Responsive breakpoints: 640px (tablet), 1024px (desktop)
+- Mobile-first approach with progressive enhancement
+
+**Header features:**
+- Sticky positioning with shadow
+- App name as clickable link to homepage
+- User profile section with name (hidden on mobile) and sign-out button
+- Responsive padding and font sizes
+- Only shows user profile when authenticated
+
+**Learnings for future iterations:**
+- CSS custom properties enable consistent design tokens across the app
+- Clerk's SignOutButton component wraps a button element - style the button, not the wrapper
+- Layout component receives auth context via Astro.locals.auth() - can conditionally show UI
+- Mobile-first CSS: Base styles for mobile, then @media (min-width:...) for larger screens
+- The sign-in/sign-up pages also use the Layout, so header appears there (without user profile)
+- User name display: Use user.firstName as fallback before email for better UX
+- Sticky header: Use position: sticky with top: 0 and z-index: 100 for persistent header
+- HTML inspection via curl can verify layout when browser automation isn't available
+
+---
+## 2026-02-09 22:17 - US-004
+
+**Implemented:** Events list page (homepage) with upcoming and past events sections
+
+**Files changed:**
+- src/pages/index.astro - Replaced placeholder content with events list functionality
+- db/seed.ts - Added sample events for testing (upcoming and past events)
+
+**Features:**
+- Fetches all events from database with RSVP count aggregation
+- Separates events into upcoming (future) and past sections
+- Upcoming events sorted by date ascending (soonest first)
+- Past events sorted by date descending (most recent first)
+- Event cards show: title, formatted date/time, location, RSVP counts (going/maybe/not going)
+- Links to individual event detail pages (/events/[id])
+- Empty state message when no events exist
+- Date/time formatting in Europe/Oslo timezone using Intl.DateTimeFormat
+- Responsive grid layout: 1 column (mobile), 2 columns (tablet 640px+), 3 columns (desktop 1024px+)
+- Hover effects and visual polish using design system tokens
+- Past events displayed with reduced opacity for visual distinction
+
+**Learnings for future iterations:**
+- Date comparison for upcoming/past: Use `new Date(event.dateTime) >= now` to filter
+- Intl.DateTimeFormat with timeZone: 'Europe/Oslo' ensures correct timezone formatting
+- RSVP aggregation pattern: Fetch rsvps per event, then filter by status to count
+- Grid layout: Use CSS Grid with responsive breakpoints for mobile-first design
+- Event cards as links: Use `<a>` with `display: block` for entire card clickability
+- Hover state: `transform: translateY(-2px)` creates subtle lift effect on hover
+- Empty state: Use dashed border to distinguish from regular content containers
+- TypeScript: Date objects from Astro DB can be passed directly to `new Date()`
+- Database seed data: Helpful to create sample data for testing UI without manual entry
+- Browser verification: Clerk authentication redirects work correctly (307 to sign-in page)
+- Clerk test mode: Use test email test+clerk_test@example.com  and read the password from TEST_PASSWORD in .env in this folder. Verification code 424242 if needed.
+
+---
+## 2026-02-09 22:31 - US-005
+
+**Implemented:** Event detail page with full event information and RSVP status display
+
+**Files changed:**
+- src/pages/events/[id].astro - Created event detail page with dynamic routing
+- prd.json - Updated US-005 to passes: true
+
+**Features:**
+- Dynamic route parameter handling (/events/[id])
+- Displays all event fields: title, description, date/time, location, map link
+- Current user's RSVP status prominently displayed at top of RSVP section
+- Aggregated RSVP counts in grid layout: Going, Maybe, Not Going, No Response
+- Lists of users grouped by RSVP status (Going/Maybe/Not Going)
+- Date/time formatting in Europe/Oslo timezone with full format (weekday, date, time)
+- Clickable map link opens in new tab if present
+- Back link to homepage for navigation
+- Proper 404 handling (returns 404 status code if event not found)
+- Responsive design: single column on mobile, two-column grid on tablet/desktop
+- Visual distinction for current user's status with colored badges
+- No Response count calculated as total users minus users who RSVPd
+
+**Learnings for future iterations:**
+- Dynamic routes in Astro: Use [param].astro syntax, access via Astro.params
+- Astro 404 handling: Return `new Response(null, { status: 404 })` instead of redirect
+- RSVP aggregation pattern: Fetch all RSVPs, then filter by status to group and count
+- No Response calculation: Total users - users with RSVPs (not stored in DB)
+- User joins: Fetch RSVPs first, then Promise.all to join with user data
+- Current user lookup: Query Users table by clerkUserId to get local database ID
+- Date formatting: Use long format for detail pages (weekday + full date + time)
+- Optional fields: Check `event.mapLink` before rendering the link element
+- Layout hierarchy: event-header (back link, title, date) → event-content (grid) → details + RSVPs
+- Status badges: Consistent color coding (green=going, orange=maybe, red=not going, gray=no response)
+- Grid responsiveness: 2 columns for RSVP counts on mobile, 4 columns on desktop
+- Authentication flow: Protected routes correctly redirect to Clerk sign-in via middleware
+---
+
+## 2026-02-10 08:28 - US-019
+
+**Implemented:** Playwright testing infrastructure with Clerk authentication support
+
+**Files changed:**
+- playwright.config.ts - Created Playwright configuration with Chromium, Firefox, and WebKit projects
+- tests/global-setup.ts - Implemented Clerk setup for test token generation
+- tests/fixtures.ts - Created custom Playwright fixtures for authenticated sessions
+- tests/helpers/db-helpers.ts - Added database utilities for test data seeding and cleanup
+- tests/smoke.spec.ts - Created basic smoke tests to verify setup
+- TESTING.md - Comprehensive testing documentation with examples and best practices
+- package.json - Added test scripts: test, test:headed, test:debug, test:ui
+- pnpm-lock.yaml - Added @playwright/test, @clerk/testing, and dotenv dependencies
+
+**Features:**
+- Playwright configured with 3 browser projects (Chromium, Firefox, WebKit)
+- Global setup with clerkSetup() for generating Clerk test tokens
+- Test fixtures extending base Playwright test for easy auth integration
+- Database helpers for creating test users, events, RSVPs, and cleanup
+- Smoke tests verifying unauthenticated redirects and auth page accessibility
+- Comprehensive documentation covering test running, writing, and troubleshooting
+- Environment variable handling via dotenv for test configuration
+- Web server auto-start configuration for running tests against dev server
+
+**Learnings for future iterations:**
+- Playwright global setup: Use `globalSetup: require.resolve('./tests/global-setup')` in config
+- Clerk testing setup: Call `clerkSetup()` in global-setup.ts to configure test tokens
+- Test fixtures: Extend `test as base` from '@playwright/test' for custom fixtures
+- Database helpers: Import from 'astro:db' works in test files when using proper Astro context
+- Test scripts: playwright test supports --headed, --debug, and --ui flags for different modes
+- Serial execution: Use `test.describe.serial()` for tests that must run sequentially
+- Environment variables: Load .env with dotenv.config() in playwright.config.ts
+- Web-first assertions: Use `await expect(locator).toBeVisible()` instead of manual waits
+- User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
+- Test documentation: Include examples, best practices, and troubleshooting in TESTING.md
+- Package manager: Playwright browsers installed with `pnpm exec playwright install`
+- Configuration: webServer.reuseExistingServer prevents conflicts when dev server already running
+
+---
+
+
+## 2026-02-10 08:58 - US-020
+
+**Implemented:** E2E tests for authentication flows with Clerk
+
+**Files changed:**
+- tests/auth.spec.ts - Created authentication E2E tests (4 automated + 7 documented manual tests)
+- playwright.config.ts - Fixed ES module syntax (replaced require.resolve with import.meta.url)
+- tests/global-setup.ts - Added environment variable mapping for Clerk (PUBLIC_CLERK_PUBLISHABLE_KEY → CLERK_PUBLISHABLE_KEY)
+- .gitignore - Added playwright-report/ and test-results/ to ignore test artifacts
+
+**Tests implemented:**
+1. ✅ Homepage redirects unauthenticated users to Clerk sign-in
+2. ✅ Sign-in page is accessible and displays Clerk UI
+3. ✅ Sign-up page is accessible and displays Clerk UI
+4. ✅ Protected event routes redirect to sign-in
+5. 📋 Manual tests documented for flows requiring Clerk hosted UI interaction (sign-in, sign-out, etc.)
+
+**Test results:**
+- 12 passed (4 tests × 3 browsers: Chromium, Firefox, WebKit)
+- 21 skipped (7 manual tests × 3 browsers, with clear documentation)
+- Typecheck passes with 0 errors
+
+**Learnings for future iterations:**
+- Clerk's `routing="path"` (hosted UI) cannot be fully automated with `clerk.signIn()` helper
+- The `@clerk/testing` helper requires embeddable components or specific setup not compatible with hosted auth
+- ES modules in playwright.config.ts: Use `import.meta.url` and `fileURLToPath` instead of `require.resolve()`
+- Environment variable mapping: Clerk testing expects `CLERK_PUBLISHABLE_KEY` but Astro uses `PUBLIC_CLERK_PUBLISHABLE_KEY`
+- Focus automated tests on verifiable behaviors: redirects, access control, UI presence
+- Document manual test scenarios for flows requiring external UI interaction
+- Use `page.getByRole('heading', { name: /pattern/i })` for more specific locators vs broad text matches
+- Always add test artifacts (playwright-report/, test-results/) to .gitignore
+- Test checklist in comments helps guide manual testing when automation isn't possible
+- User-facing locators with `getByRole()` are more resilient to UI changes than CSS selectors
+
+---
+
+## 2026-02-10 20:52 - US-021
+
+**Implemented:** E2E tests for events list and detail pages
+
+**Files changed:**
+- tests/events.spec.ts - Created comprehensive E2E tests (13 tests total)
+- tests/helpers/api-helpers.ts - Created API-based test helpers for database operations
+- src/pages/api/test/seed.ts - Created test data seeding API endpoint
+- src/pages/api/test/current-user.ts - Created API endpoint to get authenticated user
+- src/middleware.ts - Added /api/test routes to public routes for test access
+- src/pages/index.astro - Added try-catch to handle race conditions in user sync
+
+**Tests implemented:**
+1. Events list displays upcoming and past events in separate sections
+2. Empty state when no events exist
+3. Clicking event card navigates to detail page
+4. RSVP counts display correctly for each event
+5. Event detail page displays all fields correctly
+6. RSVP counts and user lists displayed correctly on detail page
+7. No response count calculation
+8. Back navigation from detail to list
+9. 404 handling for non-existent events
+10. Current user RSVP status prominently displayed
+11. No response status for user without RSVP
+
+**Learnings for future iterations:**
+- Playwright tests cannot import Astro virtual modules (astro:db) directly - use API endpoints instead
+- Test data isolation: Use unique emails with timestamps to avoid conflicts across test runs
+- Database cleanup strategy: Don't delete users to avoid race conditions with authenticated user sync
+- API-based helpers: Create test API endpoints for database operations instead of direct imports
+- User-facing locators: Specify heading level (level: 2) when multiple headings match same text
+- Race condition handling: Wrap database inserts in try-catch to handle UNIQUE constraint errors gracefully
+- Authenticated user in tests: Use page.evaluate() with fetch() to make API calls from browser context (includes auth cookies)
+- Test data persistence: Users persist across test runs when not deleted in cleanup - affects No Response counts
+- Current user handling: Check if user exists before creating to avoid duplicate key errors
+- Empty state verification: Check for absence of elements rather than presence of empty state message
+- Web-first assertions: Use toBeVisible(), filter({ hasText }), and getByRole() for robust tests
+- Test isolation: Use uniqueEmail() helper with Date.now() and random strings for unique test data
+- Middleware configuration: Add test API routes to public routes list for unauthenticated access during setup
+
+---
+
+## 2026-02-10 21:45 - US-006
+
+**Implemented:** RSVP functionality on event detail page
+
+**Files changed:**
+- src/pages/api/rsvp.ts - Created API endpoint for RSVP submission (insert/update)
+- src/pages/events/[id].astro - Added RSVP button group, past event detection, client-side JavaScript
+- tests/rsvp.spec.ts - Created 4 E2E tests for RSVP functionality
+- prd.json - Updated US-006 to passes: true
+
+**Features:**
+- RSVP button group (Going, Maybe, Not Going) with active state highlighting
+- Server-side API endpoint handles insert or update of RSVPs
+- Past events show read-only notice instead of RSVP buttons
+- Success message displays before page reload to show updated counts
+- Client-side JavaScript disables buttons during submission to prevent double-clicks
+- Button styling changes based on current user's RSVP status
+
+**Learnings for future iterations:**
+- API endpoint pattern: POST /api/rsvp with { eventId, status } body
+- Client-side script pattern: Disable all buttons during submission, show success message, reload after 1s
+- Past event detection: Compare `new Date(event.dateTime) >= now` in server-side code
+- RSVP status in HTML: Use data attributes (data-status, data-event-id) for JavaScript access
+- Active button styling: Apply classes dynamically based on `currentUserRsvp?.status` match
+- Page reload pattern: Use `window.location.reload()` after successful API call to show fresh data
+- Success message animation: Fixed position with slideIn CSS animation for user feedback
+- Button class logic: Use template literals with ternary for conditional classes
+- E2E test pattern: Use `exact: true` with getByRole to avoid matching "Going" in "Not Going"
+- E2E test waits: Use `page.waitForResponse()` to ensure API calls complete before assertions
+- Test user setup: Ensure authenticated user exists in database before RSVP tests
+- Test isolation issue: Parallel execution can cause race conditions with user creation - consider serial execution or better user management
+- Playwright exact matching: Always use `{ exact: true }` when button names overlap (e.g., "Going" vs "Not Going")
+
+---
+
+## 2026-02-10 21:27 - US-023
+
+**Implemented:** CI/CD pipeline for Playwright tests with GitHub Actions
+
+**Files changed:**
+- .github/workflows/playwright.yml - Created GitHub Actions workflow with test sharding and artifact uploads
+- README.md - Added Playwright test status badge
+- TESTING.md - Added comprehensive CI configuration, troubleshooting, and setup documentation
+- prd.json - Updated US-023 to passes: true
+
+**Features:**
+- GitHub Actions workflow triggers on PR and main branch pushes
+- Test sharding across 3 parallel shards for faster CI execution
+- Playwright browsers automatically installed in CI environment
+- Trace collection enabled on test failures (configured in playwright.config.ts)
+- Artifact uploads for test reports, traces, screenshots, and videos
+- Merge reports job combines all shard reports into single HTML report
+- Status badge in README shows current test status
+- Parallel execution across all three browser projects (Chromium, Firefox, WebKit)
+- Comprehensive CI documentation in TESTING.md with setup instructions and troubleshooting
+
+**Learnings for future iterations:**
+- GitHub Actions workflow: Use matrix strategy for test sharding with shardIndex/shardTotal
+- pnpm in CI: Use pnpm/action-setup@v4 for package manager setup and caching
+- Playwright browser installation: Use `pnpm exec playwright install --with-deps` for CI
+- Test sharding: Pass `--shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}` to playwright test command
+- Artifact uploads: Use `actions/upload-artifact@v4` with `if: ${{ !cancelled() }}` to upload even on failure
+- Report merging: Use `playwright merge-reports` to combine shard reports into single HTML report
+- GitHub secrets: Configure Clerk API keys and test credentials as repository secrets for CI
+- Status badge: Use GitHub Actions badge URL pattern: `https://github.com/USER/REPO/actions/workflows/FILE.yml/badge.svg`
+- fail-fast: false: Allows all shards to complete even if one fails, useful for debugging
+- Artifact retention: Set retention-days to balance storage costs and debugging needs
+- Test timeout: Set job timeout-minutes to prevent runaway tests in CI
+- Frozen lockfile: Use `--frozen-lockfile` flag in CI to ensure reproducible builds
+- Download artifacts pattern: Use `pattern: playwright-report-*` to download all shard reports
+- CI environment variables: Tests use same environment variables as local development
+- Test consistency: 28/29 tests passing - one known flaky test doesn't block CI setup
+
+---
+
+## 2026-02-10 21:50 - US-007
+
+**Implemented:** Event creation form with full functionality
+
+**Files changed:**
+- src/pages/events/new.astro - Created event creation form page
+- src/pages/api/events/create.ts - Created API endpoint for event insertion
+- src/layouts/Layout.astro - Added 'Create Event' button in header
+- tests/event-creation.spec.ts - Created 11 E2E tests for event creation
+- tests/helpers/api-helpers.ts - Added uniqueEmail() helper function
+
+**Features:**
+- Event creation form with all required and optional fields
+- Form fields: title (required), description (textarea), date/time pickers, location (required), map link (optional URL)
+- HTML5 form validation for required fields
+- Client-side JavaScript for form submission via fetch API
+- API endpoint handles authentication, validation, and database insertion
+- Date/time stored as ISO string, interpreted in Europe/Oslo timezone
+- Success message with animation before redirect
+- Redirect to event detail page after successful creation
+- 'Create Event' button in header navigation for easy access
+- Error handling with user-friendly messages
+- Responsive design with mobile-first approach
+
+**Learnings for future iterations:**
+- BigInt serialization: Astro DB's `lastInsertRowid` returns BigInt, which cannot be serialized to JSON directly
+  - Solution: Convert to Number with `Number(result.lastInsertRowid)` before returning in API response
+- Form submission pattern: Use `e.preventDefault()` and fetch API for async submissions with loading states
+- Date/time handling: HTML date/time inputs provide values in YYYY-MM-DD and HH:mm format
+  - Combine with `${date}T${time}:00` and convert to ISO string for database storage
+- Client-side script pattern: Disable buttons during submission, show success message, then redirect after delay
+- Test isolation: Use `uniqueEmail()` helper to generate unique test data and avoid conflicts
+- E2E test patterns for forms:
+  - Use `page.locator('#id')` for form inputs when labels contain extra elements (like required asterisks)
+  - Wait for success message visibility before checking for redirect
+  - Use regex patterns for URL matching: `page.waitForURL(/\/events\/\d+$/)`
+- Error message testing: Use `page.route()` to mock API failures and verify error handling
+- Test flakiness: Parallel test execution can cause race conditions with database operations
+  - Event creation tests pass consistently when run in isolation (11/11 passed)
+  - Minor flakiness in full suite (36/38 tests pass) due to parallel execution
+
+---
+
+
+## 2026-02-11 09:33 - US-008
+
+**Implemented:** Duplicate event functionality
+
+**Files changed:**
+- src/pages/index.astro - Added duplicate button with conditional rendering, fetches most recent event by createdAt
+- src/pages/events/new.astro - Added URL parameter handling for pre-filling form, added duplicate banner indicator
+- tests/duplicate-event.spec.ts - Created 8 E2E tests for duplicate functionality
+- tests/helpers/api-helpers.ts - Added createEvent() helper for authenticated event creation in tests
+- prd.json - Updated US-008 to passes: true
+
+**Features:**
+- "Duplicate Last Event" button on homepage (enabled when events exist, disabled when no events)
+- Button fetches most recent event by createdAt timestamp
+- Pre-fills form with title, description, location, and map link from last event
+- Date and time intentionally left empty for manual user input
+- Blue banner on form page clearly indicates duplication source
+- URL query parameters pass data between pages
+- Responsive design: button stacks on mobile, inline on desktop
+- 8 comprehensive E2E tests covering all scenarios
+
+**Learnings for future iterations:**
+- URL query parameters: Use `Astro.url.searchParams.get()` to read parameters in Astro pages
+- URL encoding: Use `encodeURIComponent()` when passing data via query parameters to handle special characters
+- Conditional rendering: Can show different elements (link vs disabled button) based on data availability
+- Form pre-fill pattern: Set `value` attribute on inputs, use closing tags for textarea content
+- Banner design: Use distinct colors and borders to draw attention to important notices
+- Playwright page.evaluate(): Must use `window.location.origin` for absolute URLs in fetch calls
+- Test data isolation: Navigate to page with `await page.goto('/')` before using page.evaluate() to ensure proper context
+- Flexible test selectors: Use `.locator('button:has-text("X"), a:has-text("X")').first()` to handle multiple element types
+- Event sorting: Use array spread and sort() to find most recent: `[...allEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]`
+- Mobile-first CSS: Stack button below title on mobile with `flex-direction: column`, inline on desktop with default row direction
+- Test helper pattern: Create reusable helpers like createEvent() that use page.evaluate() for authenticated operations
+- Query parameter passing: Can pass multiple parameters in URL, remembering to handle optional fields (empty strings)
+---
+## 2026-02-11 12:12 CET - US-009
+- Implemented upcoming-event edit flow with `/events/[id]/edit.astro`, including pre-filled title/description/date/time/location/map link values, past-event redirect, and save/cancel UX
+- Added update server action at `/api/events/update` with validation, upcoming-only enforcement, DB update, and `updatedAt` timestamp refresh
+- Added an `Edit Event` action on `src/pages/events/[id].astro` visible only for upcoming events
+- Wrote Playwright E2E coverage for edit functionality and restrictions
+- Files changed:
+  - `src/pages/events/[id]/edit.astro`
+  - `src/pages/api/events/update.ts`
+  - `src/pages/events/[id].astro`
+  - `tests/event-edit.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - For Astro pages that need runtime values in client scripts, `define:vars` makes scripts inline; keep script code plain JavaScript (no TS assertions/annotations)
+    - Europe/Oslo prefill for `<input type="date">` and `<input type="time">` is reliable using `Intl.DateTimeFormat(...).formatToParts()` and reconstructing `YYYY-MM-DD` / `HH:mm`
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full Playwright runs can fail in parallel due to shared test cleanup; `pnpm test --workers=1` produced stable results
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Event updates are performed through `/api/events/update`; detail-page edit visibility is controlled by `isUpcoming` in `src/pages/events/[id].astro`
+---
+## 2026-02-11 12:19 - US-010
+- What was implemented
+  - Added Resend email provider integration for new event notifications with configurable env vars (`RESEND_API_KEY`, optional `EMAIL_FROM`, optional `RESEND_API_URL`).
+  - Added reusable notification service that builds HTML/text email content with event title, description, date/time (Europe/Oslo), and location.
+  - Integrated notification dispatch into `POST /api/events/create` so all users are notified when a new event is created.
+  - Added notification logging for successful email sends in `NotificationLog` with `type: new_event` and `channel: email`.
+  - Updated `.env.example` with email provider setup values.
+- Files changed
+  - `.env.example`
+  - `src/lib/email.ts`
+  - `src/lib/event-notifications.ts`
+  - `src/pages/api/events/create.ts`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Keep side effects (email notifications) as best-effort in API routes so core writes (event creation) stay reliable.
+    - Centralize email provider calls in `src/lib` and keep route handlers focused on orchestration.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full Playwright suite is still flaky with parallel workers in this codebase; `pnpm test --workers=1` gives stable results.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - New-event notifications are currently triggered only from `src/pages/api/events/create.ts` and the returned payload now includes a `notifications` summary.
+---
+## 2026-02-11 12:25 - US-011
+- What was implemented
+- Added event update notification flow triggered from `POST /api/events/update` using a new `sendEventUpdateNotifications` helper
+- Added update-email templates (HTML + text) that compare previous and updated event values and highlight field-level changes
+- Compared and highlighted changes for title, description, date/time (Europe/Oslo formatting), location, and map link
+- Logged successful update notifications in `NotificationLog` with `type: 'event_update'` and `channel: 'email'`
+- Kept notifications best-effort so event updates succeed even if notification delivery fails
+- Added `notifications` summary in update API response (`totalUsers`, `sent`, `failed`, `skipped`)
+- Files changed
+- `src/lib/event-notifications.ts`
+- `src/pages/api/events/update.ts`
+- `prd.json`
+- `progress.txt`
+- **Learnings for future iterations**
+- Patterns discovered (e.g., "this codebase uses X for Y")
+- Normalize text (`trim`) and nullable fields before computing email diffs to avoid false-positive "changed" values
+- Reuse one notification summary contract across create/update flows to keep API integrations predictable
+- Gotchas encountered (e.g., "don't forget to update Z when changing W")
+- The suite can fail in parallel due to shared test cleanup; stable verification is `pnpm test --workers=1`
+- Useful context (e.g., "the evaluation panel is in component X")
+- `src/pages/api/events/update.ts` now follows the same best-effort notification orchestration pattern as `src/pages/api/events/create.ts`
+---
+## 2026-02-11 12:32 CET - US-012
+- What was implemented
+  - Added reminder notification flow in `src/lib/event-notifications.ts` that targets events happening tomorrow in Europe/Oslo and sends reminder emails with title, description, date/time, location, and map link.
+  - Added duplicate-prevention by checking `NotificationLog` for existing `type='reminder'` + `channel='email'` entries per user/event before sending.
+  - Added cron API endpoint `GET /api/cron/event-reminders` with `CRON_SECRET` auth and an Oslo-time guard that only executes at 18:00 Europe/Oslo.
+  - Added scheduled GitHub Actions workflow `.github/workflows/event-reminders.yml` to call the cron endpoint hourly.
+  - Added cron route to public middleware matcher and documented `CRON_SECRET` in `.env.example`.
+  - Verified with `pnpm astro check` and `pnpm test --workers=1`.
+- Files changed
+  - `.env.example`
+  - `.github/workflows/event-reminders.yml`
+  - `src/lib/event-notifications.ts`
+  - `src/middleware.ts`
+  - `src/pages/api/cron/event-reminders.ts`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - For timezone-specific schedules, run cron hourly in UTC and enforce the business timezone/hour in the API handler to stay correct across DST changes.
+    - Notification dedupe is safest as a per-user/per-event lookup in `NotificationLog` before sending.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - New API route files under `src/pages/api/...` need correct relative imports to `src/lib/...`; wrong pathing fails `astro check` immediately.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Reminder endpoint is intentionally public in middleware but locked down with `CRON_SECRET`; scheduler integration relies on repository secrets `APP_BASE_URL` and `CRON_SECRET`.
+---
+## 2026-02-11 13:27 CET - US-013
+- What was implemented
+- Added `/settings` page with browser notification controls: current permission status, request-permission action, saved preference display, and success/error feedback messaging.
+- Added `POST /api/settings/notifications` to persist browser notification preference for the authenticated user.
+- Extended `Users` schema with `browserNotificationsEnabled` (default `false`) and linked settings UI updates to this field.
+- Added `Settings` link to authenticated header navigation.
+- Added Playwright E2E coverage for settings navigation, permission status display, permission request behavior, feedback UI, and DB persistence.
+- Files changed
+- `db/config.ts`
+- `src/layouts/Layout.astro`
+- `src/pages/settings.astro`
+- `src/pages/api/settings/notifications.ts`
+- `tests/settings.spec.ts`
+- `tests/AGENTS.md`
+- `prd.json`
+- `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Browser notification flows are easiest to test by mocking `window.Notification` using `page.addInitScript()` before navigation, then asserting persisted state via `/api/test/current-user`.
+    - Persisting user-facing settings should happen in dedicated API endpoints (here `/api/settings/notifications`) and not in page-render handlers.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `pnpm test` can still fail in parallel from existing shared-data race conditions; stable full-suite verification remains `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Settings preference is stored in `Users.browserNotificationsEnabled`; UI status is displayed on `src/pages/settings.astro` and updated through `/api/settings/notifications`.
+---
+## 2026-02-11 14:38 CET - US-014
+- What was implemented
+  - Added browser push infrastructure with `public/service-worker.js` handling `push` and `notificationclick` events, including navigation to event detail URLs from notification clicks.
+  - Registered the service worker on authenticated app loads in `src/layouts/Layout.astro`.
+  - Extended `Users` schema with `pushSubscription` and `pushSubscriptionUpdatedAt` fields and created `POST /api/settings/push-subscription` to store/clear push subscriptions.
+  - Integrated push delivery into `sendNewEventNotifications`, `sendEventUpdateNotifications`, and `sendEventReminderNotifications` using `web-push`, with best-effort behavior and dedupe logging in `NotificationLog` (`channel: 'push'`).
+  - Added VAPID config docs (`PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) and made `/service-worker.js` public in Clerk middleware.
+  - Added Playwright E2E coverage in `tests/push-notifications.spec.ts` for service worker availability and push subscription persistence.
+- Files changed
+  - `.env.example`
+  - `db/config.ts`
+  - `package.json`
+  - `pnpm-lock.yaml`
+  - `public/service-worker.js`
+  - `src/layouts/Layout.astro`
+  - `src/lib/event-notifications.ts`
+  - `src/lib/push-notifications.ts`
+  - `src/middleware.ts`
+  - `src/pages/api/settings/push-subscription.ts`
+  - `src/pages/settings.astro`
+  - `src/types/web-push.d.ts`
+  - `tests/AGENTS.md`
+  - `tests/push-notifications.spec.ts`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Keep push delivery best-effort like email delivery: event create/update/reminder should not fail when push send fails.
+    - Dedupe push notifications by `(userId, eventId, type, channel='push')` in `NotificationLog` to avoid duplicate sends.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Service worker registration request timing is non-deterministic in browser tests; verify worker availability via `page.request.get('/service-worker.js')` for stable assertions.
+    - Parallel Playwright (`pnpm test`) remains flaky from pre-existing shared-data races; stable full-suite verification is `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Push subscription persistence is now centralized in `/api/settings/push-subscription`, and notification dispatch integration lives in `src/lib/event-notifications.ts`.
+---
+## 2026-02-11 14:47 CET - US-015
+- What was implemented
+  - Added `src/pages/history.astro` to show the authenticated user's RSVP history across upcoming and past events.
+  - History entries render event title, Europe/Oslo date-time, location, and the current user's RSVP status badge.
+  - Entries are sorted by event date descending and link directly to `/events/[id]`.
+  - Added empty-state UI when the current user has no RSVPs.
+  - Added `My History` navigation link in the authenticated header.
+  - Added Playwright E2E coverage in `tests/history.spec.ts` for navigation, sorting/filtering, event links, status display, and empty state.
+  - Updated Playwright config to use `data-test-id` as the canonical test id attribute and switched new tests to `getByTestId(...)`.
+- Files changed
+  - `playwright.config.ts`
+  - `src/layouts/Layout.astro`
+  - `src/pages/history.astro`
+  - `tests/history.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - For Astro pages that depend on an authenticated local user row, include a fallback sync path from Clerk user data to avoid relying on homepage sync.
+    - Prefer `getByTestId(...)` now that Playwright is configured with `testIdAttribute: 'data-test-id'`.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `Rsvps.status` is typed as `string` from Astro DB in page templates; helper formatters should accept `string` unless explicit narrowing is added.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - History page data is currently assembled by loading user RSVPs first and joining events in `src/pages/history.astro`.
+---
+## 2026-02-11 14:53 CET - US-016
+- What was implemented
+  - Added a custom invite-only access page at `/access-denied` with the required message, sign-in CTA, and design-token-aligned styling.
+  - Updated Clerk middleware so unauthenticated requests to protected routes redirect to `/access-denied` and preserve the attempted path in a `from` query parameter.
+  - Updated unauthenticated Playwright coverage to verify redirect behavior, invite-only content, and sign-in link navigation flow.
+  - Verified with `pnpm astro check` and `pnpm test --workers=1`.
+- Files changed
+  - `src/middleware.ts`
+  - `src/pages/access-denied.astro`
+  - `tests/auth.spec.ts`
+  - `tests/smoke.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Keep unauthenticated UX deterministic by routing protected requests to a local explanatory page (`/access-denied`) and letting users explicitly continue to `/sign-in`.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - When auth redirect behavior changes, update both `tests/auth.spec.ts` and `tests/smoke.spec.ts` to keep baseline unauthenticated checks aligned.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Middleware now handles invite-only routing centrally in `src/middleware.ts`; the message UI lives in `src/pages/access-denied.astro`.
+---
+## 2026-02-11 15:22 CET - US-017
+- What was implemented
+  - Polished mobile-first responsive behavior in shared layout and event pages: header actions now adapt across 320px-428px widths without crowding, with explicit 44x44 minimum touch targets for primary controls.
+  - Added global responsive safeguards (`box-sizing`, media max-width handling, and horizontal overflow protection) and mobile-safe toast positioning to avoid clipped feedback messages.
+  - Added Playwright E2E coverage in `tests/responsive.spec.ts` validating mobile/tablet viewports, touch target sizing, no horizontal scroll, and form input mobile usability.
+  - Verified with `pnpm astro check` and `pnpm test --workers=1`.
+- Files changed
+  - `src/layouts/Layout.astro`
+  - `src/styles/global.css`
+  - `src/pages/events/new.astro`
+  - `src/pages/events/[id].astro`
+  - `src/pages/events/[id]/edit.astro`
+  - `tests/responsive.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Responsive regressions are easiest to guard by combining viewport-specific assertions with overflow checks (`documentElement.scrollWidth` vs `window.innerWidth`).
+    - Touch target accessibility can be enforced in Playwright with `locator.boundingBox()` assertions for minimum 44px dimensions.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full parallel Playwright runs remain flaky from shared test-data cleanup races; stable end-to-end verification is still `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Header navigation responsiveness is centralized in `src/layouts/Layout.astro`, while toast positioning behavior for event flows is controlled in event page scripts and shared `.toast-message` styles.
+---
+## 2026-02-11 15:38 CET - US-018
+- What was implemented
+  - Added final accessibility polish in shared layout: page-level meta description support and a keyboard-accessible skip link (`Skip to main content`).
+  - Added global focus-visible treatment in `src/styles/global.css` for interactive controls and improved text/status token contrast values to meet WCAG AA expectations.
+  - Improved async UX on event create/edit/detail and settings flows with explicit loading states (`Creating...`, `Saving...`, `Updating...`), inline `aria-live` feedback regions, and non-blocking toast/inline error messaging.
+  - Removed client-side debug logging and replaced `alert(...)` RSVP errors with user-friendly inline/toast feedback.
+  - Added comprehensive Playwright coverage in `tests/accessibility-polish.spec.ts` for metadata, keyboard focus/skip-link behavior, async loading+error feedback, and token contrast checks.
+- Files changed
+  - `src/layouts/Layout.astro`
+  - `src/styles/global.css`
+  - `src/pages/index.astro`
+  - `src/pages/events/new.astro`
+  - `src/pages/events/[id].astro`
+  - `src/pages/events/[id]/edit.astro`
+  - `src/pages/settings.astro`
+  - `src/pages/history.astro`
+  - `src/pages/sign-in.astro`
+  - `src/pages/sign-up.astro`
+  - `src/pages/access-denied.astro`
+  - `tests/accessibility-polish.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Centralizing focus-visible styles and metadata in `Layout`/global CSS reduces per-page accessibility drift and keeps keyboard behavior consistent.
+    - For async UI flows in Astro client scripts, pair button disabled states with `aria-busy` and an `aria-live` status region so both visual and assistive feedback stay in sync.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Adding `aria-label` to controls with visible text changes the accessible name and can break existing Playwright `getByRole({ name })` locators.
+    - Full `pnpm test` remains flaky in parallel due shared test-data races; stable full-suite verification is still `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - New accessibility regression coverage lives in `tests/accessibility-polish.spec.ts` and focuses on cross-page polish criteria (metadata, keyboard/focus, loading/error feedback, contrast).
+---
