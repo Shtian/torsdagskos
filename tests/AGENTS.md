@@ -24,4 +24,9 @@
   ```
 - This handles conditional rendering without brittle test failures
 
+### Browser Notification Testing
+- For deterministic browser notification tests, mock the `window.Notification` API via `page.addInitScript()` before `page.goto()`.
+- Control the simulated permission result (`granted`/`denied`) by updating a local `permissionState` in the injected mock.
+- To verify persisted user preference, fetch `/api/test/current-user` from `page.evaluate()` so auth cookies are included.
+
 Run: `pnpm test` or `pnpm test tests/<file>.spec.ts`

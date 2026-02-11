@@ -8,6 +8,7 @@ const Users = defineTable({
     clerkUserId: column.text({ unique: true }),
     email: column.text({ unique: true }),
     name: column.text(),
+    browserNotificationsEnabled: column.boolean({ default: false }),
     createdAt: column.date({ default: new Date() }),
   },
   indexes: {

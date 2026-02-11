@@ -241,8 +241,8 @@
         "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Settings page implemented with browser notification permission flow. Added /settings UI with permission status and feedback, persisted preference in Users.browserNotificationsEnabled via /api/settings/notifications, added Settings link in header, and covered behavior with Playwright E2E tests in tests/settings.spec.ts. Typecheck passes and Playwright suite passes in stable mode (--workers=1)."
     },
     {
       "id": "US-014",

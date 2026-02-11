@@ -33,6 +33,7 @@
 - User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
 - Specific locators: Use `page.getByRole('heading', { name: /pattern/i, level: 2 })` to avoid multiple matches
 - Authenticated API calls: Use `page.evaluate(() => fetch('/api/...'))` to include auth cookies
+- Browser notification E2E tests: Override `window.Notification` with `page.addInitScript()` before navigation to make permission flows deterministic (`granted`/`denied`)
 - Serial execution: Use `test.describe.serial()` for Clerk auth tests (per documentation)
 - ES modules in config: Use `import.meta.url` with `fileURLToPath` and `dirname` instead of `require.resolve()`
 - Test artifacts: Always add `playwright-report/` and `test-results/` to .gitignore
@@ -589,4 +590,29 @@
     - New API route files under `src/pages/api/...` need correct relative imports to `src/lib/...`; wrong pathing fails `astro check` immediately.
   - Useful context (e.g., "the evaluation panel is in component X")
     - Reminder endpoint is intentionally public in middleware but locked down with `CRON_SECRET`; scheduler integration relies on repository secrets `APP_BASE_URL` and `CRON_SECRET`.
+---
+## 2026-02-11 13:27 CET - US-013
+- What was implemented
+- Added `/settings` page with browser notification controls: current permission status, request-permission action, saved preference display, and success/error feedback messaging.
+- Added `POST /api/settings/notifications` to persist browser notification preference for the authenticated user.
+- Extended `Users` schema with `browserNotificationsEnabled` (default `false`) and linked settings UI updates to this field.
+- Added `Settings` link to authenticated header navigation.
+- Added Playwright E2E coverage for settings navigation, permission status display, permission request behavior, feedback UI, and DB persistence.
+- Files changed
+- `db/config.ts`
+- `src/layouts/Layout.astro`
+- `src/pages/settings.astro`
+- `src/pages/api/settings/notifications.ts`
+- `tests/settings.spec.ts`
+- `tests/AGENTS.md`
+- `prd.json`
+- `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Browser notification flows are easiest to test by mocking `window.Notification` using `page.addInitScript()` before navigation, then asserting persisted state via `/api/test/current-user`.
+    - Persisting user-facing settings should happen in dedicated API endpoints (here `/api/settings/notifications`) and not in page-render handlers.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `pnpm test` can still fail in parallel from existing shared-data race conditions; stable full-suite verification remains `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Settings preference is stored in `Users.browserNotificationsEnabled`; UI status is displayed on `src/pages/settings.astro` and updated through `/api/settings/notifications`.
 ---
