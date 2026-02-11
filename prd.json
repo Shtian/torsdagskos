@@ -204,8 +204,8 @@
         "Typecheck passes"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented event update email notifications triggered automatically from /api/events/update. Added change-diff email template comparing title, description, date/time, location, and map link (old vs new values), sends to all users, and logs successful sends in NotificationLog with type='event_update' and channel='email'. Notification sending is best-effort and does not block event updates. Typecheck passes."
     },
     {
       "id": "US-012",

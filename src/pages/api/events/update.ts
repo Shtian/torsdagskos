@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { db, Events, eq } from 'astro:db';
+import { sendEventUpdateNotifications } from '../../../lib/event-notifications';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -44,19 +45,46 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
+    const updatedEvent = {
+      title,
+      description: description || '',
+      dateTime: new Date(dateTime),
+      location,
+      mapLink: mapLink || null,
+    };
+
     await db
       .update(Events)
       .set({
-        title,
-        description: description || '',
-        dateTime: new Date(dateTime),
-        location,
-        mapLink: mapLink || null,
+        ...updatedEvent,
         updatedAt: new Date(),
       })
       .where(eq(Events.id, Number(eventId)));
 
-    return new Response(JSON.stringify({ success: true, eventId: Number(eventId) }), {
+    let notificationSummary = {
+      totalUsers: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+    };
+
+    try {
+      notificationSummary = await sendEventUpdateNotifications({
+        eventId: Number(eventId),
+        previous: {
+          title: existingEvent.title,
+          description: existingEvent.description || '',
+          dateTime: new Date(existingEvent.dateTime),
+          location: existingEvent.location,
+          mapLink: existingEvent.mapLink || null,
+        },
+        updated: updatedEvent,
+      });
+    } catch (notificationError) {
+      console.error('Error sending event update notifications:', notificationError);
+    }
+
+    return new Response(JSON.stringify({ success: true, eventId: Number(eventId), notifications: notificationSummary }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
