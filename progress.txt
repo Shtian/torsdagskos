@@ -1,5 +1,6 @@
 # Codebase Patterns
 - Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
+- For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -9,4 +10,14 @@
 - **Learnings for future iterations**
   - Astro React TSX components require `@types/react` and `@types/react-dom` in this repo for `pnpm astro check` to pass.
   - Existing test conventions and helper guidance in `tests/AGENTS.md` are accurate; new UI checks should follow `getByRole`/`getByTestId` patterns from there.
+---
+## 2026-02-11 16:42:43 CET - US-002
+- Established a single-source global light-theme baseline in `src/styles/global.css` by formalizing semantic tokens for color, spacing, radius, typography, and elevation, and adding shadcn-compatible semantic aliases (`--background`, `--foreground`, `--card`, etc.).
+- Applied token-driven baseline styles to root elements (`html`, `body`, headings, media, links) to remove hardcoded base defaults and ensure consistent styling behavior across pages.
+- Added Playwright coverage in `tests/theme-baseline.spec.ts` to validate token presence and computed baseline styles on an unauthenticated route.
+- Files changed: `src/styles/global.css`, `tests/theme-baseline.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`, `ralph.sh`.
+- **Learnings for future iterations**
+  - Keep core semantic aliases (`--background`, `--foreground`, `--primary`, `--ring`) defined alongside legacy `--color-*` tokens so older pages and shadcn primitives can coexist during migration.
+  - Theme baseline tests are more stable when they run as `@unauth` against `/access-denied` and assert computed styles instead of auth-dependent page content.
+  - Full suite reliability remains best with `pnpm test --workers=1`; auth-dependent specs can fail intermittently under competing state.
 ---

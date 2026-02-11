@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* Design System Tokens */
+/* Design System Tokens (single source of truth) */
 :root {
-  /* Colors - Beige/Sand Primary Palette */
+  /* Brand colors */
   --color-primary-50: #faf9f7;
   --color-primary-100: #f5f3ef;
   --color-primary-200: #ebe6dc;
@@ -10,12 +10,11 @@
   --color-primary-400: #c9b89a;
   --color-primary-500: #b3a186;
 
-  /* Accent Color */
-  --color-accent: #6B705C;
+  --color-accent: #6b705c;
   --color-accent-dark: #525548;
   --color-accent-light: #898e7a;
 
-  /* Semantic Colors */
+  /* Semantic colors used by existing pages */
   --color-background: var(--color-primary-50);
   --color-surface: #ffffff;
   --color-border: var(--color-primary-200);
@@ -23,45 +22,75 @@
   --color-text-secondary: #6b6b6b;
   --color-text-muted: #5f5f5f;
 
-  /* Status Colors */
+  /* Status colors */
   --color-success: #2f6a35;
   --color-warning: #8a5a1f;
   --color-error: #a52c2c;
 
+  /* shadcn-compatible semantic aliases */
+  --background: var(--color-background);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-primary-100);
+  --secondary-foreground: var(--color-accent-dark);
+  --muted: var(--color-primary-100);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-accent);
+  --accent-foreground: #ffffff;
+  --destructive: var(--color-error);
+  --destructive-foreground: #ffffff;
+  --ring: var(--color-accent-dark);
+  --input: var(--color-border);
+
   /* Typography */
-  --font-heading: 'Georgia', 'Times New Roman', serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  --font-heading: "Georgia", "Times New Roman", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
 
-  /* Spacing Scale (4px base) */
-  --space-1: 0.25rem;  /* 4px */
-  --space-2: 0.5rem;   /* 8px */
-  --space-3: 0.75rem;  /* 12px */
-  --space-4: 1rem;     /* 16px */
-  --space-5: 1.25rem;  /* 20px */
-  --space-6: 1.5rem;   /* 24px */
-  --space-8: 2rem;     /* 32px */
-  --space-10: 2.5rem;  /* 40px */
-  --space-12: 3rem;    /* 48px */
-  --space-16: 4rem;    /* 64px */
+  /* Spacing scale (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
 
-  /* Border Radius */
-  --radius-sm: 0.25rem;  /* 4px */
-  --radius-md: 0.5rem;   /* 8px */
-  --radius-lg: 0.75rem;  /* 12px */
-  --radius-xl: 1rem;     /* 16px */
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
   --radius-full: 9999px;
 
-  /* Shadows */
+  /* Elevation */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
-/* Base Styles */
+/* Baseline styles */
 html {
+  text-size-adjust: 100%;
   font-family: var(--font-body);
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+  font-size: 16px;
+  line-height: var(--line-height-normal);
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 * {
@@ -73,14 +102,27 @@ body {
   padding: 0;
   min-height: 100vh;
   overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
 }
 
-/* Headings use serif font */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: var(--line-height-tight);
   color: var(--color-accent-dark);
+  text-wrap: balance;
+}
+
+p {
+  color: var(--color-text-primary);
+}
+
+a {
+  color: inherit;
 }
 
 img,
@@ -88,6 +130,7 @@ svg,
 video,
 canvas {
   max-width: 100%;
+  height: auto;
 }
 
 .touch-target {
