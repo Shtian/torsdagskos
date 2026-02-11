@@ -73,7 +73,10 @@ const now = new Date();
 const isUpcoming = new Date(event.dateTime) >= now;
 ---
 
-<Layout title={event.title}>
+<Layout
+  title={`${event.title} - Torsdagskos`}
+  description={`View details and RSVP options for ${event.title} at ${event.location}.`}
+>
   <div class="mx-auto max-w-225 p-4 sm:p-6">
     <div class="mb-8">
       <a href="/" class="mb-4 inline-block text-[0.95rem] text-(--color-accent) no-underline transition-colors duration-200 hover:text-(--color-accent-dark)">&larr; Back to Events</a>
@@ -138,6 +141,7 @@ const isUpcoming = new Date(event.dateTime) >= now;
             </button>
           </div>
         )}
+        <p id="rsvp-feedback" class="mb-6 mt-0 min-h-6 text-(--color-text-secondary)" role="status" aria-live="polite"></p>
 
         {!isUpcoming && (
           <div data-test-id="past-event-notice" class="mb-6 rounded-md bg-(--color-border) p-4 text-center italic text-(--color-text-muted)">
@@ -228,6 +232,24 @@ const isUpcoming = new Date(event.dateTime) >= now;
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const rsvpButtons = document.querySelectorAll('[data-rsvp-button]');
+    const feedback = document.getElementById('rsvp-feedback');
+
+    function showMessage(text: string, type: 'success' | 'error') {
+      const message = document.createElement('div');
+      const baseClasses = 'toast-message fixed z-[1000] rounded-md px-6 py-4 text-white shadow-lg transition';
+      message.className = type === 'success'
+        ? `${baseClasses} bg-(--color-success)`
+        : `${baseClasses} bg-(--color-error)`;
+      message.setAttribute('data-test-id', type === 'success' ? 'rsvp-success-message' : 'rsvp-error-message');
+      message.setAttribute('role', type === 'success' ? 'status' : 'alert');
+      message.setAttribute('aria-live', type === 'success' ? 'polite' : 'assertive');
+      message.textContent = text;
+      document.body.appendChild(message);
+
+      setTimeout(() => {
+        message.remove();
+      }, 3000);
+    }
 
     rsvpButtons.forEach(button => {
       button.addEventListener('click', async (e) => {
@@ -238,7 +260,17 @@ const isUpcoming = new Date(event.dateTime) >= now;
         if (!status || !eventId) return;
 
         // Disable all buttons during submission
-        rsvpButtons.forEach(btn => (btn as HTMLButtonElement).disabled = true);
+        rsvpButtons.forEach(btn => {
+          const buttonElement = btn as HTMLButtonElement;
+          if (!buttonElement.dataset.originalText) {
+            buttonElement.dataset.originalText = buttonElement.textContent || '';
+          }
+          buttonElement.disabled = true;
+        });
+        target.textContent = 'Saving...';
+        if (feedback) {
+          feedback.textContent = 'Saving RSVP...';
+        }
 
         try {
           const response = await fetch('/api/rsvp', {
@@ -256,23 +288,29 @@ const isUpcoming = new Date(event.dateTime) >= now;
             throw new Error('Failed to update RSVP');
           }
 
-          // Show success message
-          const successMessage = document.createElement('div');
-          successMessage.className = 'toast-message fixed z-[1000] rounded-md bg-(--color-success) px-6 py-4 text-white shadow-lg';
-          successMessage.setAttribute('data-test-id', 'rsvp-success-message');
-          successMessage.textContent = 'RSVP updated successfully!';
-          document.body.appendChild(successMessage);
+          showMessage('RSVP updated successfully!', 'success');
+          if (feedback) {
+            feedback.textContent = 'RSVP updated successfully. Refreshing...';
+          }
 
           // Reload page after short delay to show updated counts
           setTimeout(() => {
             window.location.reload();
           }, 1000);
-        } catch (error) {
-          console.error('Error updating RSVP:', error);
-          alert('Failed to update RSVP. Please try again.');
+        } catch {
+          showMessage('Failed to update RSVP. Please try again.', 'error');
+          if (feedback) {
+            feedback.textContent = 'Failed to update RSVP. Please try again.';
+          }
 
           // Re-enable buttons on error
-          rsvpButtons.forEach(btn => (btn as HTMLButtonElement).disabled = false);
+          rsvpButtons.forEach(btn => {
+            const buttonElement = btn as HTMLButtonElement;
+            buttonElement.disabled = false;
+            if (buttonElement.dataset.originalText) {
+              buttonElement.textContent = buttonElement.dataset.originalText;
+            }
+          });
         }
       });
     });

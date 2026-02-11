@@ -87,7 +87,10 @@ function formatEventDate(date: Date): string {
 }
 ---
 
-<Layout>
+<Layout
+  title="Events - Torsdagskos"
+  description="Browse upcoming and past Torsdagskos events, including location, time, and RSVP summaries."
+>
   <div class="mx-auto p-4 sm:p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
       <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Upcoming Events</h1>
@@ -100,7 +103,7 @@ function formatEventDate(date: Date): string {
         </a>
       )}
       {!mostRecentEvent && (
-        <button class="cursor-not-allowed whitespace-nowrap rounded-md border-2 border-(--color-border) bg-white px-4 py-2 text-center text-[0.9rem] font-medium text-(--color-text-muted) opacity-40 max-sm:w-full" disabled>
+        <button class="cursor-not-allowed whitespace-nowrap rounded-md border-2 border-(--color-border) bg-white px-4 py-2 text-center text-[0.9rem] font-medium text-(--color-text-muted) opacity-40 max-sm:w-full" disabled aria-label="Duplicate last event unavailable">
           Duplicate Last Event
         </button>
       )}

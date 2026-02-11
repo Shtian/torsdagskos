@@ -32,6 +32,7 @@
 - Test data isolation: Use `uniqueEmail()` helper with timestamps to avoid conflicts across runs
 - Web-first assertions: Use `await expect(locator).toBeVisible()` instead of timeouts
 - User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
+- Avoid adding `aria-label` on controls that already have visible text unless needed; it overrides accessible names and can break existing `getByRole({ name })` assertions
 - Project test IDs: Playwright is configured with `testIdAttribute: 'data-test-id'`; prefer `getByTestId(...)` over raw attribute locators
 - Responsive UI tests should set viewport sizes explicitly and assert `document.documentElement.scrollWidth <= window.innerWidth` to catch horizontal overflow regressions
 - Touch-target accessibility checks can be automated by asserting `locator.boundingBox()` width/height are both at least `44` pixels
@@ -729,4 +730,37 @@
     - Full parallel Playwright runs remain flaky from shared test-data cleanup races; stable end-to-end verification is still `pnpm test --workers=1`.
   - Useful context (e.g., "the evaluation panel is in component X")
     - Header navigation responsiveness is centralized in `src/layouts/Layout.astro`, while toast positioning behavior for event flows is controlled in event page scripts and shared `.toast-message` styles.
+---
+## 2026-02-11 15:38 CET - US-018
+- What was implemented
+  - Added final accessibility polish in shared layout: page-level meta description support and a keyboard-accessible skip link (`Skip to main content`).
+  - Added global focus-visible treatment in `src/styles/global.css` for interactive controls and improved text/status token contrast values to meet WCAG AA expectations.
+  - Improved async UX on event create/edit/detail and settings flows with explicit loading states (`Creating...`, `Saving...`, `Updating...`), inline `aria-live` feedback regions, and non-blocking toast/inline error messaging.
+  - Removed client-side debug logging and replaced `alert(...)` RSVP errors with user-friendly inline/toast feedback.
+  - Added comprehensive Playwright coverage in `tests/accessibility-polish.spec.ts` for metadata, keyboard focus/skip-link behavior, async loading+error feedback, and token contrast checks.
+- Files changed
+  - `src/layouts/Layout.astro`
+  - `src/styles/global.css`
+  - `src/pages/index.astro`
+  - `src/pages/events/new.astro`
+  - `src/pages/events/[id].astro`
+  - `src/pages/events/[id]/edit.astro`
+  - `src/pages/settings.astro`
+  - `src/pages/history.astro`
+  - `src/pages/sign-in.astro`
+  - `src/pages/sign-up.astro`
+  - `src/pages/access-denied.astro`
+  - `tests/accessibility-polish.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Centralizing focus-visible styles and metadata in `Layout`/global CSS reduces per-page accessibility drift and keeps keyboard behavior consistent.
+    - For async UI flows in Astro client scripts, pair button disabled states with `aria-busy` and an `aria-live` status region so both visual and assistive feedback stay in sync.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Adding `aria-label` to controls with visible text changes the accessible name and can break existing Playwright `getByRole({ name })` locators.
+    - Full `pnpm test` remains flaky in parallel due shared test-data races; stable full-suite verification is still `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - New accessibility regression coverage lives in `tests/accessibility-polish.spec.ts` and focuses on cross-page polish criteria (metadata, keyboard/focus, loading/error feedback, contrast).
 ---

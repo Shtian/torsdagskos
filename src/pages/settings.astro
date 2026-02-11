@@ -44,7 +44,10 @@ const notificationsEnabled = currentUser?.browserNotificationsEnabled ?? false;
 const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
 ---
 
-<Layout title="Settings - Torsdagskos">
+<Layout
+  title="Settings - Torsdagskos"
+  description="Manage browser notification permissions and push subscription preferences."
+>
   <section class="mx-auto grid max-w-190 gap-6" aria-labelledby="settings-title">
     <a href="/" class="w-fit text-(--color-accent) no-underline hover:text-(--color-accent-dark)">&larr; Back to Events</a>
     <h1 id="settings-title" class="m-0 text-2xl sm:text-[2rem]">Settings</h1>
@@ -224,6 +227,9 @@ const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
     }
 
     requestButton.setAttribute('disabled', 'true');
+    requestButton.setAttribute('aria-busy', 'true');
+    requestButton.textContent = 'Updating...';
+    setFeedback('Updating notification settings...', 'success');
 
     try {
       const permission = await Notification.requestPermission();
@@ -244,10 +250,12 @@ const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
         setFeedback('Browser notifications are disabled for this browser.', 'success');
       }
     } catch (error) {
-      console.error('Notification preference update failed:', error);
-      setFeedback('Could not update notification settings. Please try again.', 'error');
+      const message = error instanceof Error ? error.message : 'Could not update notification settings. Please try again.';
+      setFeedback(message, 'error');
     } finally {
       requestButton.removeAttribute('disabled');
+      requestButton.removeAttribute('aria-busy');
+      requestButton.textContent = 'Request notification permission';
     }
   });
 </script>

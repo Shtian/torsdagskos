@@ -5,9 +5,13 @@ import { SignOutButton } from '@clerk/astro/components';
 
 interface Props {
 	title?: string;
+	description?: string;
 }
 
-const { title = "Torsdagskos" } = Astro.props;
+const {
+	title = "Torsdagskos",
+	description = "Torsdagskos is a private meetup planner for coordinating recurring events with friends.",
+} = Astro.props;
 
 // Get authenticated user
 const { userId } = Astro.locals.auth();
@@ -27,9 +31,11 @@ if (userId) {
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
 		<title>{title}</title>
 	</head>
 	<body>
+		<a href="#main-content" class="skip-link">Skip to main content</a>
 		<div class="flex min-h-screen flex-col">
 			<header class="sticky top-0 z-50 border-b border-(--color-border) bg-white shadow-sm">
 				<div class="mx-auto flex w-full max-w-300 flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between lg:px-6 lg:py-5">
@@ -57,15 +63,15 @@ if (userId) {
 				</div>
 			</header>
 
-			<main class="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 lg:p-8">
+			<main id="main-content" class="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 lg:p-8">
 				<slot />
 			</main>
 		</div>
 		{shouldRegisterServiceWorker && (
 			<script>
 				if ('serviceWorker' in navigator) {
-					navigator.serviceWorker.register('/service-worker.js').catch((error) => {
-						console.error('Service worker registration failed:', error);
+					navigator.serviceWorker.register('/service-worker.js').catch(() => {
+						// Best-effort registration: keep UI functional even if SW setup fails.
 					});
 				}
 			</script>

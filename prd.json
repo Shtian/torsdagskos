@@ -335,8 +335,8 @@
         "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 23,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added final accessibility and UX polish across shared layout and async interactions: global keyboard-visible focus treatment, skip link, per-page titles and meta descriptions, improved high-contrast token values, and user-friendly loading/error feedback for create/edit/RSVP/settings flows. Removed client-side debug logging from updated UI scripts. Added Playwright coverage in `tests/accessibility-polish.spec.ts` for metadata, keyboard navigation/focus visibility, async loading+error feedback, and WCAG AA contrast checks. Typecheck passes. Full Playwright suite passes in stable mode with `pnpm test --workers=1`."
     },
     {
       "id": "US-019",

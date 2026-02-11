@@ -21,12 +21,12 @@
   --color-border: var(--color-primary-200);
   --color-text-primary: #2d2d2d;
   --color-text-secondary: #6b6b6b;
-  --color-text-muted: #9b9b9b;
+  --color-text-muted: #5f5f5f;
 
   /* Status Colors */
-  --color-success: #5a8f5a;
-  --color-warning: #d4a057;
-  --color-error: #c25555;
+  --color-success: #2f6a35;
+  --color-warning: #8a5a1f;
+  --color-error: #a52c2c;
 
   /* Typography */
   --font-heading: 'Georgia', 'Times New Roman', serif;
@@ -93,6 +93,27 @@ canvas {
 .touch-target {
   min-height: 2.75rem;
   min-width: 2.75rem;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -10rem;
+  z-index: 1000;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-dark);
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  text-decoration: none;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+}
+
+:where(a, button, input, textarea, select, [role="button"], [tabindex]):focus-visible {
+  outline: 3px solid var(--color-accent-dark) !important;
+  outline-offset: 2px;
 }
 
 .toast-message {

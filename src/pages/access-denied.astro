@@ -4,7 +4,10 @@ import Layout from '../layouts/Layout.astro';
 const requestedPath = Astro.url.searchParams.get('from');
 ---
 
-<Layout title="Invite-Only Access - Torsdagskos">
+<Layout
+  title="Invite-Only Access - Torsdagskos"
+  description="This private app is invite-only. Sign in with an invited account to continue."
+>
   <section class="mx-auto mt-10 max-w-2xl rounded-xl border border-(--color-border) bg-white p-6 text-center shadow-sm sm:mt-16 sm:p-10">
     <p class="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-(--color-text-secondary)">
       Access Restricted

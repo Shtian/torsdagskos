@@ -7,6 +7,7 @@
 - Keep tests independent; no shared state across tests.
 - Many specs mutate shared DB state via `/api/test/seed` cleanup; full parallel runs can race across files. Prefer `pnpm test --workers=1` for stable full-suite verification, or isolate data/cleanup per spec when adding new tests.
 - Use stable selectors and roles; avoid brittle text where possible.
+- Avoid adding `aria-label` to controls that already have clear visible text unless necessary; it overrides the accessible name and can break existing `getByRole({ name: ... })` locators.
 - Playwright config uses `testIdAttribute: 'data-test-id'`; prefer `page.getByTestId(...)` over manual `[data-test-id=...]` selectors.
 - For responsive checks, set explicit viewport sizes in-spec (`page.setViewportSize`) and assert no horizontal overflow with `document.documentElement.scrollWidth <= window.innerWidth`.
 - For mobile accessibility touch targets, assert clickable control dimensions with `locator.boundingBox()` and keep both width/height `>= 44`.
