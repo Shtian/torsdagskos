@@ -458,3 +458,39 @@
 
 ---
 
+
+## 2026-02-11 09:33 - US-008
+
+**Implemented:** Duplicate event functionality
+
+**Files changed:**
+- src/pages/index.astro - Added duplicate button with conditional rendering, fetches most recent event by createdAt
+- src/pages/events/new.astro - Added URL parameter handling for pre-filling form, added duplicate banner indicator
+- tests/duplicate-event.spec.ts - Created 8 E2E tests for duplicate functionality
+- tests/helpers/api-helpers.ts - Added createEvent() helper for authenticated event creation in tests
+- prd.json - Updated US-008 to passes: true
+
+**Features:**
+- "Duplicate Last Event" button on homepage (enabled when events exist, disabled when no events)
+- Button fetches most recent event by createdAt timestamp
+- Pre-fills form with title, description, location, and map link from last event
+- Date and time intentionally left empty for manual user input
+- Blue banner on form page clearly indicates duplication source
+- URL query parameters pass data between pages
+- Responsive design: button stacks on mobile, inline on desktop
+- 8 comprehensive E2E tests covering all scenarios
+
+**Learnings for future iterations:**
+- URL query parameters: Use `Astro.url.searchParams.get()` to read parameters in Astro pages
+- URL encoding: Use `encodeURIComponent()` when passing data via query parameters to handle special characters
+- Conditional rendering: Can show different elements (link vs disabled button) based on data availability
+- Form pre-fill pattern: Set `value` attribute on inputs, use closing tags for textarea content
+- Banner design: Use distinct colors and borders to draw attention to important notices
+- Playwright page.evaluate(): Must use `window.location.origin` for absolute URLs in fetch calls
+- Test data isolation: Navigate to page with `await page.goto('/')` before using page.evaluate() to ensure proper context
+- Flexible test selectors: Use `.locator('button:has-text("X"), a:has-text("X")').first()` to handle multiple element types
+- Event sorting: Use array spread and sort() to find most recent: `[...allEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]`
+- Mobile-first CSS: Stack button below title on mobile with `flex-direction: column`, inline on desktop with default row direction
+- Test helper pattern: Create reusable helpers like createEvent() that use page.evaluate() for authenticated operations
+- Query parameter passing: Can pass multiple parameters in URL, remembering to handle optional fields (empty strings)
+---

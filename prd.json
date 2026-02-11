@@ -151,8 +151,8 @@
         "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Duplicate event functionality fully implemented. Button on homepage fetches most recent event and pre-fills form. Banner indicates duplication. Date/time left empty for manual input. 8 E2E tests written and passing. Typecheck passes."
     },
     {
       "id": "US-009",
