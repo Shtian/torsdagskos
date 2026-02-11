@@ -2,6 +2,7 @@
 - Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
 - For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
 - Load Google Fonts once in `src/layouts/Layout.astro` and map them via global CSS font tokens (`--font-heading`, `--font-body`) so typography stays consistent across all routes.
+- When rendering React `Textarea` components from `.astro` pages, prefer `defaultValue` over children content to avoid accidental `"[object Object]"` rendering in SSR output.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -31,5 +32,15 @@
 - **Learnings for future iterations**
   - Keep all font loading centralized in `src/layouts/Layout.astro` so every route inherits the same typography without per-page duplication.
   - Font-family Playwright assertions should use `toContain()` for the selected family name, since rendered stacks include browser-specific fallbacks.
-  - Run full Playwright verification with `pnpm test --workers=1` when validating UI stories to avoid parallel state races in this codebase.
+- Run full Playwright verification with `pnpm test --workers=1` when validating UI stories to avoid parallel state races in this codebase.
+---
+## 2026-02-11 16:59:55 CET - US-004
+- Added shadcn form primitives `Input`, `Label`, `Textarea`, and `Select`, plus a `src/components/ui/index.ts` barrel for consistent UI imports.
+- Replaced event creation form controls in `src/pages/events/new.astro` with the new primitives while preserving existing IDs/names and submit behavior.
+- Expanded the shadcn island demo to include a working `Select` and added Playwright assertions for the new select interaction and primitive slots.
+- Files changed: `package.json`, `pnpm-lock.yaml`, `src/components/ui/input.tsx`, `src/components/ui/label.tsx`, `src/components/ui/textarea.tsx`, `src/components/ui/select.tsx`, `src/components/ui/index.ts`, `src/components/ShadcnIslandDemo.tsx`, `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Import shared UI primitives from `@/components/ui` to keep migration imports consistent across pages and islands.
+  - For React form primitives rendered in Astro pages, preserve existing element IDs so current scripts and Playwright locators keep working without refactors.
+  - `data-slot` attributes on shadcn primitives provide stable selectors for focused UI tests when role/text assertions are not specific enough.
 ---

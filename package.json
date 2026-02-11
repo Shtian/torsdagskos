@@ -18,6 +18,8 @@
     "@astrojs/node": "^9.5.2",
     "@astrojs/react": "^4.4.2",
     "@clerk/astro": "^2.17.1",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-select": "^2.2.6",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.17.1",
     "class-variance-authority": "^0.7.1",

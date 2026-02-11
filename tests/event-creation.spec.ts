@@ -6,6 +6,9 @@ test.describe('Event Creation', () => {
 
     // Check that form elements are visible
     await expect(page.getByRole('heading', { name: /create new event/i, level: 1 })).toBeVisible();
+    await expect(page.locator('[data-slot="label"]').first()).toBeVisible();
+    await expect(page.locator('#title[data-slot="input"]')).toBeVisible();
+    await expect(page.locator('#description[data-slot="textarea"]')).toBeVisible();
     await expect(page.locator('#title')).toBeVisible();
     await expect(page.locator('#description')).toBeVisible();
     await expect(page.locator('#date')).toBeVisible();

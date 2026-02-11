@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { Button, Input, Label, Textarea } from '@/components/ui';
 
 // Ensure user is authenticated
 const { userId } = Astro.locals.auth();
@@ -37,14 +38,14 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
     <form id="event-form" class="rounded-lg border border-(--color-border) bg-white p-6 sm:p-8">
       <div class="mb-6">
-        <label for="title" class="mb-2 block font-semibold text-(--color-text-primary)">
+        <Label htmlFor="title" className="mb-2 block">
           Event Title <span class="text-(--color-error)">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="text"
           id="title"
           name="title"
-          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+          className="h-auto px-3 py-3"
           required
           placeholder="e.g., Torsdagskos at John's place"
           value={prefillTitle}
@@ -52,55 +53,56 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
       </div>
 
       <div class="mb-6">
-        <label for="description" class="mb-2 block font-semibold text-(--color-text-primary)">
+        <Label htmlFor="description" className="mb-2 block">
           Description
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           id="description"
           name="description"
-          class="min-h-[120px] w-full resize-y rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
-          rows="5"
+          className="min-h-[120px] resize-y px-3 py-3"
+          rows={5}
           placeholder="What's the plan? Any special details?"
-        >{prefillDescription}</textarea>
+          defaultValue={prefillDescription}
+        />
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="mb-6">
-          <label for="date" class="mb-2 block font-semibold text-(--color-text-primary)">
+          <Label htmlFor="date" className="mb-2 block">
             Date <span class="text-(--color-error)">*</span>
-          </label>
-          <input
+          </Label>
+          <Input
             type="date"
             id="date"
             name="date"
-            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+            className="h-auto px-3 py-3"
             required
           />
         </div>
 
         <div class="mb-6">
-          <label for="time" class="mb-2 block font-semibold text-(--color-text-primary)">
+          <Label htmlFor="time" className="mb-2 block">
             Time <span class="text-(--color-error)">*</span>
-          </label>
-          <input
+          </Label>
+          <Input
             type="time"
             id="time"
             name="time"
-            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+            className="h-auto px-3 py-3"
             required
           />
         </div>
       </div>
 
       <div class="mb-6">
-        <label for="location" class="mb-2 block font-semibold text-(--color-text-primary)">
+        <Label htmlFor="location" className="mb-2 block">
           Location <span class="text-(--color-error)">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="text"
           id="location"
           name="location"
-          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+          className="h-auto px-3 py-3"
           required
           placeholder="e.g., John's apartment, Oslo City Center"
           value={prefillLocation}
@@ -108,23 +110,23 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
       </div>
 
       <div class="mb-6">
-        <label for="mapLink" class="mb-2 block font-semibold text-(--color-text-primary)">
+        <Label htmlFor="mapLink" className="mb-2 block">
           Map Link <span class="text-[0.9rem] font-normal text-(--color-text-muted)">(optional)</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="url"
           id="mapLink"
           name="mapLink"
-          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+          className="h-auto px-3 py-3"
           placeholder="https://maps.google.com/..."
           value={prefillMapLink}
         />
       </div>
 
       <div class="mt-8 flex flex-col gap-4 sm:flex-row">
-        <button type="submit" class="touch-target inline-block cursor-pointer rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-6 py-3 text-center text-base font-medium text-white transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" id="submit-button">
+        <Button type="submit" id="submit-button" className="touch-target h-auto cursor-pointer px-6 py-3 text-base sm:w-auto">
           Create Event
-        </button>
+        </Button>
         <a href="/" class="touch-target inline-flex items-center justify-center rounded-md border-2 border-(--color-border) bg-white px-6 py-3 text-center text-base font-medium text-(--color-text-primary) no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) sm:w-auto">Cancel</a>
       </div>
       <p id="form-feedback" class="mb-0 mt-4 min-h-6 text-(--color-text-secondary)" role="status" aria-live="polite"></p>
