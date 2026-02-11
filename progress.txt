@@ -46,6 +46,7 @@
 ## API Endpoints
 - Event creation: POST /api/events/create with { title, description, dateTime, location, mapLink }
 - Return pattern: Always convert BigInt IDs to Number before JSON serialization
+- Notification pattern: Keep event creation successful even if email delivery fails; run notifications as best-effort and log only successful sends in `NotificationLog`
 
 ---
 
@@ -516,4 +517,27 @@
     - Full Playwright runs can fail in parallel due to shared test cleanup; `pnpm test --workers=1` produced stable results
   - Useful context (e.g., "the evaluation panel is in component X")
     - Event updates are performed through `/api/events/update`; detail-page edit visibility is controlled by `isUpcoming` in `src/pages/events/[id].astro`
+---
+## 2026-02-11 12:19 - US-010
+- What was implemented
+  - Added Resend email provider integration for new event notifications with configurable env vars (`RESEND_API_KEY`, optional `EMAIL_FROM`, optional `RESEND_API_URL`).
+  - Added reusable notification service that builds HTML/text email content with event title, description, date/time (Europe/Oslo), and location.
+  - Integrated notification dispatch into `POST /api/events/create` so all users are notified when a new event is created.
+  - Added notification logging for successful email sends in `NotificationLog` with `type: new_event` and `channel: email`.
+  - Updated `.env.example` with email provider setup values.
+- Files changed
+  - `.env.example`
+  - `src/lib/email.ts`
+  - `src/lib/event-notifications.ts`
+  - `src/pages/api/events/create.ts`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Keep side effects (email notifications) as best-effort in API routes so core writes (event creation) stay reliable.
+    - Centralize email provider calls in `src/lib` and keep route handlers focused on orchestration.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full Playwright suite is still flaky with parallel workers in this codebase; `pnpm test --workers=1` gives stable results.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - New-event notifications are currently triggered only from `src/pages/api/events/create.ts` and the returned payload now includes a `notifications` summary.
 ---

@@ -188,8 +188,8 @@
         "Typecheck passes"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Configured Resend-based email delivery for new event creation with environment variables (RESEND_API_KEY, EMAIL_FROM), added HTML/text new-event template containing title/description/date-time/location, sends to all users after event creation, and logs successful deliveries in NotificationLog as type='new_event' and channel='email'. Typecheck passes."
     },
     {
       "id": "US-011",

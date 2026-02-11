@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { db, Events } from 'astro:db';
+import { sendNewEventNotifications } from '../../../lib/event-notifications';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -30,11 +31,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
+    const eventDate = new Date(dateTime);
+
     // Insert event into database
     const result = await db.insert(Events).values({
       title,
       description: description || '',
-      dateTime: new Date(dateTime),
+      dateTime: eventDate,
       location,
       mapLink: mapLink || null,
       createdAt: new Date(),
@@ -43,9 +46,27 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Get the inserted event ID (convert BigInt to Number for JSON serialization)
     const eventId = Number(result.lastInsertRowid);
+    let notificationSummary = {
+      totalUsers: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+    };
+
+    try {
+      notificationSummary = await sendNewEventNotifications({
+        eventId,
+        title,
+        description: description || '',
+        dateTime: eventDate,
+        location,
+      });
+    } catch (notificationError) {
+      console.error('Error sending new event notifications:', notificationError);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, eventId }),
+      JSON.stringify({ success: true, eventId, notifications: notificationSummary }),
       {
         status: 200,
         headers: {
