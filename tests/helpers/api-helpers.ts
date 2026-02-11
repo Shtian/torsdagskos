@@ -100,3 +100,45 @@ export async function cleanupTestData(): Promise<void> {
 export async function resetAllTestData(): Promise<void> {
   await seedAPI('reset_all');
 }
+
+/**
+ * Create an event using the authenticated user's session (via page.evaluate)
+ * This simulates a real user creating an event
+ */
+export async function createEvent(
+  page: any,
+  data: {
+    title: string;
+    description: string;
+    dateTime: string; // ISO string
+    location: string;
+    mapLink?: string;
+  }
+): Promise<{ eventId: number }> {
+  // Navigate to a page first to ensure we have a proper browser context
+  await page.goto('/');
+
+  const result = await page.evaluate(async (eventData: any) => {
+    const response = await fetch(`${window.location.origin}/api/events/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: eventData.title,
+        description: eventData.description,
+        dateTime: eventData.dateTime,
+        location: eventData.location,
+        mapLink: eventData.mapLink || null,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create event');
+    }
+
+    return response.json();
+  }, data);
+
+  return result;
+}

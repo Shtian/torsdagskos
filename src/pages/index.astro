@@ -38,6 +38,11 @@ if (userId) {
 // Fetch all events
 const allEvents = await db.select().from(Events).all();
 
+// Get most recent event for duplication (sorted by createdAt descending)
+const mostRecentEvent = allEvents.length > 0
+  ? [...allEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+  : null;
+
 // Get RSVP counts for each event
 const eventsWithRsvps = await Promise.all(
   allEvents.map(async (event) => {
@@ -84,7 +89,22 @@ function formatEventDate(date: Date): string {
 
 <Layout>
   <div class="container">
-    <h1 class="page-title">Upcoming Events</h1>
+    <div class="header-actions">
+      <h1 class="page-title">Upcoming Events</h1>
+      {mostRecentEvent && (
+        <a
+          href={`/events/new?duplicate=true&title=${encodeURIComponent(mostRecentEvent.title)}&description=${encodeURIComponent(mostRecentEvent.description || '')}&location=${encodeURIComponent(mostRecentEvent.location)}&mapLink=${encodeURIComponent(mostRecentEvent.mapLink || '')}`}
+          class="btn-duplicate"
+        >
+          Duplicate Last Event
+        </a>
+      )}
+      {!mostRecentEvent && (
+        <button class="btn-duplicate" disabled>
+          Duplicate Last Event
+        </button>
+      )}
+    </div>
 
     {upcomingEvents.length === 0 && pastEvents.length === 0 && (
       <div class="empty-state">
@@ -138,10 +158,46 @@ function formatEventDate(date: Date): string {
     padding: var(--space-6);
   }
 
+  .header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
   .page-title {
     font-size: 2rem;
-    margin-bottom: var(--space-6);
+    margin: 0;
     color: var(--color-accent-dark);
+  }
+
+  .btn-duplicate {
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface);
+    color: var(--color-accent);
+    border: 2px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .btn-duplicate:hover:not(:disabled) {
+    background: var(--color-accent);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .btn-duplicate:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
   }
 
   .empty-state {
@@ -243,8 +299,18 @@ function formatEventDate(date: Date): string {
       padding: var(--space-4);
     }
 
+    .header-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
     .page-title {
       font-size: 1.5rem;
+    }
+
+    .btn-duplicate {
+      width: 100%;
+      text-align: center;
     }
 
     .event-title {

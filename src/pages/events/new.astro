@@ -6,6 +6,13 @@ const { userId } = Astro.locals.auth();
 if (!userId) {
   return Astro.redirect('/sign-in');
 }
+
+// Check if this is a duplicate request
+const isDuplicate = Astro.url.searchParams.get('duplicate') === 'true';
+const prefillTitle = Astro.url.searchParams.get('title') || '';
+const prefillDescription = Astro.url.searchParams.get('description') || '';
+const prefillLocation = Astro.url.searchParams.get('location') || '';
+const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 ---
 
 <Layout title="Create New Event">
@@ -14,6 +21,16 @@ if (!userId) {
       <a href="/" class="back-link">&larr; Back to Events</a>
       <h1 class="page-title">Create New Event</h1>
     </div>
+
+    {isDuplicate && (
+      <div class="duplicate-banner">
+        <p>
+          <strong>Duplicated from last event</strong> - Title, description, location, and map link have been pre-filled.
+          <br />
+          <span class="banner-note">Please set the date and time for this new event.</span>
+        </p>
+      </div>
+    )}
 
     <form id="event-form" class="event-form">
       <div class="form-group">
@@ -27,6 +44,7 @@ if (!userId) {
           class="form-input"
           required
           placeholder="e.g., Torsdagskos at John's place"
+          value={prefillTitle}
         />
       </div>
 
@@ -40,7 +58,7 @@ if (!userId) {
           class="form-textarea"
           rows="5"
           placeholder="What's the plan? Any special details?"
-        ></textarea>
+        >{prefillDescription}</textarea>
       </div>
 
       <div class="form-row">
@@ -82,6 +100,7 @@ if (!userId) {
           class="form-input"
           required
           placeholder="e.g., John's apartment, Oslo City Center"
+          value={prefillLocation}
         />
       </div>
 
@@ -95,6 +114,7 @@ if (!userId) {
           name="mapLink"
           class="form-input"
           placeholder="https://maps.google.com/..."
+          value={prefillMapLink}
         />
       </div>
 
@@ -136,6 +156,26 @@ if (!userId) {
     font-size: 2rem;
     margin: 0;
     color: var(--color-accent-dark);
+  }
+
+  .duplicate-banner {
+    background: #e3f2fd;
+    border: 2px solid #2196f3;
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .duplicate-banner p {
+    margin: 0;
+    color: #1565c0;
+    font-size: 0.95rem;
+  }
+
+  .banner-note {
+    font-size: 0.9rem;
+    color: #1976d2;
+    font-style: italic;
   }
 
   .event-form {
