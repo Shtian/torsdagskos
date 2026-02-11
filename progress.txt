@@ -50,6 +50,8 @@
 - Notification pattern: Keep event creation successful even if email delivery fails; run notifications as best-effort and log only successful sends in `NotificationLog`
 - Event update pattern: POST `/api/events/update` should mirror create-route best-effort notifications and return a `notifications` summary payload
 - Cron reminder pattern: expose `/api/cron/event-reminders` as a public route gated by `CRON_SECRET`; schedule hourly and enforce `18:00 Europe/Oslo` inside the handler for DST-safe daily execution
+- Push subscription persistence: use dedicated endpoint `POST /api/settings/push-subscription` storing serialized JSON in `Users.pushSubscription`; keep boolean preference in sync via `Users.browserNotificationsEnabled`
+- Service worker routing: add `/service-worker.js` to public Clerk middleware routes so worker fetch/update is never blocked by auth redirects
 
 ---
 
@@ -615,4 +617,39 @@
     - `pnpm test` can still fail in parallel from existing shared-data race conditions; stable full-suite verification remains `pnpm test --workers=1`.
   - Useful context (e.g., "the evaluation panel is in component X")
     - Settings preference is stored in `Users.browserNotificationsEnabled`; UI status is displayed on `src/pages/settings.astro` and updated through `/api/settings/notifications`.
+---
+## 2026-02-11 14:38 CET - US-014
+- What was implemented
+  - Added browser push infrastructure with `public/service-worker.js` handling `push` and `notificationclick` events, including navigation to event detail URLs from notification clicks.
+  - Registered the service worker on authenticated app loads in `src/layouts/Layout.astro`.
+  - Extended `Users` schema with `pushSubscription` and `pushSubscriptionUpdatedAt` fields and created `POST /api/settings/push-subscription` to store/clear push subscriptions.
+  - Integrated push delivery into `sendNewEventNotifications`, `sendEventUpdateNotifications`, and `sendEventReminderNotifications` using `web-push`, with best-effort behavior and dedupe logging in `NotificationLog` (`channel: 'push'`).
+  - Added VAPID config docs (`PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) and made `/service-worker.js` public in Clerk middleware.
+  - Added Playwright E2E coverage in `tests/push-notifications.spec.ts` for service worker availability and push subscription persistence.
+- Files changed
+  - `.env.example`
+  - `db/config.ts`
+  - `package.json`
+  - `pnpm-lock.yaml`
+  - `public/service-worker.js`
+  - `src/layouts/Layout.astro`
+  - `src/lib/event-notifications.ts`
+  - `src/lib/push-notifications.ts`
+  - `src/middleware.ts`
+  - `src/pages/api/settings/push-subscription.ts`
+  - `src/pages/settings.astro`
+  - `src/types/web-push.d.ts`
+  - `tests/AGENTS.md`
+  - `tests/push-notifications.spec.ts`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Keep push delivery best-effort like email delivery: event create/update/reminder should not fail when push send fails.
+    - Dedupe push notifications by `(userId, eventId, type, channel='push')` in `NotificationLog` to avoid duplicate sends.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Service worker registration request timing is non-deterministic in browser tests; verify worker availability via `page.request.get('/service-worker.js')` for stable assertions.
+    - Parallel Playwright (`pnpm test`) remains flaky from pre-existing shared-data races; stable full-suite verification is `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Push subscription persistence is now centralized in `/api/settings/push-subscription`, and notification dispatch integration lives in `src/lib/event-notifications.ts`.
 ---

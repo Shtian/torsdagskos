@@ -260,8 +260,8 @@
         "Typecheck passes"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented Web Push support with service worker handling (`/service-worker.js`) and click-through navigation to event detail links. Added automatic service worker registration for authenticated app loads in Layout, persisted push subscriptions in Users via `/api/settings/push-subscription`, and extended notification delivery to send push events (best-effort, deduplicated in NotificationLog with channel='push') for new events, event updates, and reminders. Added VAPID environment configuration in `.env.example`, made the service worker route public in middleware, and added Playwright coverage in `tests/push-notifications.spec.ts` for service worker availability plus push subscription store/clear behavior. Typecheck passes; Playwright suite passes in stable mode (`pnpm test --workers=1`)."
     },
     {
       "id": "US-015",

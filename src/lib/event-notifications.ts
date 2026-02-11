@@ -1,5 +1,6 @@
 import { db, Events, NotificationLog, Users, and, eq, gte } from 'astro:db';
 import { sendEmail } from './email';
+import { isPushDeliveryConfigured, sendPushNotification } from './push-notifications';
 
 interface NewEventNotificationInput {
   eventId: number;
@@ -37,6 +38,14 @@ interface NotificationSummary {
 interface ReminderNotificationSummary extends NotificationSummary {
   eventsConsidered: number;
   eventsTargeted: number;
+}
+
+interface PushDeliveryInput {
+  eventId: number;
+  type: 'new_event' | 'event_update' | 'reminder';
+  title: string;
+  body: string;
+  url: string;
 }
 
 function escapeHtml(value: string): string {
@@ -307,6 +316,72 @@ function getTomorrowOsloDateKey(now: Date): string {
   }).format(osloTodayAsUtcMidnight);
 }
 
+async function sendPushNotificationsToOptedInUsers(
+  input: PushDeliveryInput
+): Promise<void> {
+  if (!isPushDeliveryConfigured()) {
+    return;
+  }
+
+  const users = await db.select().from(Users);
+  const pushEligibleUsers = users.filter(
+    (user) => user.browserNotificationsEnabled && !!user.pushSubscription
+  );
+
+  if (pushEligibleUsers.length === 0) {
+    return;
+  }
+
+  await Promise.all(
+    pushEligibleUsers.map(async (user) => {
+      const hasAlreadyReceived = await db
+        .select({ id: NotificationLog.id })
+        .from(NotificationLog)
+        .where(
+          and(
+            eq(NotificationLog.userId, user.id),
+            eq(NotificationLog.eventId, input.eventId),
+            eq(NotificationLog.type, input.type),
+            eq(NotificationLog.channel, 'push')
+          )
+        )
+        .get();
+
+      if (hasAlreadyReceived) {
+        return;
+      }
+
+      const result = await sendPushNotification(user.pushSubscription!, {
+        title: input.title,
+        body: input.body,
+        url: input.url,
+      });
+
+      if (result.expired) {
+        await db
+          .update(Users)
+          .set({
+            browserNotificationsEnabled: false,
+            pushSubscription: null,
+            pushSubscriptionUpdatedAt: new Date(),
+          })
+          .where(eq(Users.id, user.id));
+        return;
+      }
+
+      if (result.success) {
+        await db.insert(NotificationLog).values({
+          userId: user.id,
+          eventId: input.eventId,
+          type: input.type,
+          channel: 'push',
+          sentAt: new Date(),
+        });
+      }
+    })
+  );
+}
+
 export async function sendNewEventNotifications(
   input: NewEventNotificationInput
 ): Promise<NotificationSummary> {
@@ -348,6 +423,18 @@ export async function sendNewEventNotifications(
   const sent = results.filter((result) => result.success).length;
   const failed = results.filter((result) => !result.success && !result.skipped).length;
   const skipped = results.filter((result) => result.skipped).length;
+
+  try {
+    await sendPushNotificationsToOptedInUsers({
+      eventId: input.eventId,
+      type: 'new_event',
+      title: `New event: ${input.title}`,
+      body: `${formatEventDate(input.dateTime)} · ${input.location}`,
+      url: `/events/${input.eventId}`,
+    });
+  } catch (error) {
+    console.error('Push notification delivery failed for new event:', error);
+  }
 
   return {
     totalUsers: users.length,
@@ -398,6 +485,19 @@ export async function sendEventUpdateNotifications(
   const sent = results.filter((result) => result.success).length;
   const failed = results.filter((result) => !result.success && !result.skipped).length;
   const skipped = results.filter((result) => result.skipped).length;
+
+  try {
+    const title = input.updated.title || input.previous.title;
+    await sendPushNotificationsToOptedInUsers({
+      eventId: input.eventId,
+      type: 'event_update',
+      title: `Event updated: ${title}`,
+      body: `${formatEventDate(input.updated.dateTime)} · ${input.updated.location}`,
+      url: `/events/${input.eventId}`,
+    });
+  } catch (error) {
+    console.error('Push notification delivery failed for event update:', error);
+  }
 
   return {
     totalUsers: users.length,
@@ -504,6 +604,18 @@ export async function sendEventReminderNotifications(
     sent += results.filter((result) => result.success).length;
     failed += results.filter((result) => !result.success && !result.skipped).length;
     skipped += results.filter((result) => result.skipped).length;
+
+    try {
+      await sendPushNotificationsToOptedInUsers({
+        eventId: event.id,
+        type: 'reminder',
+        title: `Reminder: ${event.title} is tomorrow`,
+        body: `${formatEventDate(new Date(event.dateTime))} · ${event.location}`,
+        url: `/events/${event.id}`,
+      });
+    } catch (error) {
+      console.error('Push notification delivery failed for reminder:', error);
+    }
   }
 
   return {

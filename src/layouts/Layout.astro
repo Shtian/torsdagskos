@@ -12,6 +12,7 @@ const { title = "Torsdagskos" } = Astro.props;
 // Get authenticated user
 const { userId } = Astro.locals.auth();
 let user = null;
+const shouldRegisterServiceWorker = !!userId;
 
 if (userId) {
 	user = await clerkClient(Astro).users.getUser(userId);
@@ -57,5 +58,14 @@ if (userId) {
 				<slot />
 			</main>
 		</div>
+		{shouldRegisterServiceWorker && (
+			<script>
+				if ('serviceWorker' in navigator) {
+					navigator.serviceWorker.register('/service-worker.js').catch((error) => {
+						console.error('Service worker registration failed:', error);
+					});
+				}
+			</script>
+		)}
 	</body>
 </html>

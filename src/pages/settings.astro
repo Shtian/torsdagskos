@@ -41,6 +41,7 @@ if (!currentUser) {
 }
 
 const notificationsEnabled = currentUser?.browserNotificationsEnabled ?? false;
+const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
 ---
 
 <Layout title="Settings - Torsdagskos">
@@ -76,12 +77,13 @@ const notificationsEnabled = currentUser?.browserNotificationsEnabled ?? false;
   </section>
 </Layout>
 
-<script>
+<script define:vars={{ vapidPublicKey }}>
   // @ts-nocheck
   const permissionStatus = document.getElementById('permission-status');
   const savedPreference = document.getElementById('saved-preference');
   const requestButton = document.getElementById('request-permission');
   const feedback = document.getElementById('feedback');
+  const supportsPush = 'serviceWorker' in navigator && 'PushManager' in window;
 
   /** @type {(permission: string) => string} */
   const capitalize = (permission) => {
@@ -129,6 +131,90 @@ const notificationsEnabled = currentUser?.browserNotificationsEnabled ?? false;
     return response.json();
   }
 
+  /** @type {(subscription: unknown | null) => Promise<unknown>} */
+  const savePushSubscription = async (subscription) => {
+    const response = await fetch('/api/settings/push-subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ subscription }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to save push subscription');
+    }
+
+    return response.json();
+  }
+
+  /** @type {(base64String: string) => Uint8Array} */
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replaceAll('-', '+').replaceAll('_', '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+
+    return outputArray;
+  }
+
+  const getServiceWorkerRegistration = async () => {
+    if (!('serviceWorker' in navigator)) {
+      return null;
+    }
+
+    const existingRegistration = await navigator.serviceWorker.getRegistration('/service-worker.js');
+    if (existingRegistration) {
+      return existingRegistration;
+    }
+
+    return navigator.serviceWorker.register('/service-worker.js');
+  }
+
+  /** @type {(enabled: boolean) => Promise<void>} */
+  const syncPushSubscription = async (enabled) => {
+    if (!supportsPush) {
+      return;
+    }
+
+    const registration = await getServiceWorkerRegistration();
+    if (!registration) {
+      return;
+    }
+
+    const existingSubscription = await registration.pushManager.getSubscription();
+
+    if (!enabled) {
+      if (existingSubscription) {
+        await existingSubscription.unsubscribe();
+      }
+      await savePushSubscription(null);
+      return;
+    }
+
+    if (!vapidPublicKey) {
+      return;
+    }
+
+    let subscription = existingSubscription;
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      });
+    }
+
+    const serializedSubscription = typeof subscription.toJSON === 'function'
+      ? subscription.toJSON()
+      : subscription;
+
+    await savePushSubscription(serializedSubscription);
+  }
+
   setPermissionDisplay();
 
   requestButton?.addEventListener('click', async () => {
@@ -144,6 +230,7 @@ const notificationsEnabled = currentUser?.browserNotificationsEnabled ?? false;
       setPermissionDisplay();
 
       const enabled = permission === 'granted';
+      await syncPushSubscription(enabled);
       await savePreference(enabled);
 
       if (savedPreference) {

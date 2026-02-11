@@ -9,6 +9,8 @@ const Users = defineTable({
     email: column.text({ unique: true }),
     name: column.text(),
     browserNotificationsEnabled: column.boolean({ default: false }),
+    pushSubscription: column.text({ optional: true }),
+    pushSubscriptionUpdatedAt: column.date({ optional: true }),
     createdAt: column.date({ default: new Date() }),
   },
   indexes: {

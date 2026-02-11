@@ -28,5 +28,7 @@
 - For deterministic browser notification tests, mock the `window.Notification` API via `page.addInitScript()` before `page.goto()`.
 - Control the simulated permission result (`granted`/`denied`) by updating a local `permissionState` in the injected mock.
 - To verify persisted user preference, fetch `/api/test/current-user` from `page.evaluate()` so auth cookies are included.
+- For service worker coverage, prefer validating the static worker script via `page.request.get('/service-worker.js')` instead of waiting on browser registration network events (those can be non-deterministic).
+- Push subscription persistence can be tested end-to-end by posting to `/api/settings/push-subscription` from `page.evaluate()` and asserting the stored `Users.pushSubscription` value via `/api/test/current-user`.
 
 Run: `pnpm test` or `pnpm test tests/<file>.spec.ts`
