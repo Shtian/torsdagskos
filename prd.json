@@ -296,8 +296,8 @@
         "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 21,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented custom invite-only access page at `/access-denied` with the exact required message, sign-in link, and design-token-based styling. Updated Clerk middleware to redirect unauthenticated protected-route requests to `/access-denied` (including attempted path in `from` query). Added Playwright coverage in `tests/auth.spec.ts` and `tests/smoke.spec.ts` for redirect behavior, invite-only message rendering, and sign-in link navigation. Typecheck passes and Playwright suite passes with `pnpm test --workers=1`."
     },
     {
       "id": "US-017",

@@ -20,6 +20,7 @@
 - Auth context available via `Astro.locals.auth()` in pages
 - User data fetched with `clerkClient(Astro).users.getUser(userId)`
 - Layout component can conditionally render UI based on auth status
+- Unauthenticated protected-route requests are redirected by middleware to `/access-denied` (with optional `from` query) instead of directly to Clerk
 
 ## Testing (Playwright)
 - Use `test` and `expect` from `./fixtures` for custom fixtures support
@@ -679,4 +680,26 @@
     - `Rsvps.status` is typed as `string` from Astro DB in page templates; helper formatters should accept `string` unless explicit narrowing is added.
   - Useful context (e.g., "the evaluation panel is in component X")
     - History page data is currently assembled by loading user RSVPs first and joining events in `src/pages/history.astro`.
+---
+## 2026-02-11 14:53 CET - US-016
+- What was implemented
+  - Added a custom invite-only access page at `/access-denied` with the required message, sign-in CTA, and design-token-aligned styling.
+  - Updated Clerk middleware so unauthenticated requests to protected routes redirect to `/access-denied` and preserve the attempted path in a `from` query parameter.
+  - Updated unauthenticated Playwright coverage to verify redirect behavior, invite-only content, and sign-in link navigation flow.
+  - Verified with `pnpm astro check` and `pnpm test --workers=1`.
+- Files changed
+  - `src/middleware.ts`
+  - `src/pages/access-denied.astro`
+  - `tests/auth.spec.ts`
+  - `tests/smoke.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Keep unauthenticated UX deterministic by routing protected requests to a local explanatory page (`/access-denied`) and letting users explicitly continue to `/sign-in`.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - When auth redirect behavior changes, update both `tests/auth.spec.ts` and `tests/smoke.spec.ts` to keep baseline unauthenticated checks aligned.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Middleware now handles invite-only routing centrally in `src/middleware.ts`; the message UI lives in `src/pages/access-denied.astro`.
 ---

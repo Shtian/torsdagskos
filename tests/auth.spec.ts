@@ -20,13 +20,13 @@ import { test, expect } from './fixtures';
  */
 
 test.describe('Authentication - Unauthenticated access @unauth', () => {
-  test('homepage redirects unauthenticated users to Clerk sign-in', async ({ page }) => {
+  test('homepage redirects unauthenticated users to access denied page', async ({ page }) => {
     // Attempt to visit the homepage without authentication
     await page.goto('/');
 
-    // Should redirect to Clerk's sign-in page
-    // Clerk uses accounts.dev subdomain for hosted auth UI
-    await expect(page).toHaveURL(/accounts\.dev.*sign-in/);
+    // Should redirect to custom access denied page
+    await expect(page).toHaveURL(/\/access-denied/);
+    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
   });
 
   test('sign-in page is accessible and displays Clerk sign-in UI', async ({ page }) => {
@@ -50,12 +50,19 @@ test.describe('Authentication - Unauthenticated access @unauth', () => {
     await expect(page.getByRole('heading', { name: /create.*account|sign up/i })).toBeVisible();
   });
 
-  test('protected event routes redirect to sign-in', async ({ page }) => {
+  test('protected event routes redirect to access denied page with sign-in link', async ({ page }) => {
     // Try to access a protected event detail page
     await page.goto('/events/1');
 
-    // Should redirect to Clerk's sign-in page
-    await expect(page).toHaveURL(/accounts\.dev.*sign-in/);
+    // Should redirect to custom access denied page
+    await expect(page).toHaveURL(/\/access-denied\?from=%2Fevents%2F1/);
+    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
+
+    const signInLink = page.getByRole('link', { name: 'Go to Sign In' });
+    await expect(signInLink).toHaveAttribute('href', '/sign-in');
+
+    await signInLink.click();
+    await expect(page).toHaveURL('/sign-in');
   });
 });
 

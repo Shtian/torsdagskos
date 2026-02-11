@@ -9,6 +9,7 @@
 - Use stable selectors and roles; avoid brittle text where possible.
 - Playwright config uses `testIdAttribute: 'data-test-id'`; prefer `page.getByTestId(...)` over manual `[data-test-id=...]` selectors.
 - Keep specs focused: one behavior per test, minimal setup.
+- Unauthenticated route assertions should target local `/access-denied` first; validate the invite-only message and sign-in link instead of expecting direct middleware redirects to Clerk-hosted domains.
 
 ## Test Helpers (tests/helpers/api-helpers.ts)
 

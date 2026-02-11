@@ -12,14 +12,13 @@ import { test, expect } from './fixtures';
  */
 
 test.describe('Smoke tests @unauth', () => {
-  test('homepage redirects unauthenticated users to Clerk sign-in', async ({ page }) => {
+  test('homepage redirects unauthenticated users to access denied page', async ({ page }) => {
     // Attempt to visit the homepage without authentication
     await page.goto('/');
 
-    // Should redirect to Clerk's sign-in page
-    // Clerk uses accounts.dev subdomain for hosted auth UI
-    expect(page.url()).toContain('accounts.dev');
-    expect(page.url()).toContain('sign-in');
+    // Should redirect to the custom access denied page
+    await expect(page).toHaveURL(/\/access-denied/);
+    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
   });
 
   test('sign-in page is accessible', async ({ page }) => {
