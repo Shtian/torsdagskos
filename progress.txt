@@ -33,6 +33,8 @@
 - Web-first assertions: Use `await expect(locator).toBeVisible()` instead of timeouts
 - User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
 - Project test IDs: Playwright is configured with `testIdAttribute: 'data-test-id'`; prefer `getByTestId(...)` over raw attribute locators
+- Responsive UI tests should set viewport sizes explicitly and assert `document.documentElement.scrollWidth <= window.innerWidth` to catch horizontal overflow regressions
+- Touch-target accessibility checks can be automated by asserting `locator.boundingBox()` width/height are both at least `44` pixels
 - Specific locators: Use `page.getByRole('heading', { name: /pattern/i, level: 2 })` to avoid multiple matches
 - Authenticated API calls: Use `page.evaluate(() => fetch('/api/...'))` to include auth cookies
 - Browser notification E2E tests: Override `window.Notification` with `page.addInitScript()` before navigation to make permission flows deterministic (`granted`/`denied`)
@@ -702,4 +704,29 @@
     - When auth redirect behavior changes, update both `tests/auth.spec.ts` and `tests/smoke.spec.ts` to keep baseline unauthenticated checks aligned.
   - Useful context (e.g., "the evaluation panel is in component X")
     - Middleware now handles invite-only routing centrally in `src/middleware.ts`; the message UI lives in `src/pages/access-denied.astro`.
+---
+## 2026-02-11 15:22 CET - US-017
+- What was implemented
+  - Polished mobile-first responsive behavior in shared layout and event pages: header actions now adapt across 320px-428px widths without crowding, with explicit 44x44 minimum touch targets for primary controls.
+  - Added global responsive safeguards (`box-sizing`, media max-width handling, and horizontal overflow protection) and mobile-safe toast positioning to avoid clipped feedback messages.
+  - Added Playwright E2E coverage in `tests/responsive.spec.ts` validating mobile/tablet viewports, touch target sizing, no horizontal scroll, and form input mobile usability.
+  - Verified with `pnpm astro check` and `pnpm test --workers=1`.
+- Files changed
+  - `src/layouts/Layout.astro`
+  - `src/styles/global.css`
+  - `src/pages/events/new.astro`
+  - `src/pages/events/[id].astro`
+  - `src/pages/events/[id]/edit.astro`
+  - `tests/responsive.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Responsive regressions are easiest to guard by combining viewport-specific assertions with overflow checks (`documentElement.scrollWidth` vs `window.innerWidth`).
+    - Touch target accessibility can be enforced in Playwright with `locator.boundingBox()` assertions for minimum 44px dimensions.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full parallel Playwright runs remain flaky from shared test-data cleanup races; stable end-to-end verification is still `pnpm test --workers=1`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Header navigation responsiveness is centralized in `src/layouts/Layout.astro`, while toast positioning behavior for event flows is controlled in event page scripts and shared `.toast-message` styles.
 ---

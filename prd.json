@@ -315,8 +315,8 @@
         "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Polished mobile-first responsive behavior across shared layout and event forms/details. Header actions now adapt cleanly to 320px-428px screens with 44x44 touch targets, global overflow safeguards were added, and toast placement is mobile-safe. Added Playwright E2E coverage in tests/responsive.spec.ts for mobile and tablet viewports (touch targets, no horizontal scroll, form input usability). Typecheck passes. Playwright passes in stable mode (pnpm test --workers=1)."
     },
     {
       "id": "US-018",

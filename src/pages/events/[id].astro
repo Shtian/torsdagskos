@@ -81,7 +81,7 @@ const isUpcoming = new Date(event.dateTime) >= now;
       <p class="m-0 text-[0.95rem] text-(--color-text-secondary) sm:text-[1.1rem]">{formatEventDate(event.dateTime)}</p>
       {isUpcoming && (
         <div class="mt-4">
-          <a href={`/events/${event.id}/edit`} class="inline-block rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-4 py-2 font-medium text-white no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark)">Edit Event</a>
+          <a href={`/events/${event.id}/edit`} class="touch-target inline-flex items-center rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-4 py-2 font-medium text-white no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark)">Edit Event</a>
         </div>
       )}
     </div>
@@ -258,7 +258,7 @@ const isUpcoming = new Date(event.dateTime) >= now;
 
           // Show success message
           const successMessage = document.createElement('div');
-          successMessage.className = 'fixed right-6 top-[100px] z-[1000] rounded-md bg-(--color-success) px-6 py-4 text-white shadow-lg';
+          successMessage.className = 'toast-message fixed z-[1000] rounded-md bg-(--color-success) px-6 py-4 text-white shadow-lg';
           successMessage.setAttribute('data-test-id', 'rsvp-success-message');
           successMessage.textContent = 'RSVP updated successfully!';
           document.body.appendChild(successMessage);

@@ -8,6 +8,8 @@
 - Many specs mutate shared DB state via `/api/test/seed` cleanup; full parallel runs can race across files. Prefer `pnpm test --workers=1` for stable full-suite verification, or isolate data/cleanup per spec when adding new tests.
 - Use stable selectors and roles; avoid brittle text where possible.
 - Playwright config uses `testIdAttribute: 'data-test-id'`; prefer `page.getByTestId(...)` over manual `[data-test-id=...]` selectors.
+- For responsive checks, set explicit viewport sizes in-spec (`page.setViewportSize`) and assert no horizontal overflow with `document.documentElement.scrollWidth <= window.innerWidth`.
+- For mobile accessibility touch targets, assert clickable control dimensions with `locator.boundingBox()` and keep both width/height `>= 44`.
 - Keep specs focused: one behavior per test, minimal setup.
 - Unauthenticated route assertions should target local `/access-denied` first; validate the invite-only message and sign-in link instead of expecting direct middleware redirects to Clerk-hosted domains.
 

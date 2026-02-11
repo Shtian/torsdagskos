@@ -119,10 +119,10 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
       </div>
 
       <div class="mt-8 flex flex-col gap-4 sm:flex-row">
-        <button type="submit" class="inline-block cursor-pointer rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-6 py-3 text-center text-base font-medium text-white transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" id="submit-button">
+        <button type="submit" class="touch-target inline-block cursor-pointer rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-6 py-3 text-center text-base font-medium text-white transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" id="submit-button">
           Create Event
         </button>
-        <a href="/" class="inline-block rounded-md border-2 border-(--color-border) bg-white px-6 py-3 text-center text-base font-medium text-(--color-text-primary) no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) sm:w-auto">Cancel</a>
+        <a href="/" class="touch-target inline-flex items-center justify-center rounded-md border-2 border-(--color-border) bg-white px-6 py-3 text-center text-base font-medium text-(--color-text-primary) no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) sm:w-auto">Cancel</a>
       </div>
     </form>
   </div>
@@ -198,7 +198,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
     function showMessage(text: string, type: 'success' | 'error') {
       const message = document.createElement('div');
-      const baseClasses = 'fixed right-6 top-[100px] z-[1000] rounded-md px-6 py-4 text-white shadow-lg transition';
+      const baseClasses = 'toast-message fixed z-[1000] rounded-md px-6 py-4 text-white shadow-lg transition';
       message.className = type === 'success'
         ? `${baseClasses} bg-(--color-success)`
         : `${baseClasses} bg-(--color-error)`;
