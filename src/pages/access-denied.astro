@@ -1,0 +1,33 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const requestedPath = Astro.url.searchParams.get('from');
+---
+
+<Layout
+  title="Invite-Only Access - Torsdagskos"
+  description="This private app is invite-only. Sign in with an invited account to continue."
+>
+  <section class="mx-auto mt-10 max-w-2xl rounded-xl border border-(--color-border) bg-white p-6 text-center shadow-sm sm:mt-16 sm:p-10">
+    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-(--color-text-secondary)">
+      Access Restricted
+    </p>
+    <h2 class="mb-4 text-3xl text-(--color-accent-dark) sm:text-4xl">
+      This is an invite-only application
+    </h2>
+    <p class="mx-auto mb-6 max-w-lg text-base text-(--color-text-secondary)">
+      You need an account invitation to continue.
+      {requestedPath && (
+        <>
+          {' '}You tried to open <code class="rounded bg-(--color-primary-100) px-1 py-0.5 text-sm">{requestedPath}</code>.
+        </>
+      )}
+    </p>
+    <a
+      href="/sign-in"
+      class="inline-block rounded-md bg-(--color-accent) px-5 py-3 text-sm font-medium text-white no-underline transition duration-200 hover:-translate-y-px hover:bg-(--color-accent-dark) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)"
+    >
+      Go to Sign In
+    </a>
+  </section>
+</Layout>

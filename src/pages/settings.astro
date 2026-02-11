@@ -1,0 +1,261 @@
+---
+import { clerkClient } from '@clerk/astro/server';
+import { db, Users, eq } from 'astro:db';
+import Layout from '../layouts/Layout.astro';
+
+const { userId } = Astro.locals.auth();
+if (!userId) {
+  return Astro.redirect('/sign-in');
+}
+
+const clerkUser = await clerkClient(Astro).users.getUser(userId);
+
+let currentUser = await db
+  .select()
+  .from(Users)
+  .where(eq(Users.clerkUserId, userId))
+  .get();
+
+if (!currentUser) {
+  try {
+    await db.insert(Users).values({
+      clerkUserId: userId,
+      email: clerkUser.emailAddresses[0]?.emailAddress || '',
+      name:
+        `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
+        clerkUser.emailAddresses[0]?.emailAddress ||
+        'User',
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    if (!(error instanceof Error && error.message.includes('UNIQUE constraint'))) {
+      throw error;
+    }
+  }
+
+  currentUser = await db
+    .select()
+    .from(Users)
+    .where(eq(Users.clerkUserId, userId))
+    .get();
+}
+
+const notificationsEnabled = currentUser?.browserNotificationsEnabled ?? false;
+const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
+---
+
+<Layout
+  title="Settings - Torsdagskos"
+  description="Manage browser notification permissions and push subscription preferences."
+>
+  <section class="mx-auto grid max-w-190 gap-6" aria-labelledby="settings-title">
+    <a href="/" class="w-fit text-(--color-accent) no-underline hover:text-(--color-accent-dark)">&larr; Back to Events</a>
+    <h1 id="settings-title" class="m-0 text-2xl sm:text-[2rem]">Settings</h1>
+
+    <article class="rounded-lg border border-(--color-border) bg-white p-6 shadow-sm" aria-labelledby="notifications-title">
+      <h2 id="notifications-title" class="mb-2 mt-0 text-[1.4rem]">Browser Notifications</h2>
+      <p class="mb-5 mt-0 text-(--color-text-secondary)">
+        Enable browser notifications to receive alerts directly in this browser.
+      </p>
+
+      <dl class="mb-5 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-md border border-(--color-border) bg-(--color-primary-100) p-4">
+          <dt class="mb-1 text-[0.9rem] text-(--color-text-secondary)">Permission status</dt>
+          <dd id="permission-status" class="m-0 text-[1.05rem] font-semibold text-(--color-accent-dark)">Checking...</dd>
+        </div>
+        <div class="rounded-md border border-(--color-border) bg-(--color-primary-100) p-4">
+          <dt class="mb-1 text-[0.9rem] text-(--color-text-secondary)">Saved preference</dt>
+          <dd id="saved-preference" class="m-0 text-[1.05rem] font-semibold text-(--color-accent-dark)" data-enabled={String(notificationsEnabled)}>
+            {notificationsEnabled ? 'Enabled' : 'Disabled'}
+          </dd>
+        </div>
+      </dl>
+
+      <button type="button" id="request-permission" class="min-h-11 rounded-md bg-(--color-accent) px-5 py-3 text-base text-white transition-colors duration-200 hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">
+        Request notification permission
+      </button>
+
+      <p id="feedback" class="mb-0 mt-4 min-h-6 text-(--color-text-secondary)" role="status" aria-live="polite"></p>
+    </article>
+  </section>
+</Layout>
+
+<script define:vars={{ vapidPublicKey }}>
+  // @ts-nocheck
+  const permissionStatus = document.getElementById('permission-status');
+  const savedPreference = document.getElementById('saved-preference');
+  const requestButton = document.getElementById('request-permission');
+  const feedback = document.getElementById('feedback');
+  const supportsPush = 'serviceWorker' in navigator && 'PushManager' in window;
+
+  /** @type {(permission: string) => string} */
+  const capitalize = (permission) => {
+    if (!permission) return 'Unknown';
+    return permission.charAt(0).toUpperCase() + permission.slice(1);
+  }
+
+  /** @type {(message: string, type: 'success' | 'error') => void} */
+  const setFeedback = (message, type) => {
+    if (!feedback) return;
+    feedback.textContent = message;
+    feedback.classList.remove('text-(--color-success)', 'text-(--color-error)', 'text-(--color-text-secondary)');
+    feedback.classList.add(type === 'success' ? 'text-(--color-success)' : 'text-(--color-error)');
+  }
+
+  function setPermissionDisplay() {
+    if (!permissionStatus || !requestButton) {
+      return;
+    }
+
+    if (!('Notification' in window)) {
+      permissionStatus.textContent = 'Unsupported';
+      requestButton.setAttribute('disabled', 'true');
+      setFeedback('This browser does not support notifications.', 'error');
+      return;
+    }
+
+    permissionStatus.textContent = capitalize(Notification.permission);
+  }
+
+  /** @type {(enabled: boolean) => Promise<unknown>} */
+  const savePreference = async (enabled) => {
+    const response = await fetch('/api/settings/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ enabled }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to save notification preference');
+    }
+
+    return response.json();
+  }
+
+  /** @type {(subscription: unknown | null) => Promise<unknown>} */
+  const savePushSubscription = async (subscription) => {
+    const response = await fetch('/api/settings/push-subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ subscription }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to save push subscription');
+    }
+
+    return response.json();
+  }
+
+  /** @type {(base64String: string) => Uint8Array} */
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replaceAll('-', '+').replaceAll('_', '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+
+    return outputArray;
+  }
+
+  const getServiceWorkerRegistration = async () => {
+    if (!('serviceWorker' in navigator)) {
+      return null;
+    }
+
+    const existingRegistration = await navigator.serviceWorker.getRegistration('/service-worker.js');
+    if (existingRegistration) {
+      return existingRegistration;
+    }
+
+    return navigator.serviceWorker.register('/service-worker.js');
+  }
+
+  /** @type {(enabled: boolean) => Promise<void>} */
+  const syncPushSubscription = async (enabled) => {
+    if (!supportsPush) {
+      return;
+    }
+
+    const registration = await getServiceWorkerRegistration();
+    if (!registration) {
+      return;
+    }
+
+    const existingSubscription = await registration.pushManager.getSubscription();
+
+    if (!enabled) {
+      if (existingSubscription) {
+        await existingSubscription.unsubscribe();
+      }
+      await savePushSubscription(null);
+      return;
+    }
+
+    if (!vapidPublicKey) {
+      return;
+    }
+
+    let subscription = existingSubscription;
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      });
+    }
+
+    const serializedSubscription = typeof subscription.toJSON === 'function'
+      ? subscription.toJSON()
+      : subscription;
+
+    await savePushSubscription(serializedSubscription);
+  }
+
+  setPermissionDisplay();
+
+  requestButton?.addEventListener('click', async () => {
+    if (!('Notification' in window)) {
+      setFeedback('Notifications are not supported in this browser.', 'error');
+      return;
+    }
+
+    requestButton.setAttribute('disabled', 'true');
+    requestButton.setAttribute('aria-busy', 'true');
+    requestButton.textContent = 'Updating...';
+    setFeedback('Updating notification settings...', 'success');
+
+    try {
+      const permission = await Notification.requestPermission();
+      setPermissionDisplay();
+
+      const enabled = permission === 'granted';
+      await syncPushSubscription(enabled);
+      await savePreference(enabled);
+
+      if (savedPreference) {
+        savedPreference.textContent = enabled ? 'Enabled' : 'Disabled';
+        savedPreference.setAttribute('data-enabled', String(enabled));
+      }
+
+      if (enabled) {
+        setFeedback('Browser notifications enabled.', 'success');
+      } else {
+        setFeedback('Browser notifications are disabled for this browser.', 'success');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not update notification settings. Please try again.';
+      setFeedback(message, 'error');
+    } finally {
+      requestButton.removeAttribute('disabled');
+      requestButton.removeAttribute('aria-busy');
+      requestButton.textContent = 'Request notification permission';
+    }
+  });
+</script>

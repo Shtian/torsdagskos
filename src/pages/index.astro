@@ -1,11 +1,155 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import { db, Users, Events, Rsvps, eq } from 'astro:db';
+import { clerkClient } from '@clerk/astro/server';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// Get authenticated user
+const { userId } = Astro.locals.auth();
+
+let user = null;
+
+// Sync user to local database if not exists
+if (userId) {
+  user = await clerkClient(Astro).users.getUser(userId);
+
+  const existingUser = await db
+    .select()
+    .from(Users)
+    .where(eq(Users.clerkUserId, userId))
+    .get();
+
+  if (!existingUser) {
+    try {
+      await db.insert(Users).values({
+        clerkUserId: userId,
+        email: user.emailAddresses[0]?.emailAddress || '',
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User',
+        createdAt: new Date()
+      });
+    } catch (error) {
+      // Ignore unique constraint errors - user was already created by concurrent request
+      if (!(error instanceof Error && error.message.includes('UNIQUE constraint'))) {
+        throw error;
+      }
+    }
+  }
+}
+
+// Fetch all events
+const allEvents = await db.select().from(Events).all();
+
+// Get most recent event for duplication (sorted by createdAt descending)
+const mostRecentEvent = allEvents.length > 0
+  ? [...allEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+  : null;
+
+// Get RSVP counts for each event
+const eventsWithRsvps = await Promise.all(
+  allEvents.map(async (event) => {
+    const rsvps = await db
+      .select()
+      .from(Rsvps)
+      .where(eq(Rsvps.eventId, event.id))
+      .all();
+
+    const going = rsvps.filter(r => r.status === 'going').length;
+    const maybe = rsvps.filter(r => r.status === 'maybe').length;
+    const notGoing = rsvps.filter(r => r.status === 'not_going').length;
+
+    return {
+      ...event,
+      rsvpCounts: { going, maybe, notGoing }
+    };
+  })
+);
+
+// Separate into upcoming and past events (Europe/Oslo timezone)
+const now = new Date();
+const upcomingEvents = eventsWithRsvps
+  .filter(event => new Date(event.dateTime) >= now)
+  .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+
+const pastEvents = eventsWithRsvps
+  .filter(event => new Date(event.dateTime) < now)
+  .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+
+// Format date in Europe/Oslo timezone
+function formatEventDate(date: Date): string {
+  return new Intl.DateTimeFormat('no-NO', {
+    timeZone: 'Europe/Oslo',
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(date));
+}
 ---
 
-<Layout>
-	<Welcome />
+<Layout
+  title="Events - Torsdagskos"
+  description="Browse upcoming and past Torsdagskos events, including location, time, and RSVP summaries."
+>
+  <div class="mx-auto p-4 sm:p-6">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
+      <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Upcoming Events</h1>
+      {mostRecentEvent && (
+        <a
+          href={`/events/new?duplicate=true&title=${encodeURIComponent(mostRecentEvent.title)}&description=${encodeURIComponent(mostRecentEvent.description || '')}&location=${encodeURIComponent(mostRecentEvent.location)}&mapLink=${encodeURIComponent(mostRecentEvent.mapLink || '')}`}
+          class="cursor-pointer whitespace-nowrap rounded-md border-2 border-(--color-accent) bg-white px-4 py-2 text-center text-[0.9rem] font-medium text-(--color-accent) no-underline transition-all duration-200 hover:-translate-y-px hover:bg-(--color-accent) hover:text-white max-sm:w-full"
+        >
+          Duplicate Last Event
+        </a>
+      )}
+      {!mostRecentEvent && (
+        <button class="cursor-not-allowed whitespace-nowrap rounded-md border-2 border-(--color-border) bg-white px-4 py-2 text-center text-[0.9rem] font-medium text-(--color-text-muted) opacity-40 max-sm:w-full" disabled aria-label="Duplicate last event unavailable">
+          Duplicate Last Event
+        </button>
+      )}
+    </div>
+
+    {upcomingEvents.length === 0 && pastEvents.length === 0 && (
+      <div class="rounded-lg border-2 border-dashed border-(--color-border) bg-white px-6 py-12 text-center text-(--color-text-muted)">
+        <p>No events yet. Check back soon!</p>
+      </div>
+    )}
+
+    {upcomingEvents.length > 0 && (
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {upcomingEvents.map(event => (
+          <a href={`/events/${event.id}`} data-test-id="event-card" class="block rounded-lg border border-(--color-border) bg-white p-6 text-inherit no-underline transition-all duration-200 hover:-translate-y-0.5 hover:border-(--color-accent) hover:shadow-md">
+            <h2 class="mb-3 mt-0 text-[1.1rem] text-(--color-accent-dark) sm:text-xl">{event.title}</h2>
+            <p class="mb-2 mt-0 text-[0.95rem] text-(--color-text-secondary)">{formatEventDate(event.dateTime)}</p>
+            <p class="mb-4 mt-0 text-[0.9rem] text-(--color-text-secondary)">{event.location}</p>
+            <div class="flex flex-wrap gap-3">
+              <span class="rounded-full bg-[#e8f5e9] px-3 py-1 text-[0.85rem] font-medium text-(--color-success)">{event.rsvpCounts.going} going</span>
+              <span class="rounded-full bg-[#fff3e0] px-3 py-1 text-[0.85rem] font-medium text-(--color-warning)">{event.rsvpCounts.maybe} maybe</span>
+              <span class="rounded-full bg-[#ffebee] px-3 py-1 text-[0.85rem] font-medium text-(--color-error)">{event.rsvpCounts.notGoing} not going</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+
+    {pastEvents.length > 0 && (
+      <>
+        <h1 class="mt-12 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Past Events</h1>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {pastEvents.map(event => (
+            <a href={`/events/${event.id}`} data-test-id="event-card" class="block rounded-lg border border-(--color-border) bg-white p-6 text-inherit no-underline opacity-70 transition-all duration-200 hover:-translate-y-0.5 hover:border-(--color-accent) hover:shadow-md">
+              <h2 class="mb-3 mt-0 text-[1.1rem] text-(--color-accent-dark) sm:text-xl">{event.title}</h2>
+              <p class="mb-2 mt-0 text-[0.95rem] text-(--color-text-secondary)">{formatEventDate(event.dateTime)}</p>
+              <p class="mb-4 mt-0 text-[0.9rem] text-(--color-text-secondary)">{event.location}</p>
+              <div class="flex flex-wrap gap-3">
+                <span class="rounded-full bg-[#e8f5e9] px-3 py-1 text-[0.85rem] font-medium text-(--color-success)">{event.rsvpCounts.going} going</span>
+                <span class="rounded-full bg-[#fff3e0] px-3 py-1 text-[0.85rem] font-medium text-(--color-warning)">{event.rsvpCounts.maybe} maybe</span>
+                <span class="rounded-full bg-[#ffebee] px-3 py-1 text-[0.85rem] font-medium text-(--color-error)">{event.rsvpCounts.notGoing} not going</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </>
+    )}
+  </div>
 </Layout>

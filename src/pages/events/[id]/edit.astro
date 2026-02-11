@@ -1,0 +1,260 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { db, Events, eq } from 'astro:db';
+
+const { id } = Astro.params;
+const eventId = Number(id);
+
+if (!Number.isFinite(eventId)) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const event = await db
+  .select()
+  .from(Events)
+  .where(eq(Events.id, eventId))
+  .get();
+
+if (!event) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const isUpcoming = new Date(event.dateTime) >= new Date();
+if (!isUpcoming) {
+  return Astro.redirect(`/events/${event.id}`);
+}
+
+function getOsloDateInputValue(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Oslo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date(date));
+
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+  const day = parts.find((part) => part.type === 'day')?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
+function getOsloTimeInputValue(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Oslo',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date(date));
+
+  const hour = parts.find((part) => part.type === 'hour')?.value;
+  const minute = parts.find((part) => part.type === 'minute')?.value;
+
+  return `${hour}:${minute}`;
+}
+
+const prefillDate = getOsloDateInputValue(event.dateTime);
+const prefillTime = getOsloTimeInputValue(event.dateTime);
+---
+
+<Layout
+  title={`Edit ${event.title} - Torsdagskos`}
+  description={`Update details for ${event.title}, including date, location, and optional map link.`}
+>
+  <div class="mx-auto max-w-[700px] p-4 sm:p-6">
+    <div class="mb-8">
+      <a href={`/events/${event.id}`} class="mb-4 inline-block text-[0.95rem] text-(--color-accent) no-underline transition-colors duration-200 hover:text-(--color-accent-dark)">&larr; Back to Event</a>
+      <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Edit Event</h1>
+    </div>
+
+    <form id="event-form" class="rounded-lg border border-(--color-border) bg-white p-6 sm:p-8">
+      <div class="mb-6">
+        <label for="title" class="mb-2 block font-semibold text-(--color-text-primary)">
+          Event Title <span class="text-(--color-error)">*</span>
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+          required
+          value={event.title}
+        />
+      </div>
+
+      <div class="mb-6">
+        <label for="description" class="mb-2 block font-semibold text-(--color-text-primary)">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          class="min-h-[120px] w-full resize-y rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+          rows="5"
+        >{event.description}</textarea>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="mb-6">
+          <label for="date" class="mb-2 block font-semibold text-(--color-text-primary)">
+            Date <span class="text-(--color-error)">*</span>
+          </label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+            required
+            value={prefillDate}
+          />
+        </div>
+
+        <div class="mb-6">
+          <label for="time" class="mb-2 block font-semibold text-(--color-text-primary)">
+            Time <span class="text-(--color-error)">*</span>
+          </label>
+          <input
+            type="time"
+            id="time"
+            name="time"
+            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+            required
+            value={prefillTime}
+          />
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label for="location" class="mb-2 block font-semibold text-(--color-text-primary)">
+          Location <span class="text-(--color-error)">*</span>
+        </label>
+        <input
+          type="text"
+          id="location"
+          name="location"
+          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+          required
+          value={event.location}
+        />
+      </div>
+
+      <div class="mb-6">
+        <label for="mapLink" class="mb-2 block font-semibold text-(--color-text-primary)">
+          Map Link <span class="text-[0.9rem] font-normal text-(--color-text-muted)">(optional)</span>
+        </label>
+        <input
+          type="url"
+          id="mapLink"
+          name="mapLink"
+          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+          value={event.mapLink || ''}
+        />
+      </div>
+
+      <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+        <button type="submit" class="touch-target inline-block cursor-pointer rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-6 py-3 text-center text-base font-medium text-white transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" id="submit-button">
+          Save Changes
+        </button>
+        <a href={`/events/${event.id}`} class="touch-target inline-flex items-center justify-center rounded-md border-2 border-(--color-border) bg-white px-6 py-3 text-center text-base font-medium text-(--color-text-primary) no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) sm:w-auto">Cancel</a>
+      </div>
+      <p id="form-feedback" class="mb-0 mt-4 min-h-6 text-(--color-text-secondary)" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</Layout>
+
+<script is:inline define:vars={{ eventId }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('event-form');
+    const submitButton = document.getElementById('submit-button');
+    const feedback = document.getElementById('form-feedback');
+
+    if (!form || !submitButton) {
+      return;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const title = formData.get('title');
+      const description = formData.get('description');
+      const date = formData.get('date');
+      const time = formData.get('time');
+      const location = formData.get('location');
+      const mapLink = formData.get('mapLink');
+
+      if (!title || !date || !time || !location) {
+        showMessage('Please fill in all required fields.', 'error');
+        return;
+      }
+
+      const dateTimeString = `${date}T${time}:00`;
+      const dateTime = new Date(dateTimeString);
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Saving...';
+      submitButton.setAttribute('aria-busy', 'true');
+      if (feedback) {
+        feedback.textContent = 'Saving event changes...';
+      }
+
+      try {
+        const response = await fetch('/api/events/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId,
+            title,
+            description: description || '',
+            dateTime: dateTime.toISOString(),
+            location,
+            mapLink: mapLink || null,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => null);
+          throw new Error(errorPayload?.error || 'Failed to update event');
+        }
+
+        const result = await response.json();
+
+        showMessage('Event updated successfully!', 'success');
+        if (feedback) {
+          feedback.textContent = 'Event updated successfully. Redirecting to details...';
+        }
+
+        setTimeout(() => {
+          window.location.href = `/events/${result.eventId}`;
+        }, 1000);
+      } catch (error) {
+        showMessage('Failed to update event. Please try again.', 'error');
+        if (feedback) {
+          feedback.textContent = error instanceof Error ? error.message : 'Failed to update event. Please try again.';
+        }
+        submitButton.disabled = false;
+        submitButton.textContent = 'Save Changes';
+        submitButton.removeAttribute('aria-busy');
+      }
+    });
+
+    function showMessage(text, type) {
+      const message = document.createElement('div');
+      const baseClasses = 'toast-message fixed z-[1000] rounded-md px-6 py-4 text-white shadow-lg transition';
+      message.className = type === 'success'
+        ? `${baseClasses} bg-(--color-success)`
+        : `${baseClasses} bg-(--color-error)`;
+      message.setAttribute('data-test-id', type === 'success' ? 'success-message' : 'error-message');
+      message.setAttribute('role', type === 'success' ? 'status' : 'alert');
+      message.setAttribute('aria-live', type === 'success' ? 'polite' : 'assertive');
+      message.textContent = text;
+      document.body.appendChild(message);
+
+      setTimeout(() => {
+        message.remove();
+      }, 3000);
+    }
+  });
+</script>

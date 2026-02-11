@@ -1,0 +1,310 @@
+{
+  "project": "Torsdagskos",
+  "branchName": "ralph/shadcn-migration",
+  "description": "Full Astro app migration to shadcn components for a cohesive, high-quality interface using Astro + React islands.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Configure React islands and shadcn scaffold in Astro",
+      "description": "As a developer, I want shadcn and React islands configured so migrated components can be rendered consistently in Astro pages.",
+      "acceptanceCriteria": [
+        "Install and configure required React integration for Astro and shadcn dependencies",
+        "Add shadcn base scaffold files (component config and utility entry points)",
+        "Render one generated shadcn component from an Astro page via a React island",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Establish global light-theme tokens and baseline styles",
+      "description": "As a developer, I want one tokenized light-theme baseline so all migrated UI shares the same spacing, typography, and color system.",
+      "acceptanceCriteria": [
+        "Define global design tokens for color, spacing, radius, typography, and elevation in one source",
+        "Apply tokens in global styles without introducing dark-mode requirements",
+        "Confirm legacy conflicting base styles are removed or neutralized",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Select and integrate Google Fonts serif and sans-serif pair",
+      "description": "As a user, I want a polished serif and sans-serif font pairing so the interface feels cohesive and visually refined.",
+      "acceptanceCriteria": [
+        "Evaluate and select one serif and one sans-serif family from Google Fonts suitable for UI readability",
+        "Add selected font imports and wire them into global typography tokens/styles",
+        "Apply the pair consistently so headings and body text follow the defined typography roles",
+        "Document the chosen fonts and usage roles in project documentation",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Add core form primitives with shadcn",
+      "description": "As a developer, I want standard form primitives available so form UIs can be migrated without custom one-off controls.",
+      "acceptanceCriteria": [
+        "Generate and wire shadcn Button, Input, Label, Textarea, and Select components",
+        "Export primitives through a consistent local UI component path",
+        "Replace at least one existing form control usage with the new primitives",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Add surface and feedback primitives with shadcn",
+      "description": "As a developer, I want common display primitives so cards, badges, separators, and loading states are consistent across pages.",
+      "acceptanceCriteria": [
+        "Generate and wire shadcn Card, Badge, Separator, and Skeleton components",
+        "Replace at least one existing display section with these primitives",
+        "No duplicate legacy primitive implementation remains for replaced elements",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Add interactive overlay primitives with shadcn",
+      "description": "As a developer, I want consistent overlay components so dialogs, menus, and tabs behave uniformly in migrated UI flows.",
+      "acceptanceCriteria": [
+        "Generate and wire shadcn Dialog, DropdownMenu, and Tabs components",
+        "Integrate at least one dialog and one dropdown usage in existing UI",
+        "Keyboard interaction works for integrated dialog and menu usage",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Migrate app shell layout (header, footer, wrappers)",
+      "description": "As a user, I want a consistent shell structure so every page shares cohesive top-level layout styling.",
+      "acceptanceCriteria": [
+        "Migrate shared page shell, header, footer, and layout wrappers to shadcn-based structure",
+        "All non-API routes render with updated shell without routing changes",
+        "Responsive behavior remains functional at mobile and desktop breakpoints",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Migrate homepage UI (src/pages/index.astro)",
+      "description": "As a user, I want the homepage to use shadcn components so the main entry experience matches the new design system.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/index.astro to shadcn-based surface and interaction components",
+        "Current event listing behavior and links remain unchanged",
+        "Empty and populated states use shadcn-compatible patterns",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Migrate access denied page UI (src/pages/access-denied.astro)",
+      "description": "As a user, I want the access denied page to match the rest of the interface so auth edge cases feel consistent.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/access-denied.astro to shadcn-based components",
+        "Status messaging and navigation actions remain unchanged",
+        "Responsive layout remains functional on mobile and desktop",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Migrate sign-in page wrapper UI (src/pages/sign-in.astro)",
+      "description": "As a user, I want the sign-in page wrapper to use consistent layout and styling so authentication feels integrated with the app design.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/sign-in.astro wrapper layout to shadcn-compatible patterns",
+        "Existing Clerk sign-in functionality and redirect behavior remain unchanged",
+        "Spacing, hierarchy, and feedback containers use shared tokenized styles",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Migrate sign-up page wrapper UI (src/pages/sign-up.astro)",
+      "description": "As a user, I want the sign-up page wrapper to use consistent layout and styling so onboarding matches the new component system.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/sign-up.astro wrapper layout to shadcn-compatible patterns",
+        "Existing Clerk sign-up functionality and redirect behavior remain unchanged",
+        "Spacing, hierarchy, and feedback containers use shared tokenized styles",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Migrate new event page UI (src/pages/events/new.astro)",
+      "description": "As a user, I want event creation to use consistent form primitives so creating events feels cohesive and clear.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/events/new.astro form UI to shadcn form and feedback primitives",
+        "Validation, disabled, and loading states use shadcn-compatible patterns",
+        "Event creation submission behavior remains unchanged",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Migrate edit event page UI (src/pages/events/[id]/edit.astro)",
+      "description": "As a user, I want event editing to use the same component patterns so update flows feel consistent with event creation.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/events/[id]/edit.astro form UI to shadcn form and feedback primitives",
+        "Validation, disabled, and loading states use shadcn-compatible patterns",
+        "Event update submission behavior remains unchanged",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Migrate event detail page UI (src/pages/events/[id].astro)",
+      "description": "As a user, I want event details and RSVP controls to use consistent components so reading and interacting with event information is cohesive.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/events/[id].astro to shadcn surface and interaction primitives",
+        "Current event data rendering and RSVP actions remain unchanged",
+        "State indicators and action feedback use shadcn-compatible patterns",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Migrate history page UI (src/pages/history.astro)",
+      "description": "As a user, I want the history page to use the same design primitives so browsing past events feels consistent.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/history.astro to shadcn list and surface patterns",
+        "Current historical data rendering behavior remains unchanged",
+        "Empty and populated states are visually consistent with the new system",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Migrate settings page UI (src/pages/settings.astro)",
+      "description": "As a user, I want account and notification settings to use the same design primitives so preferences management matches the rest of the app.",
+      "acceptanceCriteria": [
+        "Migrate src/pages/settings.astro to shadcn-based form and surface primitives",
+        "Notification and preferences controls maintain existing behavior",
+        "No API contract changes are introduced",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Translate user-facing interface text to Norwegian",
+      "description": "As a Norwegian-speaking user, I want all user-facing UI text in Norwegian so the application feels natural and consistent.",
+      "acceptanceCriteria": [
+        "Translate all user-facing strings in non-API pages (src/pages/index.astro, src/pages/access-denied.astro, src/pages/sign-in.astro, src/pages/sign-up.astro, src/pages/events/new.astro, src/pages/events/[id]/edit.astro, src/pages/events/[id].astro, src/pages/history.astro, src/pages/settings.astro)",
+        "Preserve existing route paths, API payloads, and backend logic without introducing localization-related contract changes",
+        "Ensure labels, buttons, helper text, validation messages, and empty states are consistently translated to Norwegian",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Remove deprecated legacy UI assets",
+      "description": "As a developer, I want obsolete legacy UI artifacts removed so the codebase has one clear component system.",
+      "acceptanceCriteria": [
+        "Remove deprecated custom UI component files fully replaced by shadcn equivalents",
+        "Remove unused legacy CSS rules/utilities tied to removed components",
+        "No duplicate implementation remains for migrated primitives",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Document migration completion and usage guidelines",
+      "description": "As a maintainer, I want migration documentation and completion tracking so future work follows the new UI system consistently.",
+      "acceptanceCriteria": [
+        "Add migration checklist mapping old UI patterns to shadcn replacements with completion status",
+        "Update README with shadcn usage conventions for this codebase",
+        "List any approved exceptions and follow-up items explicitly",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

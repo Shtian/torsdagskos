@@ -1,10 +1,8 @@
-# Astro Starter Kit: Basics
+# Torsdagskos
 
-```sh
-pnpm create astro@latest -- --template basics
-```
+[![Playwright Tests](https://github.com/shtian/torsdagskos/actions/workflows/playwright.yml/badge.svg)](https://github.com/shtian/torsdagskos/actions/workflows/playwright.yml)
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Private meetup coordination website for monthly recurring events among close friends.
 
 ## 🚀 Project Structure
 
