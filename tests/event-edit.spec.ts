@@ -111,7 +111,7 @@ test.describe('Event Edit', () => {
 
     await page.getByRole('button', { name: 'Save Changes' }).click();
 
-    await expect(page.locator('.success-message')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-test-id="success-message"]')).toBeVisible({ timeout: 10000 });
     await page.waitForURL(`/events/${eventId}`, { timeout: 10000 });
 
     await expect(page.getByRole('heading', { name: updatedTitle, level: 1 })).toBeVisible();

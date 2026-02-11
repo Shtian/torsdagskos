@@ -47,7 +47,7 @@ test.describe('Event Creation', () => {
     await page.getByRole('button', { name: /create event/i, exact: true }).click();
 
     // Wait for success message
-    await expect(page.locator('.success-message')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-test-id="success-message"]')).toBeVisible({ timeout: 10000 });
 
     // Wait for redirect to event detail page (URL pattern)
     await page.waitForURL(/\/events\/\d+$/, { timeout: 10000 });
@@ -138,8 +138,8 @@ test.describe('Event Creation', () => {
     await page.getByRole('button', { name: /create event/i, exact: true }).click();
 
     // Should show error message
-    await expect(page.locator('.error-message')).toBeVisible();
-    await expect(page.locator('.error-message')).toHaveText(/failed to create event/i);
+    await expect(page.locator('[data-test-id="error-message"]')).toBeVisible();
+    await expect(page.locator('[data-test-id="error-message"]')).toHaveText(/failed to create event/i);
   });
 
   test('should display newly created event on homepage', async ({ page }) => {

@@ -110,7 +110,7 @@ test.describe('Events List Page', () => {
     await expect(page.getByText('No events yet. Check back soon!')).toBeVisible();
 
     // Verify no event cards are displayed
-    const eventCards = page.locator('.event-card');
+    const eventCards = page.locator('[data-test-id="event-card"]');
     await expect(eventCards).toHaveCount(0);
   });
 
@@ -300,10 +300,10 @@ test.describe('Event Detail Page', () => {
     await page.goto(`/events/${event.id}`);
 
     // Verify RSVP count boxes
-    const rsvpCounts = page.locator('.rsvp-counts');
-    await expect(rsvpCounts.locator('.rsvp-count-item').filter({ hasText: '2' }).filter({ hasText: 'Going' })).toBeVisible();
-    await expect(rsvpCounts.locator('.rsvp-count-item').filter({ hasText: '1' }).filter({ hasText: 'Maybe' })).toBeVisible();
-    await expect(rsvpCounts.locator('.rsvp-count-item').filter({ hasText: '1' }).filter({ hasText: 'Not Going' })).toBeVisible();
+    const rsvpCounts = page.locator('[data-test-id="rsvp-counts"]');
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '2' }).filter({ hasText: 'Going' })).toBeVisible();
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Maybe' })).toBeVisible();
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Not Going' })).toBeVisible();
 
     // Verify "Going" list
     await expect(page.getByRole('heading', { name: /going \(2\)/i })).toBeVisible();
@@ -358,12 +358,12 @@ test.describe('Event Detail Page', () => {
     // Verify No Response count is displayed
     // Note: We don't check the specific count because users persist across test runs
     // The important thing is that the No Response item is visible and shows a count
-    const rsvpCounts = page.locator('.rsvp-counts');
-    const noResponseItem = rsvpCounts.locator('.rsvp-count-item').filter({ hasText: 'No Response' });
+    const rsvpCounts = page.locator('[data-test-id="rsvp-counts"]');
+    const noResponseItem = rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'No Response' });
     await expect(noResponseItem).toBeVisible();
 
     // Verify the "Going" count shows 1 (the one RSVP we created)
-    await expect(rsvpCounts.locator('.rsvp-count-item').filter({ hasText: '1' }).filter({ hasText: 'Going' })).toBeVisible();
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Going' })).toBeVisible();
   });
 
   test('back link navigates to events list', async ({ page }) => {
@@ -455,7 +455,7 @@ test.describe('Event Detail Page', () => {
     await page.goto(`/events/${event.id}`);
 
     // Verify current user's RSVP status is displayed prominently
-    const currentUserRsvp = page.locator('.current-user-rsvp');
+    const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
     await expect(currentUserRsvp.getByText('Your status:')).toBeVisible();
     await expect(currentUserRsvp.getByText('Going')).toBeVisible();
@@ -482,7 +482,7 @@ test.describe('Event Detail Page', () => {
     await page.goto(`/events/${event.id}`);
 
     // Verify "No Response" is displayed for current user
-    const currentUserRsvp = page.locator('.current-user-rsvp');
+    const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
     await expect(currentUserRsvp.getByText('Your status:')).toBeVisible();
     await expect(currentUserRsvp.getByText('No Response')).toBeVisible();

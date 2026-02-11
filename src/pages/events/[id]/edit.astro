@@ -58,307 +58,105 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 ---
 
 <Layout title={`Edit ${event.title}`}>
-  <div class="container">
-    <div class="event-header">
-      <a href={`/events/${event.id}`} class="back-link">&larr; Back to Event</a>
-      <h1 class="page-title">Edit Event</h1>
+  <div class="mx-auto max-w-[700px] p-4 sm:p-6">
+    <div class="mb-8">
+      <a href={`/events/${event.id}`} class="mb-4 inline-block text-[0.95rem] text-(--color-accent) no-underline transition-colors duration-200 hover:text-(--color-accent-dark)">&larr; Back to Event</a>
+      <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Edit Event</h1>
     </div>
 
-    <form id="event-form" class="event-form">
-      <div class="form-group">
-        <label for="title" class="form-label">
-          Event Title <span class="required">*</span>
+    <form id="event-form" class="rounded-lg border border-(--color-border) bg-white p-6 sm:p-8">
+      <div class="mb-6">
+        <label for="title" class="mb-2 block font-semibold text-(--color-text-primary)">
+          Event Title <span class="text-(--color-error)">*</span>
         </label>
         <input
           type="text"
           id="title"
           name="title"
-          class="form-input"
+          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
           required
           value={event.title}
         />
       </div>
 
-      <div class="form-group">
-        <label for="description" class="form-label">
+      <div class="mb-6">
+        <label for="description" class="mb-2 block font-semibold text-(--color-text-primary)">
           Description
         </label>
         <textarea
           id="description"
           name="description"
-          class="form-textarea"
+          class="min-h-[120px] w-full resize-y rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
           rows="5"
         >{event.description}</textarea>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="date" class="form-label">
-            Date <span class="required">*</span>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="mb-6">
+          <label for="date" class="mb-2 block font-semibold text-(--color-text-primary)">
+            Date <span class="text-(--color-error)">*</span>
           </label>
           <input
             type="date"
             id="date"
             name="date"
-            class="form-input"
+            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
             required
             value={prefillDate}
           />
         </div>
 
-        <div class="form-group">
-          <label for="time" class="form-label">
-            Time <span class="required">*</span>
+        <div class="mb-6">
+          <label for="time" class="mb-2 block font-semibold text-(--color-text-primary)">
+            Time <span class="text-(--color-error)">*</span>
           </label>
           <input
             type="time"
             id="time"
             name="time"
-            class="form-input"
+            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
             required
             value={prefillTime}
           />
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="location" class="form-label">
-          Location <span class="required">*</span>
+      <div class="mb-6">
+        <label for="location" class="mb-2 block font-semibold text-(--color-text-primary)">
+          Location <span class="text-(--color-error)">*</span>
         </label>
         <input
           type="text"
           id="location"
           name="location"
-          class="form-input"
+          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
           required
           value={event.location}
         />
       </div>
 
-      <div class="form-group">
-        <label for="mapLink" class="form-label">
-          Map Link <span class="optional">(optional)</span>
+      <div class="mb-6">
+        <label for="mapLink" class="mb-2 block font-semibold text-(--color-text-primary)">
+          Map Link <span class="text-[0.9rem] font-normal text-(--color-text-muted)">(optional)</span>
         </label>
         <input
           type="url"
           id="mapLink"
           name="mapLink"
-          class="form-input"
+          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
           value={event.mapLink || ''}
         />
       </div>
 
-      <div class="form-actions">
-        <button type="submit" class="btn-primary" id="submit-button">
+      <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+        <button type="submit" class="inline-block cursor-pointer rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-6 py-3 text-center text-base font-medium text-white transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" id="submit-button">
           Save Changes
         </button>
-        <a href={`/events/${event.id}`} class="btn-secondary">Cancel</a>
+        <a href={`/events/${event.id}`} class="inline-block rounded-md border-2 border-(--color-border) bg-white px-6 py-3 text-center text-base font-medium text-(--color-text-primary) no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) sm:w-auto">Cancel</a>
       </div>
     </form>
   </div>
 </Layout>
-
-<style>
-  .container {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: var(--space-6);
-  }
-
-  .event-header {
-    margin-bottom: var(--space-8);
-  }
-
-  .back-link {
-    display: inline-block;
-    color: var(--color-accent);
-    text-decoration: none;
-    margin-bottom: var(--space-4);
-    font-size: 0.95rem;
-    transition: color 0.2s ease;
-  }
-
-  .back-link:hover {
-    color: var(--color-accent-dark);
-  }
-
-  .page-title {
-    font-size: 2rem;
-    margin: 0;
-    color: var(--color-accent-dark);
-  }
-
-  .event-form {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-8);
-  }
-
-  .form-group {
-    margin-bottom: var(--space-6);
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-  }
-
-  @media (min-width: 640px) {
-    .form-row {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  .form-label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: var(--space-2);
-    color: var(--color-text);
-  }
-
-  .required {
-    color: var(--color-error);
-  }
-
-  .optional {
-    color: var(--color-text-muted);
-    font-weight: 400;
-    font-size: 0.9rem;
-  }
-
-  .form-input,
-  .form-textarea {
-    width: 100%;
-    padding: var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    font-family: inherit;
-    transition: border-color 0.2s ease;
-    background: var(--color-background);
-  }
-
-  .form-input:focus,
-  .form-textarea:focus {
-    outline: none;
-    border-color: var(--color-accent);
-  }
-
-  .form-textarea {
-    resize: vertical;
-    min-height: 120px;
-  }
-
-  .form-actions {
-    display: flex;
-    gap: var(--space-4);
-    margin-top: var(--space-8);
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    padding: var(--space-3) var(--space-6);
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
-    display: inline-block;
-    text-align: center;
-  }
-
-  .btn-primary {
-    background: var(--color-accent);
-    color: white;
-    border-color: var(--color-accent);
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: var(--color-accent-dark);
-    border-color: var(--color-accent-dark);
-    transform: translateY(-1px);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary {
-    background: var(--color-surface);
-    color: var(--color-text);
-    border-color: var(--color-border);
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--color-accent);
-    transform: translateY(-1px);
-  }
-
-  .error-message {
-    position: fixed;
-    top: 100px;
-    right: var(--space-6);
-    background: var(--color-error);
-    color: white;
-    padding: var(--space-4) var(--space-6);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-  }
-
-  .success-message {
-    position: fixed;
-    top: 100px;
-    right: var(--space-6);
-    background: var(--color-success);
-    color: white;
-    padding: var(--space-4) var(--space-6);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .container {
-      padding: var(--space-4);
-    }
-
-    .event-form {
-      padding: var(--space-6);
-    }
-
-    .page-title {
-      font-size: 1.5rem;
-    }
-
-    .form-actions {
-      flex-direction: column;
-    }
-
-    .btn-primary,
-    .btn-secondary {
-      width: 100%;
-    }
-  }
-</style>
 
 <script is:inline define:vars={{ eventId }}>
   document.addEventListener('DOMContentLoaded', () => {
@@ -428,7 +226,11 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 
     function showMessage(text, type) {
       const message = document.createElement('div');
-      message.className = type === 'success' ? 'success-message' : 'error-message';
+      const baseClasses = 'fixed right-6 top-[100px] z-[1000] rounded-md px-6 py-4 text-white shadow-lg transition';
+      message.className = type === 'success'
+        ? `${baseClasses} bg-(--color-success)`
+        : `${baseClasses} bg-(--color-error)`;
+      message.setAttribute('data-test-id', type === 'success' ? 'success-message' : 'error-message');
       message.textContent = text;
       document.body.appendChild(message);
 

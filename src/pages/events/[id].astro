@@ -74,58 +74,64 @@ const isUpcoming = new Date(event.dateTime) >= now;
 ---
 
 <Layout title={event.title}>
-  <div class="container">
-    <div class="event-header">
-      <a href="/" class="back-link">&larr; Back to Events</a>
-      <h1 class="event-title">{event.title}</h1>
-      <p class="event-date">{formatEventDate(event.dateTime)}</p>
+  <div class="mx-auto max-w-225 p-4 sm:p-6">
+    <div class="mb-8">
+      <a href="/" class="mb-4 inline-block text-[0.95rem] text-(--color-accent) no-underline transition-colors duration-200 hover:text-(--color-accent-dark)">&larr; Back to Events</a>
+      <h1 class="mb-3 mt-0 text-[1.75rem] text-(--color-accent-dark) sm:text-[2.5rem]">{event.title}</h1>
+      <p class="m-0 text-[0.95rem] text-(--color-text-secondary) sm:text-[1.1rem]">{formatEventDate(event.dateTime)}</p>
       {isUpcoming && (
-        <div class="event-actions">
-          <a href={`/events/${event.id}/edit`} class="edit-event-button">Edit Event</a>
+        <div class="mt-4">
+          <a href={`/events/${event.id}/edit`} class="inline-block rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-4 py-2 font-medium text-white no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark)">Edit Event</a>
         </div>
       )}
     </div>
 
-    <div class="event-content">
-      <div class="event-details">
-        <div class="detail-section">
-          <h2>Description</h2>
-          <p class="description">{event.description}</p>
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div class="rounded-lg border border-(--color-border) bg-white p-6">
+        <div class="mb-6 last:mb-0">
+          <h2 class="mb-3 mt-0 text-xl text-(--color-accent-dark)">Description</h2>
+          <p class="m-0 whitespace-pre-wrap leading-relaxed text-(--color-text-primary)">{event.description}</p>
         </div>
 
-        <div class="detail-section">
-          <h2>Location</h2>
-          <p class="location">{event.location}</p>
+        <div class="mb-6 last:mb-0">
+          <h2 class="mb-3 mt-0 text-xl text-(--color-accent-dark)">Location</h2>
+          <p class="mb-3 mt-0 text-(--color-text-primary)">{event.location}</p>
           {event.mapLink && (
-            <a href={event.mapLink} target="_blank" rel="noopener noreferrer" class="map-link">
+            <a href={event.mapLink} target="_blank" rel="noopener noreferrer" class="inline-block text-[0.95rem] text-(--color-accent) no-underline transition-colors duration-200 hover:text-(--color-accent-dark)">
               Open in Maps &rarr;
             </a>
           )}
         </div>
       </div>
 
-      <div class="rsvp-section">
-        <h2>RSVPs</h2>
+      <div class="rounded-lg border border-(--color-border) bg-white p-6">
+        <h2 class="mb-3 mt-0 text-xl text-(--color-accent-dark)">RSVPs</h2>
 
         {isUpcoming && (
-          <div class="rsvp-buttons">
+          <div class="mb-6 flex flex-wrap gap-3">
             <button
-              class={`rsvp-button ${currentUserRsvp?.status === 'going' ? 'active going' : ''}`}
+              class={`min-w-25 flex-1 rounded-md border-2 border-(--color-border) bg-white px-4 py-3 text-base font-medium text-(--color-text-primary) transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) disabled:cursor-not-allowed disabled:opacity-50 ${currentUserRsvp?.status === 'going' ? 'border-(--color-success) bg-[#e8f5e9] text-(--color-success)' : ''}`}
+              data-rsvp-button="true"
               data-status="going"
+              data-active={currentUserRsvp?.status === 'going' ? 'true' : 'false'}
               data-event-id={event.id}
             >
               Going
             </button>
             <button
-              class={`rsvp-button ${currentUserRsvp?.status === 'maybe' ? 'active maybe' : ''}`}
+              class={`min-w-25 flex-1 rounded-md border-2 border-(--color-border) bg-white px-4 py-3 text-base font-medium text-(--color-text-primary) transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) disabled:cursor-not-allowed disabled:opacity-50 ${currentUserRsvp?.status === 'maybe' ? 'border-(--color-warning) bg-[#fff3e0] text-(--color-warning)' : ''}`}
+              data-rsvp-button="true"
               data-status="maybe"
+              data-active={currentUserRsvp?.status === 'maybe' ? 'true' : 'false'}
               data-event-id={event.id}
             >
               Maybe
             </button>
             <button
-              class={`rsvp-button ${currentUserRsvp?.status === 'not_going' ? 'active not-going' : ''}`}
+              class={`min-w-25 flex-1 rounded-md border-2 border-(--color-border) bg-white px-4 py-3 text-base font-medium text-(--color-text-primary) transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) disabled:cursor-not-allowed disabled:opacity-50 ${currentUserRsvp?.status === 'not_going' ? 'border-(--color-error) bg-[#ffebee] text-(--color-error)' : ''}`}
+              data-rsvp-button="true"
               data-status="not_going"
+              data-active={currentUserRsvp?.status === 'not_going' ? 'true' : 'false'}
               data-event-id={event.id}
             >
               Not Going
@@ -134,15 +140,21 @@ const isUpcoming = new Date(event.dateTime) >= now;
         )}
 
         {!isUpcoming && (
-          <div class="past-event-notice">
+          <div data-test-id="past-event-notice" class="mb-6 rounded-md bg-(--color-border) p-4 text-center italic text-(--color-text-muted)">
             This event has passed. RSVPs are no longer available.
           </div>
         )}
 
         {currentUserRsvp && (
-          <div class="current-user-rsvp">
+          <div data-test-id="current-user-rsvp" class="mb-6 flex items-center gap-3 rounded-md border-2 border-(--color-accent) bg-(--color-primary-500) p-4">
             <strong>Your status:</strong>
-            <span class={`rsvp-status status-${currentUserRsvp.status.replace('_', '-')}`}>
+            <span class={`rounded-full px-4 py-2 text-[0.9rem] font-medium ${
+              currentUserRsvp.status === 'going'
+                ? 'bg-[#e8f5e9] text-(--color-success)'
+                : currentUserRsvp.status === 'maybe'
+                  ? 'bg-[#fff3e0] text-(--color-warning)'
+                  : 'bg-[#ffebee] text-(--color-error)'
+            }`}>
               {currentUserRsvp.status === 'going' && 'Going'}
               {currentUserRsvp.status === 'maybe' && 'Maybe'}
               {currentUserRsvp.status === 'not_going' && 'Not Going'}
@@ -151,59 +163,59 @@ const isUpcoming = new Date(event.dateTime) >= now;
         )}
 
         {!currentUserRsvp && (
-          <div class="current-user-rsvp no-response">
+          <div data-test-id="current-user-rsvp" class="mb-6 flex items-center gap-3 rounded-md border-2 border-(--color-border) bg-white p-4">
             <strong>Your status:</strong>
-            <span class="rsvp-status status-no-response">No Response</span>
+            <span class="rounded-full bg-(--color-border) px-4 py-2 text-[0.9rem] font-medium text-(--color-text-muted)">No Response</span>
           </div>
         )}
 
-        <div class="rsvp-counts">
-          <div class="rsvp-count-item">
-            <span class="count">{goingRsvps.length}</span>
-            <span class="label">Going</span>
+        <div data-test-id="rsvp-counts" class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div data-test-id="rsvp-count-item" data-rsvp-type="going" class="rounded-md bg-(--color-primary-500) p-4 text-center">
+            <span data-test-id="rsvp-count-value" class="mb-2 block text-3xl font-semibold text-(--color-accent-dark)">{goingRsvps.length}</span>
+            <span class="label block text-[0.85rem] uppercase tracking-[0.5px] text-(--color-text-muted)">Going</span>
           </div>
-          <div class="rsvp-count-item">
-            <span class="count">{maybeRsvps.length}</span>
-            <span class="label">Maybe</span>
+          <div data-test-id="rsvp-count-item" data-rsvp-type="maybe" class="rounded-md bg-(--color-primary-500) p-4 text-center">
+            <span data-test-id="rsvp-count-value" class="mb-2 block text-3xl font-semibold text-(--color-accent-dark)">{maybeRsvps.length}</span>
+            <span class="label block text-[0.85rem] uppercase tracking-[0.5px] text-(--color-text-muted)">Maybe</span>
           </div>
-          <div class="rsvp-count-item">
-            <span class="count">{notGoingRsvps.length}</span>
-            <span class="label">Not Going</span>
+          <div data-test-id="rsvp-count-item" data-rsvp-type="not_going" class="rounded-md bg-(--color-primary-500) p-4 text-center">
+            <span data-test-id="rsvp-count-value" class="mb-2 block text-3xl font-semibold text-(--color-accent-dark)">{notGoingRsvps.length}</span>
+            <span class="label block text-[0.85rem] uppercase tracking-[0.5px] text-(--color-text-muted)">Not Going</span>
           </div>
-          <div class="rsvp-count-item">
-            <span class="count">{noResponseCount}</span>
-            <span class="label">No Response</span>
+          <div data-test-id="rsvp-count-item" data-rsvp-type="no_response" class="rounded-md bg-(--color-primary-500) p-4 text-center">
+            <span data-test-id="rsvp-count-value" class="mb-2 block text-3xl font-semibold text-(--color-accent-dark)">{noResponseCount}</span>
+            <span class="label block text-[0.85rem] uppercase tracking-[0.5px] text-(--color-text-muted)">No Response</span>
           </div>
         </div>
 
         {goingRsvps.length > 0 && (
-          <div class="rsvp-list">
-            <h3 class="rsvp-list-title">Going ({goingRsvps.length})</h3>
-            <ul class="user-list">
+          <div class="mb-6 last:mb-0">
+            <h3 class="mb-3 mt-0 text-base font-semibold text-(--color-text-secondary)">Going ({goingRsvps.length})</h3>
+            <ul class="m-0 list-none p-0">
               {goingRsvps.map(rsvp => (
-                <li class="user-item">{rsvp.user?.name}</li>
+                <li class="mb-2 rounded-sm bg-(--color-primary-500) px-3 py-2 text-(--color-text-primary) last:mb-0">{rsvp.user?.name}</li>
               ))}
             </ul>
           </div>
         )}
 
         {maybeRsvps.length > 0 && (
-          <div class="rsvp-list">
-            <h3 class="rsvp-list-title">Maybe ({maybeRsvps.length})</h3>
-            <ul class="user-list">
+          <div class="mb-6 last:mb-0">
+            <h3 class="mb-3 mt-0 text-base font-semibold text-(--color-text-secondary)">Maybe ({maybeRsvps.length})</h3>
+            <ul class="m-0 list-none p-0">
               {maybeRsvps.map(rsvp => (
-                <li class="user-item">{rsvp.user?.name}</li>
+                <li class="mb-2 rounded-sm bg-(--color-primary-500) px-3 py-2 text-(--color-text-primary) last:mb-0">{rsvp.user?.name}</li>
               ))}
             </ul>
           </div>
         )}
 
         {notGoingRsvps.length > 0 && (
-          <div class="rsvp-list">
-            <h3 class="rsvp-list-title">Not Going ({notGoingRsvps.length})</h3>
-            <ul class="user-list">
+          <div class="mb-6 last:mb-0">
+            <h3 class="mb-3 mt-0 text-base font-semibold text-(--color-text-secondary)">Not Going ({notGoingRsvps.length})</h3>
+            <ul class="m-0 list-none p-0">
               {notGoingRsvps.map(rsvp => (
-                <li class="user-item">{rsvp.user?.name}</li>
+                <li class="mb-2 rounded-sm bg-(--color-primary-500) px-3 py-2 text-(--color-text-primary) last:mb-0">{rsvp.user?.name}</li>
               ))}
             </ul>
           </div>
@@ -213,336 +225,9 @@ const isUpcoming = new Date(event.dateTime) >= now;
   </div>
 </Layout>
 
-<style>
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: var(--space-6);
-  }
-
-  .event-header {
-    margin-bottom: var(--space-8);
-  }
-
-  .back-link {
-    display: inline-block;
-    color: var(--color-accent);
-    text-decoration: none;
-    margin-bottom: var(--space-4);
-    font-size: 0.95rem;
-    transition: color 0.2s ease;
-  }
-
-  .back-link:hover {
-    color: var(--color-accent-dark);
-  }
-
-  .event-title {
-    font-size: 2.5rem;
-    margin: 0 0 var(--space-3) 0;
-    color: var(--color-accent-dark);
-  }
-
-  .event-date {
-    font-size: 1.1rem;
-    color: var(--color-text-secondary);
-    margin: 0;
-  }
-
-  .event-actions {
-    margin-top: var(--space-4);
-  }
-
-  .edit-event-button {
-    display: inline-block;
-    background: var(--color-accent);
-    color: white;
-    border: 2px solid var(--color-accent);
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    font-weight: 500;
-    padding: var(--space-2) var(--space-4);
-    transition: all 0.2s ease;
-  }
-
-  .edit-event-button:hover {
-    background: var(--color-accent-dark);
-    border-color: var(--color-accent-dark);
-    transform: translateY(-1px);
-  }
-
-  .event-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-8);
-  }
-
-  @media (min-width: 768px) {
-    .event-content {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  .event-details,
-  .rsvp-section {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-  }
-
-  .detail-section {
-    margin-bottom: var(--space-6);
-  }
-
-  .detail-section:last-child {
-    margin-bottom: 0;
-  }
-
-  .detail-section h2,
-  .rsvp-section h2 {
-    font-size: 1.25rem;
-    margin: 0 0 var(--space-3) 0;
-    color: var(--color-accent-dark);
-  }
-
-  .description {
-    line-height: 1.6;
-    color: var(--color-text);
-    margin: 0;
-    white-space: pre-wrap;
-  }
-
-  .location {
-    margin: 0 0 var(--space-3) 0;
-    color: var(--color-text);
-  }
-
-  .map-link {
-    display: inline-block;
-    color: var(--color-accent);
-    text-decoration: none;
-    font-size: 0.95rem;
-    transition: color 0.2s ease;
-  }
-
-  .map-link:hover {
-    color: var(--color-accent-dark);
-  }
-
-  .rsvp-buttons {
-    display: flex;
-    gap: var(--space-3);
-    margin-bottom: var(--space-6);
-    flex-wrap: wrap;
-  }
-
-  .rsvp-button {
-    flex: 1;
-    min-width: 100px;
-    padding: var(--space-3) var(--space-4);
-    border: 2px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text);
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .rsvp-button:hover {
-    border-color: var(--color-accent);
-    transform: translateY(-1px);
-  }
-
-  .rsvp-button.active.going {
-    background: #e8f5e9;
-    border-color: var(--color-success);
-    color: var(--color-success);
-  }
-
-  .rsvp-button.active.maybe {
-    background: #fff3e0;
-    border-color: var(--color-warning);
-    color: var(--color-warning);
-  }
-
-  .rsvp-button.active.not-going {
-    background: #ffebee;
-    border-color: var(--color-error);
-    color: var(--color-error);
-  }
-
-  .rsvp-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .past-event-notice {
-    background: var(--color-border);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-    margin-bottom: var(--space-6);
-    color: var(--color-text-muted);
-    text-align: center;
-    font-style: italic;
-  }
-
-  .current-user-rsvp {
-    background: var(--color-primary);
-    border: 2px solid var(--color-accent);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-    margin-bottom: var(--space-6);
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  .current-user-rsvp.no-response {
-    border-color: var(--color-border);
-    background: var(--color-surface);
-  }
-
-  .rsvp-success {
-    position: fixed;
-    top: 100px;
-    right: var(--space-6);
-    background: var(--color-success);
-    color: white;
-    padding: var(--space-4) var(--space-6);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  .rsvp-status {
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-full);
-    font-weight: 500;
-    font-size: 0.9rem;
-  }
-
-  .status-going {
-    background: #e8f5e9;
-    color: var(--color-success);
-  }
-
-  .status-maybe {
-    background: #fff3e0;
-    color: var(--color-warning);
-  }
-
-  .status-not-going {
-    background: #ffebee;
-    color: var(--color-error);
-  }
-
-  .status-no-response {
-    background: var(--color-border);
-    color: var(--color-text-muted);
-  }
-
-  .rsvp-counts {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-  }
-
-  @media (min-width: 640px) {
-    .rsvp-counts {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  .rsvp-count-item {
-    text-align: center;
-    padding: var(--space-4);
-    background: var(--color-primary);
-    border-radius: var(--radius-md);
-  }
-
-  .rsvp-count-item .count {
-    display: block;
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--color-accent-dark);
-    margin-bottom: var(--space-2);
-  }
-
-  .rsvp-count-item .label {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .rsvp-list {
-    margin-bottom: var(--space-6);
-  }
-
-  .rsvp-list:last-child {
-    margin-bottom: 0;
-  }
-
-  .rsvp-list-title {
-    font-size: 1rem;
-    margin: 0 0 var(--space-3) 0;
-    color: var(--color-text-secondary);
-    font-weight: 600;
-  }
-
-  .user-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .user-item {
-    padding: var(--space-2) var(--space-3);
-    background: var(--color-primary);
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-2);
-    color: var(--color-text);
-  }
-
-  .user-item:last-child {
-    margin-bottom: 0;
-  }
-
-  @media (max-width: 640px) {
-    .container {
-      padding: var(--space-4);
-    }
-
-    .event-title {
-      font-size: 1.75rem;
-    }
-
-    .event-date {
-      font-size: 0.95rem;
-    }
-  }
-</style>
-
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const rsvpButtons = document.querySelectorAll('.rsvp-button');
+    const rsvpButtons = document.querySelectorAll('[data-rsvp-button]');
 
     rsvpButtons.forEach(button => {
       button.addEventListener('click', async (e) => {
@@ -573,7 +258,8 @@ const isUpcoming = new Date(event.dateTime) >= now;
 
           // Show success message
           const successMessage = document.createElement('div');
-          successMessage.className = 'rsvp-success';
+          successMessage.className = 'fixed right-6 top-[100px] z-[1000] rounded-md bg-(--color-success) px-6 py-4 text-white shadow-lg';
+          successMessage.setAttribute('data-test-id', 'rsvp-success-message');
           successMessage.textContent = 'RSVP updated successfully!';
           document.body.appendChild(successMessage);
 

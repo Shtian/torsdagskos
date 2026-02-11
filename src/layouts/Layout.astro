@@ -29,23 +29,23 @@ if (userId) {
 		<title>{title}</title>
 	</head>
 	<body>
-		<div class="app-container">
-			<header class="app-header">
-				<div class="header-content">
-					<a href="/" class="app-name">
-						<h1>Torsdagskos</h1>
+		<div class="flex min-h-screen flex-col">
+			<header class="sticky top-0 z-50 border-b border-(--color-border) bg-white shadow-sm">
+				<div class="mx-auto flex w-full max-w-300 items-center justify-between gap-4 p-4 lg:px-6 lg:py-5">
+					<a href="/" class="no-underline">
+						<h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[1.75rem] lg:text-[2rem]">Torsdagskos</h1>
 					</a>
 
 					{user && (
-						<div class="header-actions">
-							<a href="/events/new" class="create-event-button">+ Create Event</a>
-							<a href="/settings" class="settings-link">Settings</a>
-							<div class="user-profile">
-								<span class="user-name">
+						<div class="flex shrink-0 items-center gap-4">
+							<a href="/events/new" class="inline-block whitespace-nowrap rounded-md bg-(--color-accent) px-4 py-2 text-sm font-medium text-white no-underline transition duration-200 hover:-translate-y-px hover:bg-(--color-accent-dark) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">+ Create Event</a>
+							<a href="/settings" class="inline-block whitespace-nowrap rounded-md border border-(--color-border) bg-white px-4 py-2 text-sm font-medium text-(--color-accent-dark) no-underline transition duration-200 hover:-translate-y-px hover:border-(--color-accent-light) hover:bg-(--color-primary-100) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">Settings</a>
+							<div class="flex shrink-0 items-center gap-3">
+								<span class="hidden text-sm text-(--color-text-secondary) sm:block">
 									{user.firstName || user.emailAddresses[0]?.emailAddress}
 								</span>
 								<SignOutButton asChild redirectUrl="/sign-in">
-									<button class="sign-out-button">Sign Out</button>
+									<button class="whitespace-nowrap rounded-md bg-(--color-accent) px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-(--color-accent-dark) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">Sign Out</button>
 								</SignOutButton>
 							</div>
 						</div>
@@ -53,167 +53,9 @@ if (userId) {
 				</div>
 			</header>
 
-			<main class="main-content">
+			<main class="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 lg:p-8">
 				<slot />
 			</main>
 		</div>
 	</body>
 </html>
-
-<style>
-	.app-container {
-		display: flex;
-		flex-direction: column;
-		min-height: 100vh;
-	}
-
-	.app-header {
-		background-color: var(--color-surface);
-		border-bottom: 1px solid var(--color-border);
-		box-shadow: var(--shadow-sm);
-		position: sticky;
-		top: 0;
-		z-index: 100;
-	}
-
-	.header-content {
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: var(--space-4);
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: var(--space-4);
-	}
-
-	.app-name {
-		text-decoration: none;
-		color: inherit;
-	}
-
-	.app-name h1 {
-		margin: 0;
-		font-size: 1.5rem;
-		font-family: var(--font-heading);
-		color: var(--color-accent-dark);
-	}
-
-	.header-actions {
-		display: flex;
-		align-items: center;
-		gap: var(--space-4);
-		flex-shrink: 0;
-	}
-
-	.create-event-button {
-		background-color: var(--color-accent);
-		color: white;
-		border: none;
-	}
-
-	.settings-link {
-		background-color: var(--color-surface);
-		color: var(--color-accent-dark);
-		border: 1px solid var(--color-border);
-	}
-
-	.create-event-button,
-	.settings-link {
-		padding: var(--space-2) var(--space-4);
-		border-radius: var(--radius-md);
-		font-size: 0.875rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: background-color 0.2s, transform 0.2s;
-		white-space: nowrap;
-		text-decoration: none;
-		display: inline-block;
-	}
-
-	.create-event-button:hover {
-		background-color: var(--color-accent-dark);
-		transform: translateY(-1px);
-	}
-
-	.settings-link:hover {
-		background-color: var(--color-primary-100);
-		transform: translateY(-1px);
-		border-color: var(--color-accent-light);
-	}
-
-	.create-event-button:focus,
-	.settings-link:focus {
-		outline: 2px solid var(--color-accent);
-		outline-offset: 2px;
-	}
-
-	.user-profile {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		flex-shrink: 0;
-	}
-
-	.user-name {
-		font-size: 0.875rem;
-		color: var(--color-text-secondary);
-		display: none;
-	}
-
-	.sign-out-button {
-		background-color: var(--color-accent);
-		color: white;
-		border: none;
-		padding: var(--space-2) var(--space-4);
-		border-radius: var(--radius-md);
-		font-size: 0.875rem;
-		font-family: var(--font-body);
-		cursor: pointer;
-		transition: background-color 0.2s;
-		white-space: nowrap;
-	}
-
-	.sign-out-button:hover {
-		background-color: var(--color-accent-dark);
-	}
-
-	.sign-out-button:focus {
-		outline: 2px solid var(--color-accent);
-		outline-offset: 2px;
-	}
-
-	.main-content {
-		flex: 1;
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: var(--space-6) var(--space-4);
-		width: 100%;
-	}
-
-	/* Mobile-first responsive design */
-	/* Show user name on tablet and larger screens */
-	@media (min-width: 640px) {
-		.user-name {
-			display: block;
-		}
-
-		.app-name h1 {
-			font-size: 1.75rem;
-		}
-	}
-
-	/* Larger padding on desktop */
-	@media (min-width: 1024px) {
-		.header-content {
-			padding: var(--space-5) var(--space-6);
-		}
-
-		.main-content {
-			padding: var(--space-8) var(--space-6);
-		}
-
-		.app-name h1 {
-			font-size: 2rem;
-		}
-	}
-</style>

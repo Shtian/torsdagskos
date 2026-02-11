@@ -65,7 +65,7 @@ test.describe('Duplicate Event Functionality', () => {
     await page.waitForURL(/\/events\/new\?duplicate=true/);
 
     // Check that duplicate banner is visible
-    const banner = page.locator('.duplicate-banner');
+    const banner = page.locator('[data-test-id="duplicate-banner"]');
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('Duplicated from last event');
     await expect(banner).toContainText('Please set the date and time');
@@ -123,7 +123,7 @@ test.describe('Duplicate Event Functionality', () => {
     await submitButton.click();
 
     // Wait for success message and redirect
-    await expect(page.locator('.success-message')).toBeVisible();
+    await expect(page.locator('[data-test-id="success-message"]')).toBeVisible();
     await page.waitForURL(/\/events\/\d+$/);
 
     // Verify new event page shows the duplicated data
@@ -182,7 +182,7 @@ test.describe('Duplicate Event Functionality', () => {
     await page.goto('/events/new');
 
     // Banner should not be visible
-    const banner = page.locator('.duplicate-banner');
+    const banner = page.locator('[data-test-id="duplicate-banner"]');
     await expect(banner).not.toBeVisible();
 
     // Form fields should be empty
