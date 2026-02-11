@@ -4,6 +4,11 @@
 
 Private meetup coordination website for monthly recurring events among close friends.
 
+## Typography
+
+- `Lora` (Google Fonts serif): heading font for `h1`-`h6` and display-style text.
+- `Manrope` (Google Fonts sans-serif): body/UI font for app copy, controls, and navigation.
+
 ## 🚀 Project Structure
 
 Inside of your Astro project, you'll see the following folders and files:

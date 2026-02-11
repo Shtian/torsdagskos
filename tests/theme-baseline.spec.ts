@@ -31,6 +31,6 @@ test.describe('theme baseline @unauth', () => {
 
     expect(styles.bodyBackground).toBe('rgb(250, 249, 247)');
     expect(styles.bodyColor).toBe('rgb(45, 45, 45)');
-    expect(styles.headingFontFamily).toContain('Georgia');
+    expect(styles.headingFontFamily).toContain('Lora');
   });
 });

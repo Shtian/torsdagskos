@@ -1,6 +1,7 @@
 # Codebase Patterns
 - Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
 - For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
+- Load Google Fonts once in `src/layouts/Layout.astro` and map them via global CSS font tokens (`--font-heading`, `--font-body`) so typography stays consistent across all routes.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -20,4 +21,15 @@
   - Keep core semantic aliases (`--background`, `--foreground`, `--primary`, `--ring`) defined alongside legacy `--color-*` tokens so older pages and shadcn primitives can coexist during migration.
   - Theme baseline tests are more stable when they run as `@unauth` against `/access-denied` and assert computed styles instead of auth-dependent page content.
   - Full suite reliability remains best with `pnpm test --workers=1`; auth-dependent specs can fail intermittently under competing state.
+---
+## 2026-02-11 16:48:38 CET - US-003
+- Selected and integrated a polished Google Fonts pairing: `Lora` for headings and `Manrope` for body/UI text.
+- Loaded font assets globally in `src/layouts/Layout.astro` with `preconnect` + stylesheet link, and wired typography roles through global tokens in `src/styles/global.css`.
+- Documented the font choices and usage roles in `README.md`.
+- Added Playwright coverage in `tests/typography-fonts.spec.ts` and updated baseline typography assertion in `tests/theme-baseline.spec.ts`.
+- Files changed: `src/layouts/Layout.astro`, `src/styles/global.css`, `README.md`, `tests/theme-baseline.spec.ts`, `tests/typography-fonts.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Keep all font loading centralized in `src/layouts/Layout.astro` so every route inherits the same typography without per-page duplication.
+  - Font-family Playwright assertions should use `toContain()` for the selected family name, since rendered stacks include browser-specific fallbacks.
+  - Run full Playwright verification with `pnpm test --workers=1` when validating UI stories to avoid parallel state races in this codebase.
 ---
