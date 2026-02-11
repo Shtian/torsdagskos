@@ -1,2 +1,12 @@
 # Codebase Patterns
+- Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
 
+## 2026-02-11 16:34:47 CET - US-001
+- Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
+- Rendered a React island (`ShadcnIslandDemo`) from `src/pages/index.astro` with `client:load` to validate Astro+React integration in a real page.
+- Added Playwright coverage for the new UI integration in `tests/shadcn-island.spec.ts`.
+- Files changed: `astro.config.mjs`, `tsconfig.json`, `package.json`, `pnpm-lock.yaml`, `components.json`, `src/lib/utils.ts`, `src/components/ui/button.tsx`, `src/components/ShadcnIslandDemo.tsx`, `src/pages/index.astro`, `tests/shadcn-island.spec.ts`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Astro React TSX components require `@types/react` and `@types/react-dom` in this repo for `pnpm astro check` to pass.
+  - Existing test conventions and helper guidance in `tests/AGENTS.md` are accurate; new UI checks should follow `getByRole`/`getByTestId` patterns from there.
+---
