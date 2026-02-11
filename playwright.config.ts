@@ -20,6 +20,7 @@ export default defineConfig({
 
   use: {
     baseURL,
+    testIdAttribute: "data-test-id",
     trace: "retry-with-trace",
   },
   projects: [

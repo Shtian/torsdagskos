@@ -279,8 +279,8 @@
         "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented `/history` page showing the authenticated user's RSVPs across upcoming and past events, sorted by event date descending. Added status badges (Going/Maybe/Not Going), event metadata (title/date/location), and links to event detail pages. Added header navigation link (`My History`) in layout. Added Playwright coverage in `tests/history.spec.ts` for navigation, sorted filtering to current user, event links, and empty state. Typecheck passes and full Playwright suite passes with `pnpm test --workers=1`."
     },
     {
       "id": "US-016",

@@ -31,6 +31,7 @@
 - Test data isolation: Use `uniqueEmail()` helper with timestamps to avoid conflicts across runs
 - Web-first assertions: Use `await expect(locator).toBeVisible()` instead of timeouts
 - User-facing locators: Prefer `page.getByRole()` and `page.getByText()` over CSS selectors
+- Project test IDs: Playwright is configured with `testIdAttribute: 'data-test-id'`; prefer `getByTestId(...)` over raw attribute locators
 - Specific locators: Use `page.getByRole('heading', { name: /pattern/i, level: 2 })` to avoid multiple matches
 - Authenticated API calls: Use `page.evaluate(() => fetch('/api/...'))` to include auth cookies
 - Browser notification E2E tests: Override `window.Notification` with `page.addInitScript()` before navigation to make permission flows deterministic (`granted`/`denied`)
@@ -652,4 +653,30 @@
     - Parallel Playwright (`pnpm test`) remains flaky from pre-existing shared-data races; stable full-suite verification is `pnpm test --workers=1`.
   - Useful context (e.g., "the evaluation panel is in component X")
     - Push subscription persistence is now centralized in `/api/settings/push-subscription`, and notification dispatch integration lives in `src/lib/event-notifications.ts`.
+---
+## 2026-02-11 14:47 CET - US-015
+- What was implemented
+  - Added `src/pages/history.astro` to show the authenticated user's RSVP history across upcoming and past events.
+  - History entries render event title, Europe/Oslo date-time, location, and the current user's RSVP status badge.
+  - Entries are sorted by event date descending and link directly to `/events/[id]`.
+  - Added empty-state UI when the current user has no RSVPs.
+  - Added `My History` navigation link in the authenticated header.
+  - Added Playwright E2E coverage in `tests/history.spec.ts` for navigation, sorting/filtering, event links, status display, and empty state.
+  - Updated Playwright config to use `data-test-id` as the canonical test id attribute and switched new tests to `getByTestId(...)`.
+- Files changed
+  - `playwright.config.ts`
+  - `src/layouts/Layout.astro`
+  - `src/pages/history.astro`
+  - `tests/history.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - For Astro pages that depend on an authenticated local user row, include a fallback sync path from Clerk user data to avoid relying on homepage sync.
+    - Prefer `getByTestId(...)` now that Playwright is configured with `testIdAttribute: 'data-test-id'`.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `Rsvps.status` is typed as `string` from Astro DB in page templates; helper formatters should accept `string` unless explicit narrowing is added.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - History page data is currently assembled by loading user RSVPs first and joining events in `src/pages/history.astro`.
 ---

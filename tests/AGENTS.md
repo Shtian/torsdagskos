@@ -7,6 +7,7 @@
 - Keep tests independent; no shared state across tests.
 - Many specs mutate shared DB state via `/api/test/seed` cleanup; full parallel runs can race across files. Prefer `pnpm test --workers=1` for stable full-suite verification, or isolate data/cleanup per spec when adding new tests.
 - Use stable selectors and roles; avoid brittle text where possible.
+- Playwright config uses `testIdAttribute: 'data-test-id'`; prefer `page.getByTestId(...)` over manual `[data-test-id=...]` selectors.
 - Keep specs focused: one behavior per test, minimal setup.
 
 ## Test Helpers (tests/helpers/api-helpers.ts)
