@@ -5,6 +5,7 @@
 - Do not set `storageState` in tests. Auth is handled by the Playwright project and `tests/global.setup.ts`.
 - Prefer explicit, user-visible assertions (URL, title, headings, key UI).
 - Keep tests independent; no shared state across tests.
+- Many specs mutate shared DB state via `/api/test/seed` cleanup; full parallel runs can race across files. Prefer `pnpm test --workers=1` for stable full-suite verification, or isolate data/cleanup per spec when adding new tests.
 - Use stable selectors and roles; avoid brittle text where possible.
 - Keep specs focused: one behavior per test, minimal setup.
 

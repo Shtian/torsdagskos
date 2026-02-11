@@ -170,8 +170,8 @@
         "Write Playwright E2E tests to verify functionality"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Event edit flow implemented for upcoming events. Added /events/[id]/edit page with prefilled values, update API with updatedAt handling, upcoming-only edit access (page redirects for past events), and Edit Event button on detail page for upcoming events only. Added Playwright coverage in tests/event-edit.spec.ts."
     },
     {
       "id": "US-010",

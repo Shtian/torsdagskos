@@ -79,6 +79,11 @@ const isUpcoming = new Date(event.dateTime) >= now;
       <a href="/" class="back-link">&larr; Back to Events</a>
       <h1 class="event-title">{event.title}</h1>
       <p class="event-date">{formatEventDate(event.dateTime)}</p>
+      {isUpcoming && (
+        <div class="event-actions">
+          <a href={`/events/${event.id}/edit`} class="edit-event-button">Edit Event</a>
+        </div>
+      )}
     </div>
 
     <div class="event-content">
@@ -242,6 +247,28 @@ const isUpcoming = new Date(event.dateTime) >= now;
     font-size: 1.1rem;
     color: var(--color-text-secondary);
     margin: 0;
+  }
+
+  .event-actions {
+    margin-top: var(--space-4);
+  }
+
+  .edit-event-button {
+    display: inline-block;
+    background: var(--color-accent);
+    color: white;
+    border: 2px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 500;
+    padding: var(--space-2) var(--space-4);
+    transition: all 0.2s ease;
+  }
+
+  .edit-event-button:hover {
+    background: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+    transform: translateY(-1px);
   }
 
   .event-content {

@@ -36,6 +36,7 @@
 - Serial execution: Use `test.describe.serial()` for Clerk auth tests (per documentation)
 - ES modules in config: Use `import.meta.url` with `fileURLToPath` and `dirname` instead of `require.resolve()`
 - Test artifacts: Always add `playwright-report/` and `test-results/` to .gitignore
+- Full-suite stability: Because multiple specs call shared DB cleanup endpoints, `pnpm test` can be flaky in parallel; use `pnpm test --workers=1` for stable verification unless test isolation is improved
 
 ## Database Operations
 - User sync race conditions: Wrap inserts in try-catch to handle UNIQUE constraint errors gracefully
@@ -493,4 +494,26 @@
 - Mobile-first CSS: Stack button below title on mobile with `flex-direction: column`, inline on desktop with default row direction
 - Test helper pattern: Create reusable helpers like createEvent() that use page.evaluate() for authenticated operations
 - Query parameter passing: Can pass multiple parameters in URL, remembering to handle optional fields (empty strings)
+---
+## 2026-02-11 12:12 CET - US-009
+- Implemented upcoming-event edit flow with `/events/[id]/edit.astro`, including pre-filled title/description/date/time/location/map link values, past-event redirect, and save/cancel UX
+- Added update server action at `/api/events/update` with validation, upcoming-only enforcement, DB update, and `updatedAt` timestamp refresh
+- Added an `Edit Event` action on `src/pages/events/[id].astro` visible only for upcoming events
+- Wrote Playwright E2E coverage for edit functionality and restrictions
+- Files changed:
+  - `src/pages/events/[id]/edit.astro`
+  - `src/pages/api/events/update.ts`
+  - `src/pages/events/[id].astro`
+  - `tests/event-edit.spec.ts`
+  - `tests/AGENTS.md`
+  - `prd.json`
+  - `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - For Astro pages that need runtime values in client scripts, `define:vars` makes scripts inline; keep script code plain JavaScript (no TS assertions/annotations)
+    - Europe/Oslo prefill for `<input type="date">` and `<input type="time">` is reliable using `Intl.DateTimeFormat(...).formatToParts()` and reconstructing `YYYY-MM-DD` / `HH:mm`
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full Playwright runs can fail in parallel due to shared test cleanup; `pnpm test --workers=1` produced stable results
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Event updates are performed through `/api/events/update`; detail-page edit visibility is controlled by `isUpcoming` in `src/pages/events/[id].astro`
 ---
