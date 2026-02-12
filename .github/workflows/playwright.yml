@@ -42,7 +42,7 @@ jobs:
           CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           E2E_CLERK_USER_PASSWORD: ${{ secrets.E2E_CLERK_USER_PASSWORD }}
-        run: pnpm test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: pnpm test --workers=1 --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
