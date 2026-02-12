@@ -1,6 +1,7 @@
 # Codebase Patterns
 - Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
 - For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
+- Keep a semantic heading element on `/access-denied`; theme and typography unauth specs read heading computed styles from that route.
 - Load Google Fonts once in `src/layouts/Layout.astro` and map them via global CSS font tokens (`--font-heading`, `--font-body`) so typography stays consistent across all routes.
 - When rendering React `Textarea` components from `.astro` pages, prefer `defaultValue` over children content to avoid accidental `"[object Object]"` rendering in SSR output.
 - For Playwright interactions with `ShadcnIslandDemo`, wait for `data-hydrated="true"` on `data-test-id="shadcn-island"` before tab/select/dialog/dropdown actions to avoid pre-hydration flakes.
@@ -108,4 +109,13 @@
   - Wait for React island hydration (`data-hydrated="true"`) before interacting with tabbed Radix content in Playwright; otherwise hidden-panel controls can intermittently time out.
   - Use direct-child selectors when asserting top-level `data-slot="card"` containers on pages that also embed card-based child components to avoid strict-locator collisions.
   - Homepage migration can preserve existing test contracts by keeping `Upcoming Events` and `Past Events` heading semantics while changing only shell styling primitives.
+---
+## 2026-02-12 11:59:15 CET - US-009
+- Migrated `src/pages/access-denied.astro` to a shadcn-compatible card shell and shared action styling via `buttonVariants`, while preserving the existing access-restricted messaging and sign-in navigation behavior.
+- Added frontend Playwright coverage in `tests/access-denied-ui.spec.ts` for baseline render, redirected `from` context rendering, and mobile overflow behavior.
+- Files changed: `src/pages/access-denied.astro`, `tests/access-denied-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Typography/theme tests in this repo rely on `/access-denied` for unauthenticated assertions, so keep the invite-only title as a semantic heading element when restyling that page.
+  - For migrated Astro links styled with `buttonVariants`, assert role/name/href in Playwright instead of component-only `data-slot` attributes.
+  - Mobile regression checks for single-card pages are cheap and effective using viewport + horizontal overflow assertions.
 ---
