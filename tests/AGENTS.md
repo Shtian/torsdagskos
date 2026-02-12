@@ -24,6 +24,7 @@
 - Keep the invite-only title on `/access-denied` as a semantic heading element; typography and theme unauth specs use that route for heading style assertions.
 - For React-island interaction tests on `/`, wait for `data-hydrated="true"` on `page.getByTestId('shadcn-island')` before clicking tabs/select/dialog/dropdown triggers to avoid pre-hydration flakiness.
 - For auth-sensitive `page.evaluate()` calls to `/api/test/current-user`, guard for intermittent `401` + non-JSON responses and retry a few times before failing to reduce suite flakes.
+- For occasional dev-server navigation flakes (`net::ERR_ABORTED` / detached frame), wrap critical `page.goto()` calls in a small bounded retry helper inside the spec.
 - For localized UI copy, prefer stable `data-test-id` selectors for badges/count pills where translated labels can overlap (for example `1 kommer` vs `1 kommer ikke`) and trigger strict-mode locator collisions.
 - During translation-focused stories, keep assertions for app-owned shell text localized, but keep Clerk widget heading checks regex-tolerant because Clerk-rendered copy can vary by provider locale/configuration.
 

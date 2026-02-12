@@ -13,11 +13,16 @@ test.describe('App Shell Layout', () => {
     await expect(header).toBeVisible();
 
     // Logo/title link should be present
-    const logo = page.getByRole('heading', { name: 'Torsdagskos' });
+    const logo = page
+      .getByRole('banner')
+      .getByRole('heading', { name: 'Torsdagskos', exact: true });
     await expect(logo).toBeVisible();
     await expect(logo.locator('..')).toHaveAttribute('href', '/');
 
-    // Navigation buttons should use shadcn Button components
+    // Navigation links should be semantic anchors with unchanged destinations
+    const nav = page.getByRole('navigation', { name: 'Hovednavigasjon' });
+    await expect(nav).toBeVisible();
+
     const createEventBtn = page.getByRole('link', {
       name: '+ Opprett arrangement',
     });
@@ -44,7 +49,7 @@ test.describe('App Shell Layout', () => {
     const header = page.getByRole('banner');
     await expect(header).toBeVisible();
 
-    // All navigation buttons should still be accessible
+    // All navigation links should still be accessible
     await expect(
       page.getByRole('link', { name: '+ Opprett arrangement' }),
     ).toBeVisible();
@@ -71,11 +76,48 @@ test.describe('App Shell Layout', () => {
       .locator('span.text-muted-foreground');
     await expect(userInfo).toBeVisible();
 
-    // All navigation should be in a single row
-    const navContainer = page
-      .getByRole('banner')
-      .locator('> div > div:last-child > div:last-child');
-    await expect(navContainer).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: 'Hovednavigasjon' }),
+    ).toBeVisible();
+  });
+
+  test('current route has persistent active indicator for header links', async ({
+    page,
+  }) => {
+    await page.goto('/history');
+
+    const activeLink = page.getByRole('link', { name: 'Min historikk' });
+    await expect(activeLink).toHaveAttribute('aria-current', 'page');
+    await expect(activeLink).toHaveClass(/underline/);
+
+    const inactiveLink = page.getByRole('link', {
+      name: '+ Opprett arrangement',
+    });
+    await expect(inactiveLink).not.toHaveAttribute('aria-current', 'page');
+  });
+
+  test('header links show visible focus style for keyboard users', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const createEventLink = page.getByRole('link', {
+      name: '+ Opprett arrangement',
+    });
+
+    let isFocused = await createEventLink.evaluate(
+      (element) => element === document.activeElement,
+    );
+    for (let index = 0; index < 12 && !isFocused; index += 1) {
+      await page.keyboard.press('Tab');
+      isFocused = await createEventLink.evaluate(
+        (element) => element === document.activeElement,
+      );
+    }
+    expect(isFocused).toBe(true);
+
+    await expect(createEventLink).toHaveCSS('outline-style', 'solid');
+    await expect(createEventLink).toHaveCSS('outline-width', '3px');
   });
 
   test('skip link is present for accessibility', async ({ page }) => {

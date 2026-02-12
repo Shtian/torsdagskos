@@ -15,6 +15,7 @@
 - For Norwegian localization stories, update accessible-name assertions and prefer test IDs for badge/count checks when translated labels overlap (for example `kommer` vs `kommer ikke`).
 - After shadcn migration, remove unused Astro starter artifacts (`src/components/Welcome.astro`, `src/assets/*`) and stale global CSS selectors to avoid carrying duplicate legacy UI paths.
 - Keep migration documentation synchronized between `README.md` conventions and `docs/shadcn-migration-checklist.md` mapping/status whenever UI primitives or exceptions change.
+- For intermittent Playwright `page.goto()` detach/network abort flakes on local dev server, use a small bounded retry helper in the affected spec instead of increasing global timeouts.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -239,4 +240,15 @@
   - Biome 2.3 Astro support requires explicit `html.experimentalFullSupportEnabled` to lint/format Astro/HTML files.
   - Tailwind v4 `@theme` directives in CSS require enabling `css.parser.tailwindDirectives` in `biome.json`.
   - Keep local and CI Biome commands split: `biome check` locally for iterative fixes, `biome ci` in CI for strict gating.
+---
+## 2026-02-13 00:01:50 CET - US-002
+- Implemented semantic header navigation links in `src/layouts/Layout.astro` with an explicit `<nav aria-label="Hovednavigasjon">`, plain-text link styling, hover underline affordance, route-aware `aria-current="page"`, and persistent active underline indicators while keeping destinations unchanged (`/events/new`, `/history`, `/settings`).
+- Added Playwright coverage updates in `tests/app-shell.spec.ts` for semantic nav presence, active-link indicator assertions, and keyboard focus-visible styling checks; tightened header logo heading locator to avoid strict-mode collisions with similarly named content headings.
+- Stabilized flaky duplicate-event navigation assertions by adding a bounded retry helper for `page.goto()` in `tests/duplicate-event.spec.ts` to handle intermittent local dev-server aborts during long serial runs.
+- Verified required quality checks with `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, and `pnpm test --workers=1` (113 passed).
+- Files changed: `src/layouts/Layout.astro`, `tests/app-shell.spec.ts`, `tests/duplicate-event.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Use `aria-current="page"` plus a persistent text-decoration class for active header links so visual active state and accessibility state stay in sync.
+  - In authenticated shell tests, scope generic heading locators to `role="banner"` and use `exact: true` when homepage content can contain similar heading text.
+  - A lightweight in-spec `page.goto()` retry helper is preferable to inflating global test timeouts when occasional detached-frame navigation flakes appear.
 ---

@@ -1,5 +1,20 @@
 import { test, expect } from './fixtures';
+import type { Page } from '@playwright/test';
 import { createEvent } from './helpers/api-helpers';
+
+async function gotoWithRetry(page: Page, path: string): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(300);
+    }
+  }
+}
 
 test.describe('Duplicate Event Functionality', () => {
   test('duplicate button is disabled when no events exist', async ({
@@ -10,7 +25,7 @@ test.describe('Duplicate Event Functionality', () => {
     // or the database would be cleaned before this test runs.
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Look for either a disabled button or check if button exists
     // If there are events from other tests, there will be a link instead
@@ -42,7 +57,7 @@ test.describe('Duplicate Event Functionality', () => {
     });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Check that duplicate button exists and is enabled (should be a link, not disabled button)
     const duplicateLink = page.getByRole('link', {
@@ -67,7 +82,7 @@ test.describe('Duplicate Event Functionality', () => {
     await createEvent(page, eventData);
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Click duplicate button
     const duplicateLink = page.getByRole('link', {
@@ -120,7 +135,7 @@ test.describe('Duplicate Event Functionality', () => {
     await createEvent(page, originalEventData);
 
     // Navigate to homepage and click duplicate
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     const duplicateLink = page.getByRole('link', {
       name: /dupliser forrige arrangement/i,
     });
@@ -192,7 +207,7 @@ test.describe('Duplicate Event Functionality', () => {
     await createEvent(page, newerEvent);
 
     // Navigate to homepage and click duplicate
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     const duplicateLink = page.getByRole('link', {
       name: /dupliser forrige arrangement/i,
     });
