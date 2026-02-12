@@ -13,6 +13,7 @@
 - For UI migrations, keep behavior coverage in existing specs and add focused `*-ui.spec.ts` shells/mobile tests so visual refactors do not weaken functional assertions.
 - For Norwegian localization stories, update accessible-name assertions and prefer test IDs for badge/count checks when translated labels overlap (for example `kommer` vs `kommer ikke`).
 - After shadcn migration, remove unused Astro starter artifacts (`src/components/Welcome.astro`, `src/assets/*`) and stale global CSS selectors to avoid carrying duplicate legacy UI paths.
+- Keep migration documentation synchronized between `README.md` conventions and `docs/shadcn-migration-checklist.md` mapping/status whenever UI primitives or exceptions change.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -216,4 +217,14 @@
 - **Learnings for future iterations**
   - When a UI migration reaches parity, explicitly search for orphaned starter files and stale selectors (`rg`) and remove them in the same story to keep one authoritative UI path.
   - Keep README structure snippets aligned with real repository contents when deleting legacy scaffolding so onboarding docs do not point to removed files.
+---
+## 2026-02-12 20:42:53 CET - US-019
+- Added migration completion documentation in `docs/shadcn-migration-checklist.md` with explicit old-pattern to shadcn replacement mapping and completion status.
+- Updated `README.md` with shadcn usage conventions, migration completion references, and explicit approved exceptions/follow-up items.
+- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite, 111 passed).
+- Files changed: `README.md`, `docs/shadcn-migration-checklist.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Keep migration documentation split between quick-start conventions (`README.md`) and detailed replacement/status mapping (`docs/shadcn-migration-checklist.md`) so maintainers can update both without ambiguity.
+  - Record explicit exceptions (for example provider-rendered auth widgets) in migration docs to prevent future refactors from unintentionally breaking external integrations.
+  - When completing documentation-only stories, still run full required gates (`pnpm astro check`, `pnpm test --workers=1`) before marking story status as passed.
 ---
