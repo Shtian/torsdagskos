@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { Button, Input, Label, Textarea } from '@/components/ui';
+import { buttonVariants } from '@/components/ui/button';
 
 // Ensure user is authenticated
 const { userId } = Astro.locals.auth();
@@ -16,127 +18,192 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 ---
 
 <Layout
-  title="Create New Event - Torsdagskos"
-  description="Create a new Torsdagskos event with title, date, location, and optional details."
+  title="Opprett nytt arrangement - Torsdagskos"
+  description="Opprett et nytt Torsdagskos-arrangement med tittel, dato, sted og valgfri informasjon."
 >
-  <div class="mx-auto max-w-175 p-4 sm:p-6">
-    <div class="mb-8">
-      <a href="/" class="mb-4 inline-block text-[0.95rem] text-(--color-accent) no-underline transition-colors duration-200 hover:text-(--color-accent-dark)">&larr; Back to Events</a>
-      <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Create New Event</h1>
+  <section class="mx-auto mt-6 w-full max-w-4xl px-4 pb-8 sm:mt-10 sm:px-0" data-test-id="new-event-shell">
+    <div class="mb-6">
+      <a href="/" class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Tilbake til arrangementer</a>
     </div>
 
     {isDuplicate && (
-      <div data-test-id="duplicate-banner" class="mb-6 rounded-md border-2 border-[#2196f3] bg-[#e3f2fd] p-4">
-        <p class="m-0 text-[0.95rem] text-[#1565c0]">
-          <strong>Duplicated from last event</strong> - Title, description, location, and map link have been pre-filled.
-          <br />
-          <span class="text-[0.9rem] italic text-[#1976d2]">Please set the date and time for this new event.</span>
+      <div
+        data-slot="card"
+        data-test-id="duplicate-banner"
+        class="bg-primary/5 text-card-foreground mb-6 rounded-xl border border-primary/30 px-5 py-4 shadow-sm"
+      >
+        <p class="m-0 text-sm font-medium text-foreground">
+          Duplisert fra forrige arrangement
+        </p>
+        <p class="mt-1 mb-0 text-sm text-muted-foreground">
+          Tittel, beskrivelse, sted og kartlenke ble forhåndsutfylt.
+          Angi dato og klokkeslett for dette arrangementet.
         </p>
       </div>
     )}
 
-    <form id="event-form" class="rounded-lg border border-(--color-border) bg-white p-6 sm:p-8">
-      <div class="mb-6">
-        <label for="title" class="mb-2 block font-semibold text-(--color-text-primary)">
-          Event Title <span class="text-(--color-error)">*</span>
-        </label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
-          required
-          placeholder="e.g., Torsdagskos at John's place"
-          value={prefillTitle}
-        />
+    <form id="event-form" data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
+      <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
+        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Opprett nytt arrangement</h1>
+        <p class="m-0 text-sm text-muted-foreground">
+          Fyll ut arrangementsdetaljene nedenfor. Felt merket med * er påkrevd.
+        </p>
       </div>
 
-      <div class="mb-6">
-        <label for="description" class="mb-2 block font-semibold text-(--color-text-primary)">
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          class="min-h-[120px] w-full resize-y rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
-          rows="5"
-          placeholder="What's the plan? Any special details?"
-        >{prefillDescription}</textarea>
-      </div>
-
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div class="mb-6">
-          <label for="date" class="mb-2 block font-semibold text-(--color-text-primary)">
-            Date <span class="text-(--color-error)">*</span>
-          </label>
-          <input
-            type="date"
-            id="date"
-            name="date"
-            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
+      <div data-slot="card-content" class="space-y-6 px-6 py-6 sm:px-8">
+        <div class="space-y-2">
+          <Label htmlFor="title">
+            Arrangementstittel <span class="text-destructive">*</span>
+          </Label>
+          <Input
+            type="text"
+            id="title"
+            name="title"
+            className="h-auto px-3 py-3"
             required
+            placeholder="f.eks. Torsdagskos hos Ola"
+            value={prefillTitle}
           />
         </div>
 
-        <div class="mb-6">
-          <label for="time" class="mb-2 block font-semibold text-(--color-text-primary)">
-            Time <span class="text-(--color-error)">*</span>
-          </label>
-          <input
-            type="time"
-            id="time"
-            name="time"
-            class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
-            required
+        <div class="space-y-2">
+          <Label htmlFor="description">
+            Beskrivelse
+          </Label>
+          <Textarea
+            id="description"
+            name="description"
+            className="min-h-[120px] resize-y px-3 py-3"
+            rows={5}
+            placeholder="Hva er planen? Noen spesielle detaljer?"
+            defaultValue={prefillDescription}
           />
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label htmlFor="date">
+              Dato <span class="text-destructive">*</span>
+            </Label>
+            <Input
+              type="date"
+              id="date"
+              name="date"
+              className="h-auto px-3 py-3"
+              required
+            />
+          </div>
+
+          <div class="space-y-2">
+            <Label htmlFor="time">
+              Tid <span class="text-destructive">*</span>
+            </Label>
+            <Input
+              type="time"
+              id="time"
+              name="time"
+              className="h-auto px-3 py-3"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <Label htmlFor="location">
+            Sted <span class="text-destructive">*</span>
+          </Label>
+          <Input
+            type="text"
+            id="location"
+            name="location"
+            className="h-auto px-3 py-3"
+            required
+            placeholder="f.eks. Olas leilighet, Oslo sentrum"
+            value={prefillLocation}
+          />
+        </div>
+
+        <div class="space-y-2">
+          <Label htmlFor="mapLink">
+            Kartlenke <span class="text-sm font-normal text-muted-foreground">(valgfritt)</span>
+          </Label>
+          <Input
+            type="url"
+            id="mapLink"
+            name="mapLink"
+            className="h-auto px-3 py-3"
+            placeholder="https://maps.google.com/..."
+            value={prefillMapLink}
+          />
+        </div>
+
+        <div
+          id="form-feedback-panel"
+          data-test-id="form-feedback-panel"
+          class="hidden rounded-md border px-4 py-3"
+          role="status"
+          aria-live="polite"
+        >
+          <p id="form-feedback" class="m-0 text-sm text-foreground"></p>
         </div>
       </div>
 
-      <div class="mb-6">
-        <label for="location" class="mb-2 block font-semibold text-(--color-text-primary)">
-          Location <span class="text-(--color-error)">*</span>
-        </label>
-        <input
-          type="text"
-          id="location"
-          name="location"
-          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
-          required
-          placeholder="e.g., John's apartment, Oslo City Center"
-          value={prefillLocation}
-        />
+      <div data-slot="card-footer" class="flex flex-col gap-3 border-t px-6 py-5 sm:flex-row sm:px-8">
+        <Button
+          type="submit"
+          id="submit-button"
+          data-test-id="submit-event-button"
+          className="touch-target h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
+        >
+          Opprett arrangement
+        </Button>
+        <a
+          href="/"
+          class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'touch-target px-6 py-3 text-base no-underline sm:w-auto']}
+        >
+          Avbryt
+        </a>
       </div>
-
-      <div class="mb-6">
-        <label for="mapLink" class="mb-2 block font-semibold text-(--color-text-primary)">
-          Map Link <span class="text-[0.9rem] font-normal text-(--color-text-muted)">(optional)</span>
-        </label>
-        <input
-          type="url"
-          id="mapLink"
-          name="mapLink"
-          class="w-full rounded-md border border-(--color-border) bg-(--color-background) p-3 text-base transition-colors duration-200 focus:border-(--color-accent) focus:outline-none"
-          placeholder="https://maps.google.com/..."
-          value={prefillMapLink}
-        />
-      </div>
-
-      <div class="mt-8 flex flex-col gap-4 sm:flex-row">
-        <button type="submit" class="touch-target inline-block cursor-pointer rounded-md border-2 border-(--color-accent) bg-(--color-accent) px-6 py-3 text-center text-base font-medium text-white transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent-dark) hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" id="submit-button">
-          Create Event
-        </button>
-        <a href="/" class="touch-target inline-flex items-center justify-center rounded-md border-2 border-(--color-border) bg-white px-6 py-3 text-center text-base font-medium text-(--color-text-primary) no-underline transition-all duration-200 hover:-translate-y-px hover:border-(--color-accent) sm:w-auto">Cancel</a>
-      </div>
-      <p id="form-feedback" class="mb-0 mt-4 min-h-6 text-(--color-text-secondary)" role="status" aria-live="polite"></p>
     </form>
-  </div>
+  </section>
 </Layout>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('event-form') as HTMLFormElement;
     const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
-    const feedback = document.getElementById('form-feedback') as HTMLParagraphElement;
+    const feedbackPanel = document.getElementById('form-feedback-panel') as HTMLDivElement;
+    const feedbackText = document.getElementById('form-feedback') as HTMLParagraphElement;
+    const defaultSubmitLabel = 'Opprett arrangement';
+    const loadingSubmitLabel = 'Oppretter...';
+
+    function setFeedback(message: string, type: 'idle' | 'loading' | 'success' | 'error') {
+      if (type === 'idle') {
+        feedbackPanel.className = 'hidden rounded-md border px-4 py-3';
+        feedbackText.textContent = '';
+        feedbackPanel.setAttribute('role', 'status');
+        feedbackPanel.setAttribute('aria-live', 'polite');
+        return;
+      }
+
+      const baseClasses = 'block rounded-md border px-4 py-3';
+
+      if (type === 'loading') {
+        feedbackPanel.className = `${baseClasses} border-border bg-muted/50`;
+        feedbackPanel.setAttribute('role', 'status');
+        feedbackPanel.setAttribute('aria-live', 'polite');
+      } else if (type === 'success') {
+        feedbackPanel.className = `${baseClasses} border-emerald-200 bg-emerald-50`;
+        feedbackPanel.setAttribute('role', 'status');
+        feedbackPanel.setAttribute('aria-live', 'polite');
+      } else {
+        feedbackPanel.className = `${baseClasses} border-destructive/30 bg-destructive/10`;
+        feedbackPanel.setAttribute('role', 'alert');
+        feedbackPanel.setAttribute('aria-live', 'assertive');
+      }
+
+      feedbackText.textContent = message;
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -151,7 +218,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
       // Validate required fields
       if (!title || !date || !time || !location) {
-        showMessage('Please fill in all required fields.', 'error');
+        setFeedback('Fyll ut alle påkrevde felt.', 'error');
         return;
       }
 
@@ -162,9 +229,9 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
       // Disable submit button during submission
       submitButton.disabled = true;
-      submitButton.textContent = 'Creating...';
+      submitButton.textContent = loadingSubmitLabel;
       submitButton.setAttribute('aria-busy', 'true');
-      feedback.textContent = 'Creating event...';
+      setFeedback('Oppretter arrangement...', 'loading');
 
       try {
         const response = await fetch('/api/events/create', {
@@ -183,44 +250,25 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
         if (!response.ok) {
           const errorPayload = await response.json().catch(() => null);
-          throw new Error(errorPayload?.error || 'Failed to create event');
+          throw new Error(errorPayload?.error || 'Kunne ikke opprette arrangement');
         }
 
         const result = await response.json();
 
-        showMessage('Event created successfully!', 'success');
-        feedback.textContent = 'Event created successfully. Redirecting to details...';
+        setFeedback('Arrangement opprettet. Videresender til detaljer...', 'success');
 
         // Redirect to event detail page after short delay
         setTimeout(() => {
           window.location.href = `/events/${result.eventId}`;
         }, 1000);
       } catch (error) {
-        showMessage('Failed to create event. Please try again.', 'error');
-        feedback.textContent = error instanceof Error ? error.message : 'Failed to create event. Please try again.';
+        setFeedback(error instanceof Error ? error.message : 'Kunne ikke opprette arrangement. Prøv igjen.', 'error');
 
         // Re-enable submit button on error
         submitButton.disabled = false;
-        submitButton.textContent = 'Create Event';
+        submitButton.textContent = defaultSubmitLabel;
         submitButton.removeAttribute('aria-busy');
       }
     });
-
-    function showMessage(text: string, type: 'success' | 'error') {
-      const message = document.createElement('div');
-      const baseClasses = 'toast-message fixed z-[1000] rounded-md px-6 py-4 text-white shadow-lg transition';
-      message.className = type === 'success'
-        ? `${baseClasses} bg-(--color-success)`
-        : `${baseClasses} bg-(--color-error)`;
-      message.setAttribute('data-test-id', type === 'success' ? 'success-message' : 'error-message');
-      message.setAttribute('role', type === 'success' ? 'status' : 'alert');
-      message.setAttribute('aria-live', type === 'success' ? 'polite' : 'assertive');
-      message.textContent = text;
-      document.body.appendChild(message);
-
-      setTimeout(() => {
-        message.remove();
-      }, 3000);
-    }
   });
 </script>

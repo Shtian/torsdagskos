@@ -23,14 +23,13 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -41,18 +40,18 @@ jobs:
       - name: Run Playwright tests
         env:
           PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-        run: pnpm test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+          E2E_CLERK_USER_USERNAME: ${{ secrets.E2E_CLERK_USER_USERNAME }}
+          E2E_CLERK_USER_PASSWORD: ${{ secrets.E2E_CLERK_USER_PASSWORD }}
+        run: pnpm test --reporter=blob --workers=1 --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.shardIndex }}
-          path: |
-            playwright-report/
-            test-results/
+          name: blob-report-${{ matrix.shardIndex }}
+          path: blob-report/
           retention-days: 30
 
   merge-reports:
@@ -67,14 +66,13 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -83,13 +81,26 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: all-reports
-          pattern: playwright-report-*
+          pattern: blob-report-*
           merge-multiple: true
 
+      - name: Check downloaded reports
+        id: reports
+        shell: bash
+        run: |
+          if [ -d all-reports ] && [ -n "$(find all-reports -type f -print -quit)" ]; then
+            echo "has_reports=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_reports=false" >> "$GITHUB_OUTPUT"
+            echo "No Playwright report artifacts were found. Skipping merge."
+          fi
+
       - name: Merge reports
+        if: steps.reports.outputs.has_reports == 'true'
         run: pnpm exec playwright merge-reports --reporter html ./all-reports
 
       - name: Upload merged HTML report
+        if: steps.reports.outputs.has_reports == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-merged

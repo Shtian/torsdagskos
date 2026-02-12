@@ -27,7 +27,7 @@ test.describe('Events List Page', () => {
   // Use authenticated storage state for these tests
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('displays upcoming and past events in separate sections', async ({ page }) => {
+  test('displays upcoming and tidligere arrangementer in separate sections', async ({ page }) => {
     // Setup test data
     await cleanupTestData();
 
@@ -63,7 +63,7 @@ test.describe('Events List Page', () => {
       location: 'Past Location',
     });
 
-    // Add RSVPs
+    // Add Svar
     await createTestRsvp({
       userId: user1.id,
       eventId: upcomingEvent.id,
@@ -82,21 +82,27 @@ test.describe('Events List Page', () => {
     // Verify page title
     await expect(page).toHaveTitle(/Torsdagskos/);
 
-    // Verify "Upcoming Events" section exists
-    await expect(page.getByRole('heading', { name: /upcoming events/i })).toBeVisible();
+    // Verify "Kommende arrangementer" section exists
+    await expect(page.getByRole('heading', { name: /kommende arrangementer/i })).toBeVisible();
 
     // Verify upcoming event is displayed (h2 heading within event card)
     await expect(page.getByRole('heading', { name: 'Upcoming Event', level: 2 })).toBeVisible();
-    await expect(page.getByText('Future Location')).toBeVisible();
-    await expect(page.getByText('1 going')).toBeVisible();
 
-    // Verify "Past Events" section exists
-    await expect(page.getByRole('heading', { name: /past events/i })).toBeVisible();
+    // Get the first event card and verify its details
+    const upcomingCard = page.getByTestId('event-card').first();
+    await expect(upcomingCard.getByText('Future Location')).toBeVisible();
+    await expect(upcomingCard.getByText('1 kommer')).toBeVisible();
+
+    // Verify "Tidligere arrangementer" section exists
+    await expect(page.getByRole('heading', { name: /tidligere arrangementer/i })).toBeVisible();
 
     // Verify past event is displayed (h2 heading within event card)
     await expect(page.getByRole('heading', { name: 'Past Event', level: 2 })).toBeVisible();
-    await expect(page.getByText('Past Location')).toBeVisible();
-    await expect(page.getByText('1 maybe')).toBeVisible();
+
+    // Get the last event card and verify its details
+    const pastCard = page.getByTestId('event-card').last();
+    await expect(pastCard.getByText('Past Location')).toBeVisible();
+    await expect(pastCard.getByText('1 kanskje')).toBeVisible();
   });
 
   test('displays empty state when no events exist', async ({ page }) => {
@@ -107,7 +113,7 @@ test.describe('Events List Page', () => {
     await page.goto('/');
 
     // Verify empty state message is displayed
-    await expect(page.getByText('No events yet. Check back soon!')).toBeVisible();
+    await expect(page.getByText('Ingen arrangementer ennå. Kom tilbake snart!')).toBeVisible();
 
     // Verify no event cards are displayed
     const eventCards = page.locator('[data-test-id="event-card"]');
@@ -168,7 +174,7 @@ test.describe('Events List Page', () => {
       location: 'Test Location',
     });
 
-    // Create RSVPs with different statuses
+    // Create Svar with different statuses
     await createTestRsvp({
       userId: user1.id,
       eventId: event.id,
@@ -192,9 +198,9 @@ test.describe('Events List Page', () => {
 
     // Verify RSVP counts are displayed correctly
     const eventCard = page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'RSVP Test Event' }) });
-    await expect(eventCard.getByText('1 going')).toBeVisible();
-    await expect(eventCard.getByText('1 maybe')).toBeVisible();
-    await expect(eventCard.getByText('1 not going')).toBeVisible();
+    await expect(eventCard.getByTestId('rsvp-going')).toHaveText('1 kommer');
+    await expect(eventCard.getByTestId('rsvp-maybe')).toHaveText('1 kanskje');
+    await expect(eventCard.getByTestId('rsvp-not-going')).toHaveText('1 kommer ikke');
   });
 });
 
@@ -209,7 +215,7 @@ test.describe('Event Detail Page', () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const event = await createTestEvent({
-      title: 'Complete Event Details',
+      title: 'Complete Arrangementsdetaljer',
       description: 'This is a detailed description\nwith multiple lines',
       dateTime: tomorrow,
       location: 'Test Venue, Oslo',
@@ -220,15 +226,15 @@ test.describe('Event Detail Page', () => {
     await page.goto(`/events/${event.id}`);
 
     // Verify page title
-    await expect(page).toHaveTitle(/Complete Event Details/);
+    await expect(page).toHaveTitle(/Complete Arrangementsdetaljer/);
 
     // Verify all event fields are displayed
-    await expect(page.getByRole('heading', { name: 'Complete Event Details', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Complete Arrangementsdetaljer', level: 1 })).toBeVisible();
     await expect(page.getByText('This is a detailed description')).toBeVisible();
     await expect(page.getByText('Test Venue, Oslo')).toBeVisible();
 
     // Verify map link is present and clickable
-    const mapLink = page.getByRole('link', { name: /open in maps/i });
+    const mapLink = page.getByRole('link', { name: /åpne i kart/i });
     await expect(mapLink).toBeVisible();
     await expect(mapLink).toHaveAttribute('href', 'https://maps.google.com/?q=Oslo');
     await expect(mapLink).toHaveAttribute('target', '_blank');
@@ -271,7 +277,7 @@ test.describe('Event Detail Page', () => {
       location: 'Test Location',
     });
 
-    // Create RSVPs with different statuses
+    // Create Svar with different statuses
     await createTestRsvp({
       userId: user1.id,
       eventId: event.id,
@@ -301,21 +307,21 @@ test.describe('Event Detail Page', () => {
 
     // Verify RSVP count boxes
     const rsvpCounts = page.locator('[data-test-id="rsvp-counts"]');
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '2' }).filter({ hasText: 'Going' })).toBeVisible();
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Maybe' })).toBeVisible();
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Not Going' })).toBeVisible();
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '2' }).filter({ hasText: 'Kommer' })).toBeVisible();
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Kanskje' })).toBeVisible();
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Kommer ikke' })).toBeVisible();
 
-    // Verify "Going" list
-    await expect(page.getByRole('heading', { name: /going \(2\)/i })).toBeVisible();
+    // Verify "Kommer" list
+    await expect(page.getByRole('heading', { name: /kommer \(2\)/i })).toBeVisible();
     await expect(page.getByText('Alice Johnson')).toBeVisible();
     await expect(page.getByText('Bob Smith')).toBeVisible();
 
-    // Verify "Maybe" list
-    await expect(page.getByRole('heading', { name: /maybe \(1\)/i })).toBeVisible();
+    // Verify "Kanskje" list
+    await expect(page.getByRole('heading', { name: /kanskje \(1\)/i })).toBeVisible();
     await expect(page.getByText('Charlie Brown')).toBeVisible();
 
-    // Verify "Not Going" list
-    await expect(page.getByRole('heading', { name: /not going \(1\)/i })).toBeVisible();
+    // Verify "Kommer ikke" list
+    await expect(page.getByRole('heading', { name: /kommer ikke \(1\)/i })).toBeVisible();
     await expect(page.getByText('Diana Prince')).toBeVisible();
   });
 
@@ -339,13 +345,13 @@ test.describe('Event Detail Page', () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const event = await createTestEvent({
-      title: 'No Response Test',
+      title: 'Ingen respons Test',
       description: 'Testing no response count',
       dateTime: tomorrow,
       location: 'Test Location',
     });
 
-    // Only 1 user RSVPs (out of 3 total users: authenticated + 2 test users)
+    // Only 1 user Svar (out of 3 total users: authenticated + 2 test users)
     await createTestRsvp({
       userId: user1.id,
       eventId: event.id,
@@ -355,15 +361,15 @@ test.describe('Event Detail Page', () => {
     // Navigate to event detail page
     await page.goto(`/events/${event.id}`);
 
-    // Verify No Response count is displayed
+    // Verify Ingen respons count is displayed
     // Note: We don't check the specific count because users persist across test runs
-    // The important thing is that the No Response item is visible and shows a count
+    // The important thing is that the Ingen respons item is visible and shows a count
     const rsvpCounts = page.locator('[data-test-id="rsvp-counts"]');
-    const noResponseItem = rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'No Response' });
+    const noResponseItem = rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'Ingen respons' });
     await expect(noResponseItem).toBeVisible();
 
-    // Verify the "Going" count shows 1 (the one RSVP we created)
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Going' })).toBeVisible();
+    // Verify the "Kommer" count shows 1 (the one RSVP we created)
+    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Kommer' })).toBeVisible();
   });
 
   test('back link navigates to events list', async ({ page }) => {
@@ -383,11 +389,11 @@ test.describe('Event Detail Page', () => {
     await page.goto(`/events/${event.id}`);
 
     // Click back link
-    await page.getByRole('link', { name: /back to events/i }).click();
+    await page.getByRole('link', { name: /tilbake til arrangementer/i }).click();
 
     // Verify navigation to homepage
     await expect(page).toHaveURL('/');
-    await expect(page.getByRole('heading', { name: /upcoming events/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /kommende arrangementer/i })).toBeVisible();
   });
 
   test('returns 404 for non-existent event ID', async ({ page }) => {
@@ -457,8 +463,8 @@ test.describe('Event Detail Page', () => {
     // Verify current user's RSVP status is displayed prominently
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
-    await expect(currentUserRsvp.getByText('Your status:')).toBeVisible();
-    await expect(currentUserRsvp.getByText('Going')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Din status:')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Kommer')).toBeVisible();
   });
 
   test('displays no response for user without RSVP', async ({ page }) => {
@@ -481,10 +487,10 @@ test.describe('Event Detail Page', () => {
     // Navigate to event detail page (no RSVP created)
     await page.goto(`/events/${event.id}`);
 
-    // Verify "No Response" is displayed for current user
+    // Verify "Ingen respons" is displayed for current user
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
-    await expect(currentUserRsvp.getByText('Your status:')).toBeVisible();
-    await expect(currentUserRsvp.getByText('No Response')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Din status:')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Ingen respons')).toBeVisible();
   });
 });

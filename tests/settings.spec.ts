@@ -1,17 +1,17 @@
 import { test, expect } from './fixtures';
 
-test.describe('Settings page', () => {
+test.describe('Innstillinger page', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
   test('shows settings link in header and navigates to settings page', async ({ page }) => {
     await page.goto('/');
 
-    const settingsLink = page.getByRole('link', { name: 'Settings' });
+    const settingsLink = page.getByRole('link', { name: 'Innstillinger' });
     await expect(settingsLink).toBeVisible();
 
     await settingsLink.click();
     await expect(page).toHaveURL('/settings');
-    await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Innstillinger', level: 1 })).toBeVisible();
   });
 
   test('shows current browser permission status', async ({ page }) => {
@@ -37,7 +37,7 @@ test.describe('Settings page', () => {
     });
 
     await page.goto('/settings');
-    await expect(page.locator('#permission-status')).toHaveText('Default');
+    await expect(page.locator('#permission-status')).toHaveText('Standard');
   });
 
   test('requests permission and stores enabled preference', async ({ page }) => {
@@ -68,12 +68,12 @@ test.describe('Settings page', () => {
       page.waitForResponse((response) =>
         response.url().includes('/api/settings/notifications') && response.request().method() === 'POST'
       ),
-      page.getByRole('button', { name: /request notification permission/i }).click(),
+      page.getByRole('button', { name: /be om varslingstillatelse/i }).click(),
     ]);
 
-    await expect(page.locator('#permission-status')).toHaveText('Granted');
-    await expect(page.locator('#saved-preference')).toHaveText('Enabled');
-    await expect(page.locator('#feedback')).toHaveText('Browser notifications enabled.');
+    await expect(page.locator('#permission-status')).toHaveText('Tillatt');
+    await expect(page.locator('#saved-preference')).toHaveText('Aktivert');
+    await expect(page.locator('#feedback')).toHaveText('Nettleslervarsler aktivert.');
 
     const currentUser = await page.evaluate(async () => {
       const response = await fetch('/api/test/current-user');
@@ -115,12 +115,12 @@ test.describe('Settings page', () => {
       page.waitForResponse((response) =>
         response.url().includes('/api/settings/notifications') && response.request().method() === 'POST'
       ),
-      page.getByRole('button', { name: /request notification permission/i }).click(),
+      page.getByRole('button', { name: /be om varslingstillatelse/i }).click(),
     ]);
 
-    await expect(page.locator('#permission-status')).toHaveText('Denied');
-    await expect(page.locator('#saved-preference')).toHaveText('Disabled');
-    await expect(page.locator('#feedback')).toHaveText('Browser notifications are disabled for this browser.');
+    await expect(page.locator('#permission-status')).toHaveText('Avvist');
+    await expect(page.locator('#saved-preference')).toHaveText('Deaktivert');
+    await expect(page.locator('#feedback')).toHaveText('Nettleslervarsler er deaktivert i denne nettleseren.');
 
     const currentUser = await page.evaluate(async () => {
       const response = await fetch('/api/test/current-user');

@@ -18,7 +18,7 @@ test.describe('Smoke tests @unauth', () => {
 
     // Should redirect to the custom access denied page
     await expect(page).toHaveURL(/\/access-denied/);
-    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
   });
 
   test('sign-in page is accessible', async ({ page }) => {

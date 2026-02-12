@@ -2,6 +2,8 @@
 import "../styles/global.css";
 import { clerkClient } from '@clerk/astro/server';
 import { SignOutButton } from '@clerk/astro/components';
+import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 interface Props {
 	title?: string;
@@ -10,7 +12,7 @@ interface Props {
 
 const {
 	title = "Torsdagskos",
-	description = "Torsdagskos is a private meetup planner for coordinating recurring events with friends.",
+	description = "Torsdagskos er en privat møteplanlegger for å koordinere gjentakende arrangementer med venner.",
 } = Astro.props;
 
 // Get authenticated user
@@ -24,10 +26,13 @@ if (userId) {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="no">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
@@ -35,27 +40,27 @@ if (userId) {
 		<title>{title}</title>
 	</head>
 	<body>
-		<a href="#main-content" class="skip-link">Skip to main content</a>
+		<a href="#main-content" class="skip-link">Hopp til hovedinnhold</a>
 		<div class="flex min-h-screen flex-col">
-			<header class="sticky top-0 z-50 border-b border-(--color-border) bg-white shadow-sm">
-				<div class="mx-auto flex w-full max-w-300 flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between lg:px-6 lg:py-5">
+			<header class="sticky top-0 z-50 border-b bg-background shadow-sm">
+				<div class="mx-auto flex w-full max-w-[75rem] flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between lg:px-6 lg:py-5">
 					<a href="/" class="no-underline">
-						<h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[1.75rem] lg:text-[2rem]">Torsdagskos</h1>
+						<h1 class="m-0 text-2xl text-foreground sm:text-[1.75rem] lg:text-[2rem]">Torsdagskos</h1>
 					</a>
 
 					{user && (
 						<div class="w-full md:w-auto">
 							<div class="mb-2 text-right">
-								<span class="hidden text-sm text-(--color-text-secondary) sm:inline">
+								<span class="hidden text-sm text-muted-foreground sm:inline">
 									{user.firstName || user.emailAddresses[0]?.emailAddress}
 								</span>
 							</div>
 							<div class="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 md:flex md:w-auto md:flex-wrap md:justify-end md:gap-3">
-								<a href="/events/new" class="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-md bg-(--color-accent) px-3 py-2 text-center text-sm font-medium text-white no-underline transition duration-200 hover:-translate-y-px hover:bg-(--color-accent-dark) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">+ Create Event</a>
-								<a href="/history" class="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-md border border-(--color-border) bg-white px-3 py-2 text-center text-sm font-medium text-(--color-accent-dark) no-underline transition duration-200 hover:-translate-y-px hover:border-(--color-accent-light) hover:bg-(--color-primary-100) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">My History</a>
-								<a href="/settings" class="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-md border border-(--color-border) bg-white px-3 py-2 text-center text-sm font-medium text-(--color-accent-dark) no-underline transition duration-200 hover:-translate-y-px hover:border-(--color-accent-light) hover:bg-(--color-primary-100) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">Settings</a>
+								<a href="/events/new" class:list={[buttonVariants({ size: "lg" }), "touch-target no-underline"]}>+ Opprett arrangement</a>
+								<a href="/history" class:list={[buttonVariants({ variant: "outline", size: "lg" }), "touch-target no-underline"]}>Min historikk</a>
+								<a href="/settings" class:list={[buttonVariants({ variant: "outline", size: "lg" }), "touch-target no-underline"]}>Innstillinger</a>
 								<SignOutButton asChild redirectUrl="/sign-in">
-									<button class="touch-target whitespace-nowrap rounded-md bg-(--color-accent) px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-(--color-accent-dark) focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">Sign Out</button>
+									<Button client:load size="lg" className="touch-target">Logg ut</Button>
 								</SignOutButton>
 							</div>
 						</div>

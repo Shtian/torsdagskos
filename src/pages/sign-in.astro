@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { SignIn as ClerkSignIn } from '@clerk/astro/components';
+import { buttonVariants } from '@/components/ui/button';
 
 // Redirect to home if already signed in
 const { userId } = Astro.locals.auth();
@@ -10,10 +11,36 @@ if (userId) {
 ---
 
 <Layout
-  title="Sign In - Torsdagskos"
-  description="Sign in to access your private Torsdagskos meetup dashboard."
+  title="Logg inn - Torsdagskos"
+  description="Logg inn for å få tilgang til ditt private Torsdagskos-område."
 >
-  <div class="flex min-h-screen items-center justify-center">
-    <ClerkSignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
-  </div>
+  <section class="mx-auto mt-10 w-full max-w-3xl px-4 sm:mt-16 sm:px-0" data-test-id="sign-in-shell">
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div data-slot="card-header" class="space-y-2 px-6 text-center">
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+          data-test-id="sign-in-kicker"
+        >
+          Velkommen tilbake
+        </p>
+        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl" data-test-id="sign-in-title">
+          Logg inn på Torsdagskos
+        </h1>
+        <p class="mx-auto max-w-xl text-base text-muted-foreground" data-test-id="sign-in-description">
+          Bruk den inviterte kontoen din for å få tilgang til arrangementer, svar og planlegging.
+        </p>
+      </div>
+
+      <div data-slot="card-content" class="space-y-6 px-6">
+        <div class="flex justify-center" data-test-id="sign-in-form">
+          <ClerkSignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
+        </div>
+        <div class="flex justify-center">
+          <a href="/sign-up" class:list={[buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline']}>
+            Trenger du en konto? Gå til registrering
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 </Layout>

@@ -7,12 +7,25 @@
 - Keep tests independent; no shared state across tests.
 - Many specs mutate shared DB state via `/api/test/seed` cleanup; full parallel runs can race across files. Prefer `pnpm test --workers=1` for stable full-suite verification, or isolate data/cleanup per spec when adding new tests.
 - Use stable selectors and roles; avoid brittle text where possible.
+- Shadcn primitives in this repo expose `data-slot` attributes (for example `data-slot="input"`/`"textarea"`); use these for resilient component-level assertions when roles/text are ambiguous.
 - Avoid adding `aria-label` to controls that already have clear visible text unless necessary; it overrides the accessible name and can break existing `getByRole({ name: ... })` locators.
 - Playwright config uses `testIdAttribute: 'data-test-id'`; prefer `page.getByTestId(...)` over manual `[data-test-id=...]` selectors.
 - For responsive checks, set explicit viewport sizes in-spec (`page.setViewportSize`) and assert no horizontal overflow with `document.documentElement.scrollWidth <= window.innerWidth`.
 - For mobile accessibility touch targets, assert clickable control dimensions with `locator.boundingBox()` and keep both width/height `>= 44`.
 - Keep specs focused: one behavior per test, minimal setup.
 - Unauthenticated route assertions should target local `/access-denied` first; validate the invite-only message and sign-in link instead of expecting direct middleware redirects to Clerk-hosted domains.
+- For Clerk wrapper page migrations (`/sign-in`, `/sign-up`), add stable `data-test-id` hooks on the local shell and assert both wrapper content and Clerk heading presence to ensure visual migration without breaking auth UI.
+- For event create/edit form migrations, use the shared inline feedback contract (`data-test-id="form-feedback-panel"`) and assert panel text plus submit `aria-busy`/disabled transitions instead of toast-style selectors.
+- For event detail RSVP flows, use the inline feedback panel (`data-test-id="rsvp-feedback-panel"`) and assert the `#rsvp-feedback` message instead of ephemeral toast selectors.
+- For settings page UI refactors, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` selectors stable because both page scripts and settings specs rely on them.
+- For page UI migrations, keep existing behavior-focused specs intact and add a dedicated `*-ui.spec.ts` file for shell/list surface and mobile overflow assertions.
+- For global CSS/token assertions, prefer `@unauth` tests on `/access-denied` and verify computed styles from `document.documentElement`/`document.body` to avoid auth state coupling.
+- For typography assertions, validate computed `fontFamily` with `toContain('<Font Name>')` instead of exact string equality because browser/platform fallback stacks can vary.
+- Keep the invite-only title on `/access-denied` as a semantic heading element; typography and theme unauth specs use that route for heading style assertions.
+- For React-island interaction tests on `/`, wait for `data-hydrated="true"` on `page.getByTestId('shadcn-island')` before clicking tabs/select/dialog/dropdown triggers to avoid pre-hydration flakiness.
+- For auth-sensitive `page.evaluate()` calls to `/api/test/current-user`, guard for intermittent `401` + non-JSON responses and retry a few times before failing to reduce suite flakes.
+- For localized UI copy, prefer stable `data-test-id` selectors for badges/count pills where translated labels can overlap (for example `1 kommer` vs `1 kommer ikke`) and trigger strict-mode locator collisions.
+- During translation-focused stories, keep assertions for app-owned shell text localized, but keep Clerk widget heading checks regex-tolerant because Clerk-rendered copy can vary by provider locale/configuration.
 
 ## Test Helpers (tests/helpers/api-helpers.ts)
 

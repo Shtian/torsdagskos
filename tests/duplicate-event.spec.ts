@@ -12,7 +12,7 @@ test.describe('Duplicate Event Functionality', () => {
 
     // Look for either a disabled button or check if button exists
     // If there are events from other tests, there will be a link instead
-    const duplicateButton = page.locator('button:has-text("Duplicate Last Event"), a:has-text("Duplicate Last Event")').first();
+    const duplicateButton = page.locator('button:has-text("Dupliser forrige arrangement"), a:has-text("Dupliser forrige arrangement")').first();
     await expect(duplicateButton).toBeVisible();
 
     // Check if it's a disabled button (when no events) or a link (when events exist)
@@ -37,7 +37,7 @@ test.describe('Duplicate Event Functionality', () => {
     await page.goto('/');
 
     // Check that duplicate button exists and is enabled (should be a link, not disabled button)
-    const duplicateLink = page.getByRole('link', { name: /duplicate last event/i });
+    const duplicateLink = page.getByRole('link', { name: /dupliser forrige arrangement/i });
     await expect(duplicateLink).toBeVisible();
     await expect(duplicateLink).toHaveAttribute('href', /.+/); // Has href attribute
   });
@@ -58,7 +58,7 @@ test.describe('Duplicate Event Functionality', () => {
     await page.goto('/');
 
     // Click duplicate button
-    const duplicateLink = page.getByRole('link', { name: /duplicate last event/i });
+    const duplicateLink = page.getByRole('link', { name: /dupliser forrige arrangement/i });
     await duplicateLink.click();
 
     // Should navigate to /events/new with query parameters
@@ -67,8 +67,8 @@ test.describe('Duplicate Event Functionality', () => {
     // Check that duplicate banner is visible
     const banner = page.locator('[data-test-id="duplicate-banner"]');
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText('Duplicated from last event');
-    await expect(banner).toContainText('Please set the date and time');
+    await expect(banner).toContainText('Duplisert fra forrige arrangement');
+    await expect(banner).toContainText('Angi dato og klokkeslett for dette arrangementet.');
 
     // Check that form fields are pre-filled (except date and time)
     const titleInput = page.locator('#title');
@@ -105,7 +105,7 @@ test.describe('Duplicate Event Functionality', () => {
 
     // Navigate to homepage and click duplicate
     await page.goto('/');
-    const duplicateLink = page.getByRole('link', { name: /duplicate last event/i });
+    const duplicateLink = page.getByRole('link', { name: /dupliser forrige arrangement/i });
     await duplicateLink.click();
 
     await page.waitForURL(/\/events\/new\?duplicate=true/);
@@ -119,11 +119,12 @@ test.describe('Duplicate Event Functionality', () => {
     await page.locator('#time').fill(timeString);
 
     // Submit the form
-    const submitButton = page.getByRole('button', { name: /create event/i, exact: true });
+    const submitButton = page.getByRole('button', { name: /opprett arrangement/i, exact: true });
     await submitButton.click();
 
-    // Wait for success message and redirect
-    await expect(page.locator('[data-test-id="success-message"]')).toBeVisible();
+    // Wait for success feedback and redirect
+    await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/arrangement opprettet/i);
     await page.waitForURL(/\/events\/\d+$/);
 
     // Verify new event page shows the duplicated data
@@ -161,7 +162,7 @@ test.describe('Duplicate Event Functionality', () => {
 
     // Navigate to homepage and click duplicate
     await page.goto('/');
-    const duplicateLink = page.getByRole('link', { name: /duplicate last event/i });
+    const duplicateLink = page.getByRole('link', { name: /dupliser forrige arrangement/i });
     await duplicateLink.click();
 
     await page.waitForURL(/\/events\/new\?duplicate=true/);

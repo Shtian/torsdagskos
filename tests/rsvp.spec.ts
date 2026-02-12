@@ -5,10 +5,10 @@ import { createTestUser, createTestEvent } from './helpers/api-helpers';
  * E2E tests for RSVP functionality
  *
  * These tests verify RSVP interactions:
- * - RSVPing to events (Going, Maybe, Not Going)
+ * - RSVPing to events (Kommer, Kanskje, Kommer ikke)
  * - Changing RSVP status
  * - RSVP counts updating
- * - Past events cannot be RSVPd to
+ * - tidligere arrangementer cannot be RSVPd to
  * - Current user RSVP status display
  *
  * Run with: pnpm test tests/rsvp.spec.ts
@@ -66,40 +66,40 @@ test.describe('RSVP Functionality', () => {
 
     await page.goto(`/events/${event.id}`);
 
-    // First, RSVP "Going"
-    const goingButton = page.getByRole('button', { name: 'Going', exact: true });
+    // First, RSVP "Kommer"
+    const goingButton = page.getByRole('button', { name: 'Kommer', exact: true });
     await goingButton.click();
-    await expect(page.locator('[data-test-id="rsvp-success-message"]')).toBeVisible();
+    await expect(page.getByTestId('rsvp-feedback-panel')).toContainText('Svar oppdatert');
     await page.waitForLoadState('load');
 
-    // Verify "Going" is active
+    // Verify "Kommer" is active
     await expect(goingButton).toBeVisible();
     await expect(goingButton).toHaveAttribute('data-active', 'true');
 
-    // Change to "Maybe"
-    const maybeButton = page.getByRole('button', { name: 'Maybe', exact: true });
+    // Change to "Kanskje"
+    const maybeButton = page.getByRole('button', { name: 'Kanskje', exact: true });
     await maybeButton.click();
-    await expect(page.locator('[data-test-id="rsvp-success-message"]')).toBeVisible();
+    await expect(page.getByTestId('rsvp-feedback-panel')).toContainText('Svar oppdatert');
     await page.waitForLoadState('load');
 
-    // Verify "Maybe" is now active
+    // Verify "Kanskje" is now active
     await expect(maybeButton).toBeVisible();
     await expect(maybeButton).toHaveAttribute('data-active', 'true');
     await expect(goingButton).toHaveAttribute('data-active', 'false');
 
-    // Change to "Not Going"
-    const notGoingButton = page.getByRole('button', { name: 'Not Going', exact: true });
+    // Change to "Kommer ikke"
+    const notGoingButton = page.getByRole('button', { name: 'Kommer ikke', exact: true });
     await notGoingButton.click();
-    await expect(page.locator('[data-test-id="rsvp-success-message"]')).toBeVisible();
+    await expect(page.getByTestId('rsvp-feedback-panel')).toContainText('Svar oppdatert');
     await page.waitForLoadState('load');
 
-    // Verify "Not Going" is now active
+    // Verify "Kommer ikke" is now active
     await expect(notGoingButton).toBeVisible();
     await expect(notGoingButton).toHaveAttribute('data-active', 'true');
     await expect(maybeButton).toHaveAttribute('data-active', 'false');
   });
 
-  test('should not show RSVP buttons for past events', async ({ page }) => {
+  test('should not show RSVP buttons for tidligere arrangementer', async ({ page }) => {
     // Get the authenticated user's Clerk ID and ensure they exist in the database
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -140,13 +140,13 @@ test.describe('RSVP Functionality', () => {
     await page.goto(`/events/${event.id}`);
 
     // Verify RSVP buttons are NOT visible
-    await expect(page.getByRole('button', { name: 'Going', exact: true })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Maybe', exact: true })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Not Going', exact: true })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kommer', exact: true })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kanskje', exact: true })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kommer ikke', exact: true })).not.toBeVisible();
 
     // Verify past event notice is shown
     await expect(page.locator('[data-test-id="past-event-notice"]')).toBeVisible();
-    await expect(page.locator('[data-test-id="past-event-notice"]')).toContainText('This event has passed');
+    await expect(page.locator('[data-test-id="past-event-notice"]')).toContainText('Dette arrangementet er over');
   });
 
   test('should update RSVP counts after status change', async ({ page }) => {
@@ -189,24 +189,24 @@ test.describe('RSVP Functionality', () => {
 
     await page.goto(`/events/${event.id}`);
 
-    // Initially, Going count should be 0
-    const goingCount = page.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'Going' }).locator('[data-test-id="rsvp-count-value"]').first();
+    // Initially, Kommer count should be 0
+    const goingCount = page.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'Kommer' }).locator('[data-test-id="rsvp-count-value"]').first();
     await expect(goingCount).toHaveText('0');
 
-    // Click "Going"
-    await page.getByRole('button', { name: 'Going', exact: true }).click();
+    // Click "Kommer"
+    await page.getByRole('button', { name: 'Kommer', exact: true }).click();
     await page.waitForLoadState('load');
 
-    // Going count should now be 1
+    // Kommer count should now be 1
     await expect(goingCount).toHaveText('1');
 
-    // Change to "Maybe"
-    await page.getByRole('button', { name: 'Maybe', exact: true }).click();
+    // Change to "Kanskje"
+    await page.getByRole('button', { name: 'Kanskje', exact: true }).click();
     await page.waitForLoadState('load');
 
-    // Going count should be back to 0, Maybe count should be 1
+    // Kommer count should be back to 0, Kanskje count should be 1
     await expect(goingCount).toHaveText('0');
-    const maybeCount = page.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'Maybe' }).locator('[data-test-id="rsvp-count-value"]').first();
+    const maybeCount = page.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'Kanskje' }).locator('[data-test-id="rsvp-count-value"]').first();
     await expect(maybeCount).toHaveText('1');
   });
 
@@ -250,17 +250,17 @@ test.describe('RSVP Functionality', () => {
 
     await page.goto(`/events/${event.id}`);
 
-    // Initially, should show "No Response"
-    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('Your status:');
-    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('No Response');
+    // Initially, should show "Ingen respons"
+    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('Din status:');
+    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('Ingen respons');
 
-    // RSVP "Going"
-    await page.getByRole('button', { name: 'Going', exact: true }).click();
+    // RSVP "Kommer"
+    await page.getByRole('button', { name: 'Kommer', exact: true }).click();
     await page.waitForLoadState('load');
 
-    // Should now show "Going"
-    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('Your status:');
-    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('Going');
-    await expect(page.locator('[data-test-id="current-user-rsvp"]')).not.toContainText('No Response');
+    // Should now show "Kommer"
+    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('Din status:');
+    await expect(page.locator('[data-test-id="current-user-rsvp"]')).toContainText('Kommer');
+    await expect(page.locator('[data-test-id="current-user-rsvp"]')).not.toContainText('Ingen respons');
   });
 });

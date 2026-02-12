@@ -193,7 +193,7 @@
 - TypeScript: Date objects from Astro DB can be passed directly to `new Date()`
 - Database seed data: Helpful to create sample data for testing UI without manual entry
 - Browser verification: Clerk authentication redirects work correctly (307 to sign-in page)
-- Clerk test mode: Use test email test+clerk_test@example.com  and read the password from TEST_PASSWORD in .env in this folder. Verification code 424242 if needed.
+- Clerk test mode: Use test email test+clerk_test@example.com  and read the password from E2E_CLERK_USER_PASSWORD in .env in this folder. Verification code 424242 if needed.
 
 ---
 ## 2026-02-09 22:31 - US-005

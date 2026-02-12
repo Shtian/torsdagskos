@@ -8,59 +8,73 @@ import {
 } from './helpers/api-helpers';
 
 async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test').Page): Promise<number> {
-  await page.goto('/');
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await page.goto('/');
 
-  const authInfo = await page.evaluate(async () => {
-    const response = await fetch('/api/test/current-user');
-    const data = await response.json();
+    const authInfo = await page.evaluate(async () => {
+      const response = await fetch('/api/test/current-user');
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json')
+        ? await response.json().catch(() => null)
+        : null;
 
-    if (response.ok) {
-      return {
-        userId: data.id as number,
-        clerkUserId: data.clerkUserId as string,
-        exists: true,
-      };
+      if (response.ok && payload?.id && payload?.clerkUserId) {
+        return {
+          kind: 'existing' as const,
+          userId: payload.id as number,
+        };
+      }
+
+      if (response.status === 404 && payload?.userId) {
+        return {
+          kind: 'missing' as const,
+          clerkUserId: payload.userId as string,
+        };
+      }
+
+      if (response.status === 401) {
+        return { kind: 'retry' as const };
+      }
+
+      throw new Error(`Unexpected response from /api/test/current-user: ${response.status}`);
+    });
+
+    if (authInfo.kind === 'retry') {
+      await page.waitForTimeout(250 * attempt);
+      continue;
     }
 
-    if (response.status === 404 && data.userId) {
-      return {
-        userId: null,
-        clerkUserId: data.userId as string,
-        exists: false,
-      };
+    if (authInfo.kind === 'existing') {
+      return authInfo.userId;
     }
 
-    throw new Error(`Unexpected response from /api/test/current-user: ${response.status}`);
-  });
+    const createdUser = await createTestUser({
+      clerkUserId: authInfo.clerkUserId,
+      email: uniqueEmail(),
+      name: 'Authenticated Test User',
+    });
 
-  if (authInfo.exists && authInfo.userId) {
-    return authInfo.userId;
+    return createdUser.id;
   }
 
-  const createdUser = await createTestUser({
-    clerkUserId: authInfo.clerkUserId,
-    email: uniqueEmail(),
-    name: 'Authenticated Test User',
-  });
-
-  return createdUser.id;
+  throw new Error('Unable to resolve authenticated test user after retries.');
 }
 
 test.describe('RSVP history page', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('shows My History link in header and navigates to history page', async ({ page }) => {
+  test('shows Min historikk link in header and navigates to history page', async ({ page }) => {
     await page.goto('/');
 
-    const historyLink = page.getByRole('link', { name: 'My History' });
+    const historyLink = page.getByRole('link', { name: 'Min historikk' });
     await expect(historyLink).toBeVisible();
 
     await historyLink.click();
     await expect(page).toHaveURL('/history');
-    await expect(page.getByRole('heading', { name: 'My RSVP History', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
   });
 
-  test('shows only current user RSVPs sorted by event date descending', async ({ page }) => {
+  test('shows only current user Svar sorted by event date descending', async ({ page }) => {
     await cleanupTestData();
     const currentUserId = await ensureAuthenticatedUserInDatabase(page);
 
@@ -117,12 +131,12 @@ test.describe('RSVP history page', () => {
     const firstItem = historyItems.nth(0);
     await expect(firstItem.getByRole('heading', { name: 'Future RSVP Event', level: 2 })).toBeVisible();
     await expect(firstItem.getByText('Future Venue')).toBeVisible();
-    await expect(firstItem.getByTestId('history-status')).toHaveText('Going');
+    await expect(firstItem.getByTestId('history-status')).toHaveText('Kommer');
 
     const secondItem = historyItems.nth(1);
     await expect(secondItem.getByRole('heading', { name: 'Past RSVP Event', level: 2 })).toBeVisible();
     await expect(secondItem.getByText('Past Venue')).toBeVisible();
-    await expect(secondItem.getByTestId('history-status')).toHaveText('Not Going');
+    await expect(secondItem.getByTestId('history-status')).toHaveText('Kommer ikke');
 
     await expect(page.getByRole('heading', { name: 'Other User Event', level: 2 })).toHaveCount(0);
 
@@ -138,8 +152,8 @@ test.describe('RSVP history page', () => {
 
     await page.goto('/history');
 
-    await expect(page.getByRole('heading', { name: 'My RSVP History', level: 1 })).toBeVisible();
-    await expect(page.getByText("You haven't RSVPd to any events yet.")).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
+    await expect(page.getByText("Du har ikke svart på noen arrangementer ennå.")).toBeVisible();
     await expect(page.getByTestId('history-item')).toHaveCount(0);
   });
 });
