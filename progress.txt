@@ -1,5 +1,6 @@
 # Codebase Patterns
 - Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
+- Keep event create/edit forms aligned on shadcn inline feedback (`data-test-id="form-feedback-panel"`) and assert panel text + submit busy/disabled states in Playwright instead of toast nodes.
 - For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
 - Keep a semantic heading element on `/access-denied`; theme and typography unauth specs read heading computed styles from that route.
 - Load Google Fonts once in `src/layouts/Layout.astro` and map them via global CSS font tokens (`--font-heading`, `--font-body`) so typography stays consistent across all routes.
@@ -149,4 +150,14 @@
   - Event form feedback in this codebase now uses inline status panels (`data-test-id="form-feedback-panel"`) instead of transient toast nodes; tests should assert user-visible panel text and submit button state.
   - When UI copy changes for duplicate-event banners, prefer focused substring assertions on stable meaning rather than exact phrase variants to avoid brittle failures.
   - Authenticated full-suite runs remain prone to intermittent `/api/test/current-user` 401 responses; handling retry in evaluate-based helpers substantially reduces flaky failures.
+---
+## 2026-02-12 17:40:08 CET - US-013
+- Migrated `src/pages/events/[id]/edit.astro` to the shadcn card/form shell pattern used by event creation, replacing legacy form styling with shared `Button`, `Input`, `Label`, `Textarea`, and `buttonVariants` usage while preserving all existing field IDs, prefill behavior, and update API submission flow.
+- Replaced edit-page toast messages with inline shadcn-compatible feedback states (`loading`, `success`, `error`) using the shared `form-feedback-panel` pattern and preserved redirect behavior after successful event updates.
+- Added and updated Playwright coverage in `tests/event-edit.spec.ts` for migrated card shell structure, primitive slot rendering, success feedback path, and loading/disabled/error feedback behavior during save failures.
+- Files changed: `src/pages/events/[id]/edit.astro`, `tests/event-edit.spec.ts`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Keep create/edit event forms visually and behaviorally aligned by sharing the same shadcn card sections (`data-slot="card-header|content|footer"`) and inline feedback contract.
+  - For migrated update forms, assert inline feedback panel content and submit busy state transitions instead of waiting for transient success/error nodes.
+  - Preserve existing form field IDs when migrating to shadcn primitives so API and test contracts remain stable.
 ---
