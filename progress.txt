@@ -61,3 +61,24 @@
   - Skeleton component requires explicit React import statement despite TSX file extension.
   - shadcn Separator uses `role="none"` for decorative separators (default `decorative={true}`), not `role="separator"`.
 ---
+## 2026-02-12 10:27:00 CET - US-006
+- Added shadcn interactive overlay primitives: Dialog, DropdownMenu, and Tabs components.
+- Installed lucide-react dependency for icon support in shadcn components.
+- Added ghost variant to Button component for icon-only button use cases.
+- Enhanced ShadcnIslandDemo with tab-based interface showcasing all three overlay components:
+  - Dialog with keyboard navigation (Escape to close, focus management)
+  - DropdownMenu with keyboard navigation (Arrow keys, Escape to close)
+  - Tabs with keyboard navigation (Arrow Left/Right, content switching)
+- Added comprehensive Playwright test coverage in `tests/overlay-primitives.spec.ts`:
+  - Tabs: rendering, switching, keyboard navigation
+  - Dialog: open/close, Escape key, button interactions
+  - DropdownMenu: open/close, Escape key, keyboard navigation, item selection
+- Updated existing tests to work with new demo structure (tab-based layout).
+- Files changed: `package.json`, `pnpm-lock.yaml`, `src/components/ShadcnIslandDemo.tsx`, `src/components/ui/button.tsx`, `src/components/ui/dialog.tsx`, `src/components/ui/dropdown-menu.tsx`, `src/components/ui/tabs.tsx`, `src/components/ui/index.ts`, `tests/overlay-primitives.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/surface-primitives.spec.ts`, `tests/events.spec.ts`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - shadcn overlay components (Dialog, DropdownMenu, Tabs) require lucide-react for icons.
+  - Dialog and DropdownMenu from shadcn/ui have built-in keyboard navigation and accessibility.
+  - When restructuring React islands with tabs, update existing tests to navigate to the correct tab before assertions.
+  - The ghost button variant is useful for icon-only buttons in UI components like dropdown triggers.
+  - Radix UI primitives (used by shadcn) handle focus management and keyboard interactions automatically.
+---
