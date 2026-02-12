@@ -129,3 +129,12 @@
   - Pair wrapper assertions (`data-test-id`) with user-facing Clerk heading assertions so tests validate both local shell migration and external auth widget continuity.
   - `pnpm test --workers=1` still shows a known unrelated auth flake in `tests/history.spec.ts`; `pnpm test tests/history.spec.ts --workers=1` passes in isolation.
 ---
+## 2026-02-12 14:07:09 CET - US-011
+- Migrated `src/pages/sign-up.astro` wrapper UI to the shadcn-compatible card shell pattern used for auth pages, including tokenized hierarchy (kicker, title, description, content container) while preserving Clerk sign-up functionality and authenticated redirect behavior.
+- Added frontend Playwright coverage in `tests/sign-up-ui.spec.ts` to verify migrated shell content, preserved Clerk sign-up visibility, sign-in navigation link, and mobile overflow safety.
+- Files changed: `src/pages/sign-up.astro`, `tests/sign-up-ui.spec.ts`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - For Clerk sign-up wrapper migrations, keep the Clerk component server-rendered and migrate only the surrounding Astro shell to avoid introducing auth flow regressions.
+  - Pair wrapper `data-test-id` assertions with user-facing Clerk heading assertions so tests validate both local shell migration and external auth UI continuity.
+  - Full-suite Playwright validation remains stable with `pnpm test --workers=1` in this repo.
+---

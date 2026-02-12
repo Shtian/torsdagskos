@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { SignUp as ClerkSignUp } from '@clerk/astro/components';
+import { buttonVariants } from '@/components/ui/button';
 
 // Redirect to home if already signed in
 const { userId } = Astro.locals.auth();
@@ -13,7 +14,33 @@ if (userId) {
   title="Sign Up - Torsdagskos"
   description="Create your invited account to join Torsdagskos event planning."
 >
-  <div class="flex min-h-screen items-center justify-center">
-    <ClerkSignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
-  </div>
+  <section class="mx-auto mt-10 w-full max-w-3xl px-4 sm:mt-16 sm:px-0" data-test-id="sign-up-shell">
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div data-slot="card-header" class="space-y-2 px-6 text-center">
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+          data-test-id="sign-up-kicker"
+        >
+          Join Torsdagskos
+        </p>
+        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl" data-test-id="sign-up-title">
+          Create your account
+        </h1>
+        <p class="mx-auto max-w-xl text-base text-muted-foreground" data-test-id="sign-up-description">
+          Use your invite to start creating events and RSVPing with your meetup group.
+        </p>
+      </div>
+
+      <div data-slot="card-content" class="space-y-6 px-6">
+        <div class="flex justify-center" data-test-id="sign-up-form">
+          <ClerkSignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
+        </div>
+        <div class="flex justify-center">
+          <a href="/sign-in" class:list={[buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline']}>
+            Already have an account? Go to Sign In
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 </Layout>
