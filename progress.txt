@@ -9,6 +9,7 @@
 - Full Playwright runs can intermittently 401 in `tests/history.spec.ts` (`/api/test/current-user`) late in the suite; validate with an isolated rerun of that spec when this known auth-state flake appears.
 - In auth-sensitive Playwright helpers that call `/api/test/current-user` inside `page.evaluate()`, guard for occasional 401/non-JSON responses and retry before hard-failing.
 - Event detail RSVP UX now uses inline feedback (`data-test-id="rsvp-feedback-panel"` + `#rsvp-feedback`) and `aria-busy` button states; avoid toast-based assertions in RSVP tests.
+- For UI migrations, keep behavior coverage in existing specs and add focused `*-ui.spec.ts` shells/mobile tests so visual refactors do not weaken functional assertions.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -171,4 +172,14 @@
   - For event detail migrations, keep RSVP controls on stable `data-rsvp-button`/`data-status`/`data-active` attributes so existing RSVP behavior and tests remain compatible while restyling.
   - RSVP error/success checks should target the inline feedback panel (`data-test-id="rsvp-feedback-panel"`) and `#rsvp-feedback` message text rather than transient toast selectors.
   - Reusing `buttonVariants` on Astro `<a>` and `<button>` elements keeps interaction styling aligned with shadcn without introducing extra client islands.
+---
+## 2026-02-12 18:01:57 CET - US-015
+- Migrated `src/pages/history.astro` to the shadcn-aligned surface/list shell with tokenized card wrappers for header, empty state, and RSVP history items while preserving all existing data loading, sorting, links, and status behavior.
+- Added frontend Playwright coverage in `tests/history-ui.spec.ts` for populated and empty migrated states plus mobile overflow safety on `/history`.
+- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite).
+- Files changed: `src/pages/history.astro`, `tests/history-ui.spec.ts`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Keep history-page migration assertions split between behavior (`tests/history.spec.ts`) and shell/polish checks (`tests/history-ui.spec.ts`) so layout changes do not weaken data-contract coverage.
+  - Reusing shared card slot markers (`data-slot="card"`) on Astro pages provides stable, cross-page assertions for migration UI checks.
+  - Continue using the `/api/test/current-user` retry helper pattern in auth-dependent history tests to avoid known intermittent 401 flakes.
 ---

@@ -17,6 +17,7 @@
 - For Clerk wrapper page migrations (`/sign-in`, `/sign-up`), add stable `data-test-id` hooks on the local shell and assert both wrapper content and Clerk heading presence to ensure visual migration without breaking auth UI.
 - For event create/edit form migrations, use the shared inline feedback contract (`data-test-id="form-feedback-panel"`) and assert panel text plus submit `aria-busy`/disabled transitions instead of toast-style selectors.
 - For event detail RSVP flows, use the inline feedback panel (`data-test-id="rsvp-feedback-panel"`) and assert the `#rsvp-feedback` message instead of ephemeral toast selectors.
+- For page UI migrations, keep existing behavior-focused specs intact and add a dedicated `*-ui.spec.ts` file for shell/list surface and mobile overflow assertions.
 - For global CSS/token assertions, prefer `@unauth` tests on `/access-denied` and verify computed styles from `document.documentElement`/`document.body` to avoid auth state coupling.
 - For typography assertions, validate computed `fontFamily` with `toContain('<Font Name>')` instead of exact string equality because browser/platform fallback stacks can vary.
 - Keep the invite-only title on `/access-denied` as a semantic heading element; typography and theme unauth specs use that route for heading style assertions.

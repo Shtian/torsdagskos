@@ -78,9 +78,9 @@ function formatStatus(status: string): string {
 }
 
 function statusClass(status: string): string {
-  if (status === 'going') return 'bg-[#e8f5e9] text-(--color-success)';
-  if (status === 'maybe') return 'bg-[#fff3e0] text-(--color-warning)';
-  return 'bg-[#ffebee] text-(--color-error)';
+  if (status === 'going') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  if (status === 'maybe') return 'border-amber-200 bg-amber-50 text-amber-700';
+  return 'border-rose-200 bg-rose-50 text-rose-700';
 }
 ---
 
@@ -88,33 +88,46 @@ function statusClass(status: string): string {
   title="My RSVP History - Torsdagskos"
   description="Review your RSVP history across upcoming and past Torsdagskos events."
 >
-  <div class="mx-auto max-w-225 p-4 sm:p-6">
-    <h1 class="mb-3 mt-0 text-[1.75rem] text-(--color-accent-dark) sm:text-[2.25rem]">My RSVP History</h1>
-    <p class="mb-8 mt-0 text-(--color-text-secondary)">All events you have responded to, newest first.</p>
+  <section class="mx-auto mt-6 w-full max-w-5xl px-4 pb-8 sm:mt-10 sm:px-6" data-test-id="history-shell">
+    <div data-slot="card" class="bg-card text-card-foreground mb-6 rounded-xl border shadow-sm">
+      <div data-slot="card-header" class="space-y-2 px-6 py-5 sm:px-8">
+        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">My RSVP History</h1>
+        <p class="m-0 text-sm text-muted-foreground">All events you have responded to, newest first.</p>
+      </div>
+    </div>
 
     {validHistoryItems.length === 0 && (
-      <div class="rounded-lg border-2 border-dashed border-(--color-border) bg-white px-6 py-12 text-center text-(--color-text-muted)">
-        <p class="m-0">You haven't RSVPd to any events yet.</p>
+      <div
+        data-test-id="history-empty-state"
+        data-slot="card"
+        class="bg-card text-card-foreground rounded-xl border border-dashed px-6 py-12 text-center shadow-sm"
+      >
+        <p class="m-0 text-base text-muted-foreground">You haven't RSVPd to any events yet.</p>
       </div>
     )}
 
     {validHistoryItems.length > 0 && (
       <ul class="m-0 list-none space-y-4 p-0">
         {validHistoryItems.map(({ rsvp, event }) => (
-          <li data-test-id="history-item" class="rounded-lg border border-(--color-border) bg-white p-5">
+          <li data-test-id="history-item" data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
             <a href={`/events/${event.id}`} class="block text-inherit no-underline">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <h2 class="m-0 text-xl text-(--color-accent-dark)">{event.title}</h2>
-                <span data-test-id="history-status" class={`rounded-full px-3 py-1 text-[0.85rem] font-medium ${statusClass(rsvp.status)}`}>
-                  {formatStatus(rsvp.status)}
-                </span>
+              <div data-slot="card-content" class="space-y-3 px-6 py-5 sm:px-8">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <h2 class="m-0 text-xl text-(--color-accent-dark)">{event.title}</h2>
+                  <span
+                    data-test-id="history-status"
+                    class={`inline-flex items-center rounded-full border px-3 py-1 text-[0.78rem] font-medium uppercase tracking-wide ${statusClass(rsvp.status)}`}
+                  >
+                    {formatStatus(rsvp.status)}
+                  </span>
+                </div>
+                <p class="m-0 text-sm text-muted-foreground">{formatEventDate(event.dateTime)}</p>
+                <p class="m-0 text-foreground">{event.location}</p>
               </div>
-              <p class="mb-2 mt-3 text-[0.95rem] text-(--color-text-secondary)">{formatEventDate(event.dateTime)}</p>
-              <p class="m-0 text-(--color-text-primary)">{event.location}</p>
             </a>
           </li>
         ))}
       </ul>
     )}
-  </div>
+  </section>
 </Layout>
