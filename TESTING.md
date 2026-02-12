@@ -237,7 +237,7 @@ To run tests in CI, you need to configure the following GitHub repository secret
 2. Add the following secrets:
    - `PUBLIC_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
    - `CLERK_SECRET_KEY`: Your Clerk secret key
-   - `TEST_PASSWORD`: Test user password for authentication tests
+   - `E2E_CLERK_USER_PASSWORD`: Test user password for authentication tests
 
 #### Viewing Test Results
 
