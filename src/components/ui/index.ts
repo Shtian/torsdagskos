@@ -1,5 +1,5 @@
-export { Badge, badgeVariants } from "./badge";
-export { Button, buttonVariants } from "./button";
+export { Badge, badgeVariants } from './badge';
+export { Button, buttonVariants } from './button';
 export {
   Card,
   CardAction,
@@ -8,7 +8,7 @@ export {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./card";
+} from './card';
 export {
   Dialog,
   DialogClose,
@@ -18,7 +18,7 @@ export {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./dialog";
+} from './dialog';
 export {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -35,9 +35,9 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "./dropdown-menu";
-export { Input } from "./input";
-export { Label } from "./label";
+} from './dropdown-menu';
+export { Input } from './input';
+export { Label } from './label';
 export {
   Select,
   SelectContent,
@@ -47,8 +47,8 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "./select";
-export { Separator } from "./separator";
-export { Skeleton } from "./skeleton";
-export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
-export { Textarea } from "./textarea";
+} from './select';
+export { Separator } from './separator';
+export { Skeleton } from './skeleton';
+export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
+export { Textarea } from './textarea';

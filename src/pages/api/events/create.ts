@@ -21,13 +21,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Validate required fields
     if (!title || !dateTime || !location) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: title, dateTime, location' }),
+        JSON.stringify({
+          error: 'Missing required fields: title, dateTime, location',
+        }),
         {
           status: 400,
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
     }
 
@@ -62,28 +64,32 @@ export const POST: APIRoute = async ({ request, locals }) => {
         location,
       });
     } catch (notificationError) {
-      console.error('Error sending new event notifications:', notificationError);
+      console.error(
+        'Error sending new event notifications:',
+        notificationError,
+      );
     }
 
     return new Response(
-      JSON.stringify({ success: true, eventId, notifications: notificationSummary }),
+      JSON.stringify({
+        success: true,
+        eventId,
+        notifications: notificationSummary,
+      }),
       {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
   } catch (error) {
     console.error('Error creating event:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 };

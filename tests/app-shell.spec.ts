@@ -3,7 +3,9 @@ import { test, expect } from './fixtures';
 test.describe('App Shell Layout', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('renders header with shadcn components on authenticated page', async ({ page }) => {
+  test('renders header with shadcn components on authenticated page', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     // Header should be visible and sticky (use role=banner to avoid dev toolbar headers)
@@ -16,7 +18,9 @@ test.describe('App Shell Layout', () => {
     await expect(logo.locator('..')).toHaveAttribute('href', '/');
 
     // Navigation buttons should use shadcn Button components
-    const createEventBtn = page.getByRole('link', { name: '+ Opprett arrangement' });
+    const createEventBtn = page.getByRole('link', {
+      name: '+ Opprett arrangement',
+    });
     await expect(createEventBtn).toBeVisible();
     await expect(createEventBtn).toHaveAttribute('href', '/events/new');
 
@@ -41,9 +45,15 @@ test.describe('App Shell Layout', () => {
     await expect(header).toBeVisible();
 
     // All navigation buttons should still be accessible
-    await expect(page.getByRole('link', { name: '+ Opprett arrangement' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Min historikk' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Innstillinger' })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: '+ Opprett arrangement' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Min historikk' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Innstillinger' }),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Logg ut' })).toBeVisible();
   });
 
@@ -56,11 +66,15 @@ test.describe('App Shell Layout', () => {
     await expect(header).toBeVisible();
 
     // User email should be visible at desktop size
-    const userInfo = page.getByRole('banner').locator('span.text-muted-foreground');
+    const userInfo = page
+      .getByRole('banner')
+      .locator('span.text-muted-foreground');
     await expect(userInfo).toBeVisible();
 
     // All navigation should be in a single row
-    const navContainer = page.getByRole('banner').locator('> div > div:last-child > div:last-child');
+    const navContainer = page
+      .getByRole('banner')
+      .locator('> div > div:last-child > div:last-child');
     await expect(navContainer).toBeVisible();
   });
 

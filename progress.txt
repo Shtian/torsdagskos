@@ -1,4 +1,5 @@
 # Codebase Patterns
+- Use `pnpm lint` (`biome check .`) for local validation and reserve `pnpm lint:ci` (`biome ci .`) for CI workflows.
 - Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
 - When restyling `src/pages/settings.astro`, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` IDs stable because the page script and settings specs depend on them.
 - Keep event create/edit forms aligned on shadcn inline feedback (`data-test-id="form-feedback-panel"`) and assert panel text + submit busy/disabled states in Playwright instead of toast nodes.
@@ -227,4 +228,15 @@
   - Keep migration documentation split between quick-start conventions (`README.md`) and detailed replacement/status mapping (`docs/shadcn-migration-checklist.md`) so maintainers can update both without ambiguity.
   - Record explicit exceptions (for example provider-rendered auth widgets) in migration docs to prevent future refactors from unintentionally breaking external integrations.
   - When completing documentation-only stories, still run full required gates (`pnpm astro check`, `pnpm test --workers=1`) before marking story status as passed.
+---
+## 2026-02-12 22:47:34 CET - US-001
+- Adopted BiomeJS as the project lint/format gate by adding `@biomejs/biome`, introducing `biome.json`, and wiring scripts for local checks (`pnpm lint` -> `biome check .`), CI checks (`pnpm lint:ci` -> `biome ci .`), and formatting (`pnpm format`, `pnpm format:check`).
+- Added PR lint workflow at `.github/workflows/biome.yml` to run Biome on pull requests, and updated `README.md` command docs for local vs CI Biome usage.
+- Enabled Biome v2.3 Astro/HTML and Tailwind compatibility in config (`html.experimentalFullSupportEnabled`, CSS `tailwindDirectives`) and applied repository-wide formatting for current files.
+- Verified required gates: `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, `pnpm test` (111 passed).
+- Files changed: `biome.json`, `.github/workflows/biome.yml`, `package.json`, `README.md`, `pnpm-lock.yaml`, `prd.json`, `progress.txt`, plus repository-wide Biome formatting updates across existing source and test files.
+- **Learnings for future iterations**
+  - Biome 2.3 Astro support requires explicit `html.experimentalFullSupportEnabled` to lint/format Astro/HTML files.
+  - Tailwind v4 `@theme` directives in CSS require enabling `css.parser.tailwindDirectives` in `biome.json`.
+  - Keep local and CI Biome commands split: `biome check` locally for iterative fixes, `biome ci` in CI for strict gating.
 ---

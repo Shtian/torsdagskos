@@ -11,37 +11,37 @@ const baseURL = `http://localhost:${PORT}`;
 
 // Reference: https://playwright.dev/docs/test-configuration
 export default defineConfig({
-  testDir: "./tests",
+  testDir: './tests',
   webServer: {
-    command: "pnpm dev",
+    command: 'pnpm dev',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
   },
 
   use: {
     baseURL,
-    testIdAttribute: "data-test-id",
-    trace: "retry-with-trace",
+    testIdAttribute: 'data-test-id',
+    trace: 'retry-with-trace',
   },
   projects: [
     {
-      name: "global setup",
+      name: 'global setup',
       testMatch: /global\.setup\.ts/,
     },
     {
-      name: "Authenticated",
+      name: 'Authenticated',
       use: {
-        ...devices["Desktop Chrome"],
+        ...devices['Desktop Chrome'],
         // Use prepared auth state.
-        storageState: "playwright/.clerk/user.json",
+        storageState: 'playwright/.clerk/user.json',
       },
-      dependencies: ["global setup"],
+      dependencies: ['global setup'],
       grepInvert: /@unauth/,
     },
     {
-      name: "Unauthenticated",
+      name: 'Unauthenticated',
       use: {
-        ...devices["Desktop Chrome"],
+        ...devices['Desktop Chrome'],
       },
       grep: /@unauth/,
     },

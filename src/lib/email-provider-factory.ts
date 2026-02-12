@@ -14,7 +14,9 @@ export function createEmailProviderFromEnv(): EmailProvider {
   }
 
   if (provider !== 'resend') {
-    console.warn(`Unknown EMAIL_PROVIDER "${provider}", defaulting to "resend"`);
+    console.warn(
+      `Unknown EMAIL_PROVIDER "${provider}", defaulting to "resend"`,
+    );
   }
 
   return new ResendEmailProvider();

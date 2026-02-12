@@ -1,6 +1,9 @@
 import { db, Events, NotificationLog, Users, and, eq, gte } from 'astro:db';
 import { sendEmail } from './email';
-import { isPushDeliveryConfigured, sendPushNotification } from './push-notifications';
+import {
+  isPushDeliveryConfigured,
+  sendPushNotification,
+} from './push-notifications';
 
 interface NewEventNotificationInput {
   eventId: number;
@@ -88,7 +91,8 @@ function buildNewEventEmailContent(input: NewEventNotificationInput): {
   text: string;
 } {
   const formattedDate = formatEventDate(input.dateTime);
-  const safeDescription = input.description?.trim() || 'No description provided.';
+  const safeDescription =
+    input.description?.trim() || 'No description provided.';
   const safeTitle = escapeHtml(input.title);
   const safeLocation = escapeHtml(input.location);
   const safeDescriptionHtml = escapeHtml(safeDescription);
@@ -131,7 +135,8 @@ function buildReminderEmailContent(event: {
   const formattedDate = formatEventDate(event.dateTime);
   const safeTitle = escapeHtml(event.title);
   const safeLocation = escapeHtml(event.location);
-  const safeDescription = event.description.trim() || 'No description provided.';
+  const safeDescription =
+    event.description.trim() || 'No description provided.';
   const safeDescriptionHtml = escapeHtml(safeDescription);
   const safeMapLink = event.mapLink ? escapeHtml(event.mapLink) : null;
 
@@ -175,7 +180,9 @@ function getChangedFields(input: EventUpdateNotificationInput): ChangedField[] {
 
   const changes: ChangedField[] = [];
 
-  if (normalizeText(input.previous.title) !== normalizeText(input.updated.title)) {
+  if (
+    normalizeText(input.previous.title) !== normalizeText(input.updated.title)
+  ) {
     changes.push({
       label: 'Title',
       previous: input.previous.title,
@@ -199,7 +206,10 @@ function getChangedFields(input: EventUpdateNotificationInput): ChangedField[] {
     });
   }
 
-  if (normalizeText(input.previous.location) !== normalizeText(input.updated.location)) {
+  if (
+    normalizeText(input.previous.location) !==
+    normalizeText(input.updated.location)
+  ) {
     changes.push({
       label: 'Location',
       previous: input.previous.location,
@@ -249,7 +259,7 @@ function buildEventUpdateEmailContent(input: EventUpdateNotificationInput): {
   const textChanges = changedFields
     .map(
       (change) =>
-        `${change.label}\n- Before: ${change.previous}\n- After: ${change.updated}`
+        `${change.label}\n- Before: ${change.previous}\n- After: ${change.updated}`,
     )
     .join('\n\n');
 
@@ -261,7 +271,7 @@ function buildEventUpdateEmailContent(input: EventUpdateNotificationInput): {
           <span>Before: ${escapeHtml(change.previous)}</span><br />
           <span>After: ${escapeHtml(change.updated)}</span>
         </li>
-      `
+      `,
     )
     .join('');
 
@@ -301,9 +311,15 @@ function getTomorrowOsloDateKey(now: Date): string {
     day: '2-digit',
   }).formatToParts(now);
 
-  const year = Number(nowParts.find((part) => part.type === 'year')?.value || '0');
-  const month = Number(nowParts.find((part) => part.type === 'month')?.value || '1');
-  const day = Number(nowParts.find((part) => part.type === 'day')?.value || '1');
+  const year = Number(
+    nowParts.find((part) => part.type === 'year')?.value || '0',
+  );
+  const month = Number(
+    nowParts.find((part) => part.type === 'month')?.value || '1',
+  );
+  const day = Number(
+    nowParts.find((part) => part.type === 'day')?.value || '1',
+  );
 
   const osloTodayAsUtcMidnight = new Date(Date.UTC(year, month - 1, day));
   osloTodayAsUtcMidnight.setUTCDate(osloTodayAsUtcMidnight.getUTCDate() + 1);
@@ -317,7 +333,7 @@ function getTomorrowOsloDateKey(now: Date): string {
 }
 
 async function sendPushNotificationsToOptedInUsers(
-  input: PushDeliveryInput
+  input: PushDeliveryInput,
 ): Promise<void> {
   if (!isPushDeliveryConfigured()) {
     return;
@@ -325,7 +341,7 @@ async function sendPushNotificationsToOptedInUsers(
 
   const users = await db.select().from(Users);
   const pushEligibleUsers = users.filter(
-    (user) => user.browserNotificationsEnabled && !!user.pushSubscription
+    (user) => user.browserNotificationsEnabled && !!user.pushSubscription,
   );
 
   if (pushEligibleUsers.length === 0) {
@@ -342,8 +358,8 @@ async function sendPushNotificationsToOptedInUsers(
             eq(NotificationLog.userId, user.id),
             eq(NotificationLog.eventId, input.eventId),
             eq(NotificationLog.type, input.type),
-            eq(NotificationLog.channel, 'push')
-          )
+            eq(NotificationLog.channel, 'push'),
+          ),
         )
         .get();
 
@@ -378,12 +394,12 @@ async function sendPushNotificationsToOptedInUsers(
           sentAt: new Date(),
         });
       }
-    })
+    }),
   );
 }
 
 export async function sendNewEventNotifications(
-  input: NewEventNotificationInput
+  input: NewEventNotificationInput,
 ): Promise<NotificationSummary> {
   const users = await db.select().from(Users);
   if (users.length === 0) {
@@ -417,11 +433,13 @@ export async function sendNewEventNotifications(
       }
 
       return sendResult;
-    })
+    }),
   );
 
   const sent = results.filter((result) => result.success).length;
-  const failed = results.filter((result) => !result.success && !result.skipped).length;
+  const failed = results.filter(
+    (result) => !result.success && !result.skipped,
+  ).length;
   const skipped = results.filter((result) => result.skipped).length;
 
   try {
@@ -445,7 +463,7 @@ export async function sendNewEventNotifications(
 }
 
 export async function sendEventUpdateNotifications(
-  input: EventUpdateNotificationInput
+  input: EventUpdateNotificationInput,
 ): Promise<NotificationSummary> {
   const users = await db.select().from(Users);
   if (users.length === 0) {
@@ -479,11 +497,13 @@ export async function sendEventUpdateNotifications(
       }
 
       return sendResult;
-    })
+    }),
   );
 
   const sent = results.filter((result) => result.success).length;
-  const failed = results.filter((result) => !result.success && !result.skipped).length;
+  const failed = results.filter(
+    (result) => !result.success && !result.skipped,
+  ).length;
   const skipped = results.filter((result) => result.skipped).length;
 
   try {
@@ -508,7 +528,7 @@ export async function sendEventUpdateNotifications(
 }
 
 export async function sendEventReminderNotifications(
-  input: ReminderNotificationInput = {}
+  input: ReminderNotificationInput = {},
 ): Promise<ReminderNotificationSummary> {
   const now = input.now || new Date();
   const tomorrowOsloDateKey = getTomorrowOsloDateKey(now);
@@ -531,7 +551,7 @@ export async function sendEventReminderNotifications(
     .where(gte(Events.dateTime, now));
 
   const targetEvents = upcomingEvents.filter(
-    (event) => getOsloDateKey(new Date(event.dateTime)) === tomorrowOsloDateKey
+    (event) => getOsloDateKey(new Date(event.dateTime)) === tomorrowOsloDateKey,
   );
 
   if (targetEvents.length === 0) {
@@ -568,8 +588,8 @@ export async function sendEventReminderNotifications(
               eq(NotificationLog.userId, user.id),
               eq(NotificationLog.eventId, event.id),
               eq(NotificationLog.type, 'reminder'),
-              eq(NotificationLog.channel, 'email')
-            )
+              eq(NotificationLog.channel, 'email'),
+            ),
           )
           .get();
 
@@ -598,11 +618,13 @@ export async function sendEventReminderNotifications(
         }
 
         return sendResult;
-      })
+      }),
     );
 
     sent += results.filter((result) => result.success).length;
-    failed += results.filter((result) => !result.success && !result.skipped).length;
+    failed += results.filter(
+      (result) => !result.success && !result.skipped,
+    ).length;
     skipped += results.filter((result) => result.skipped).length;
 
     try {

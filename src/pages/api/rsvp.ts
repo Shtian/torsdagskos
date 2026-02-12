@@ -7,7 +7,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -17,16 +17,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Validate input
     if (!eventId || !status) {
-      return new Response(JSON.stringify({ error: 'Missing eventId or status' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({ error: 'Missing eventId or status' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     if (!['going', 'maybe', 'not_going'].includes(status)) {
       return new Response(JSON.stringify({ error: 'Invalid status' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -40,7 +43,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!currentUser) {
       return new Response(JSON.stringify({ error: 'User not found' }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -66,19 +69,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
         eventId,
         status,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('RSVP error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 };

@@ -17,12 +17,12 @@ export default defineConfig({
     plugins: [tailwindcss()],
     resolve: {
       alias: {
-        '@': srcDir
-      }
-    }
+        '@': srcDir,
+      },
+    },
   },
 
   integrations: [clerk(), db(), react()],
   adapter: node({ mode: 'standalone' }),
-  output: 'server'
+  output: 'server',
 });

@@ -20,16 +20,22 @@ import { test, expect } from './fixtures';
  */
 
 test.describe('Authentication - Unauthenticated access @unauth', () => {
-  test('homepage redirects unauthenticated users to access denied page', async ({ page }) => {
+  test('homepage redirects unauthenticated users to access denied page', async ({
+    page,
+  }) => {
     // Attempt to visit the homepage without authentication
     await page.goto('/');
 
     // Should redirect to custom access denied page
     await expect(page).toHaveURL(/\/access-denied/);
-    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Dette er en app kun for inviterte' }),
+    ).toBeVisible();
   });
 
-  test('sign-in page is accessible and displays Clerk sign-in UI', async ({ page }) => {
+  test('sign-in page is accessible and displays Clerk sign-in UI', async ({
+    page,
+  }) => {
     await page.goto('/sign-in');
 
     // Should load successfully
@@ -40,23 +46,31 @@ test.describe('Authentication - Unauthenticated access @unauth', () => {
     await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
   });
 
-  test('sign-up page is accessible and displays Clerk sign-up UI', async ({ page }) => {
+  test('sign-up page is accessible and displays Clerk sign-up UI', async ({
+    page,
+  }) => {
     await page.goto('/sign-up');
 
     // Should load successfully
     await expect(page).toHaveTitle(/Torsdagskos/);
 
     // Should display Clerk sign-up form heading
-    await expect(page.getByRole('heading', { name: /create.*account|sign up/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /create.*account|sign up/i }),
+    ).toBeVisible();
   });
 
-  test('protected event routes redirect to access denied page with sign-in link', async ({ page }) => {
+  test('protected event routes redirect to access denied page with sign-in link', async ({
+    page,
+  }) => {
     // Try to access a protected event detail page
     await page.goto('/events/1');
 
     // Should redirect to custom access denied page
     await expect(page).toHaveURL(/\/access-denied\?from=%2Fevents%2F1/);
-    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Dette er en app kun for inviterte' }),
+    ).toBeVisible();
 
     const signInLink = page.getByRole('link', { name: 'Gå til innlogging' });
     await expect(signInLink).toHaveAttribute('href', '/sign-in');
@@ -70,7 +84,9 @@ test.describe('Authentication - Authenticated access', () => {
   // Use authenticated storage state for these tests
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('authenticated user can access homepage without redirect', async ({ page }) => {
+  test('authenticated user can access homepage without redirect', async ({
+    page,
+  }) => {
     // Navigate to homepage with authenticated session
     await page.goto('/');
 
@@ -79,7 +95,9 @@ test.describe('Authentication - Authenticated access', () => {
     await expect(page).toHaveTitle(/Torsdagskos/);
   });
 
-  test('authenticated user can access protected event routes', async ({ page }) => {
+  test('authenticated user can access protected event routes', async ({
+    page,
+  }) => {
     // Navigate to a protected event detail page
     await page.goto('/events/1');
 
@@ -88,7 +106,9 @@ test.describe('Authentication - Authenticated access', () => {
     await expect(page).toHaveURL(/\/events\/1/);
   });
 
-  test('authenticated user is redirected from sign-in page to homepage', async ({ page }) => {
+  test('authenticated user is redirected from sign-in page to homepage', async ({
+    page,
+  }) => {
     // Try to access sign-in page when already authenticated
     await page.goto('/sign-in');
 
@@ -98,7 +118,9 @@ test.describe('Authentication - Authenticated access', () => {
     await expect(page).toHaveURL('/');
   });
 
-  test('authenticated user is redirected from sign-up page to homepage', async ({ page }) => {
+  test('authenticated user is redirected from sign-up page to homepage', async ({
+    page,
+  }) => {
     // Try to access sign-up page when already authenticated
     await page.goto('/sign-up');
 

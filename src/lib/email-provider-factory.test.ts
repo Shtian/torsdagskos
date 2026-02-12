@@ -53,7 +53,7 @@ describe('email provider factory', () => {
     });
 
     expect(warnSpy).toHaveBeenCalledWith(
-      'Unknown EMAIL_PROVIDER "unsupported-provider", defaulting to "resend"'
+      'Unknown EMAIL_PROVIDER "unsupported-provider", defaulting to "resend"',
     );
     expect(result.provider).toBe('resend');
     expect(result.skipped).toBe(true);

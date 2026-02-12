@@ -7,7 +7,9 @@ import {
   uniqueEmail,
 } from './helpers/api-helpers';
 
-async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test').Page): Promise<number> {
+async function ensureAuthenticatedUserInDatabase(
+  page: import('@playwright/test').Page,
+): Promise<number> {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     await page.goto('/');
 
@@ -36,7 +38,9 @@ async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test'
         return { kind: 'retry' as const };
       }
 
-      throw new Error(`Unexpected response from /api/test/current-user: ${response.status}`);
+      throw new Error(
+        `Unexpected response from /api/test/current-user: ${response.status}`,
+      );
     });
 
     if (authInfo.kind === 'retry') {
@@ -61,7 +65,9 @@ async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test'
 }
 
 test.describe('History UI migration', () => {
-  test('renders migrated shell and list surfaces for populated history', async ({ page }) => {
+  test('renders migrated shell and list surfaces for populated history', async ({
+    page,
+  }) => {
     await cleanupTestData();
     const currentUserId = await ensureAuthenticatedUserInDatabase(page);
 
@@ -94,27 +100,45 @@ test.describe('History UI migration', () => {
     await page.goto('/history');
 
     await expect(page.getByTestId('history-shell')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 }),
+    ).toBeVisible();
     await expect(page.locator('[data-slot="card"]')).toHaveCount(3);
 
     const historyItems = page.getByTestId('history-item');
     await expect(historyItems).toHaveCount(2);
 
-    await expect(historyItems.nth(0).getByRole('heading', { name: 'Newest History UI Event', level: 2 })).toBeVisible();
-    await expect(historyItems.nth(0).getByTestId('history-status')).toHaveText('Kommer');
+    await expect(
+      historyItems
+        .nth(0)
+        .getByRole('heading', { name: 'Newest History UI Event', level: 2 }),
+    ).toBeVisible();
+    await expect(historyItems.nth(0).getByTestId('history-status')).toHaveText(
+      'Kommer',
+    );
 
-    await expect(historyItems.nth(1).getByRole('heading', { name: 'Older History UI Event', level: 2 })).toBeVisible();
-    await expect(historyItems.nth(1).getByTestId('history-status')).toHaveText('Kommer ikke');
+    await expect(
+      historyItems
+        .nth(1)
+        .getByRole('heading', { name: 'Older History UI Event', level: 2 }),
+    ).toBeVisible();
+    await expect(historyItems.nth(1).getByTestId('history-status')).toHaveText(
+      'Kommer ikke',
+    );
   });
 
-  test('renders migrated empty-state surface when there are no Svar', async ({ page }) => {
+  test('renders migrated empty-state surface when there are no Svar', async ({
+    page,
+  }) => {
     await cleanupTestData();
     await ensureAuthenticatedUserInDatabase(page);
 
     await page.goto('/history');
 
     await expect(page.getByTestId('history-empty-state')).toBeVisible();
-    await expect(page.getByTestId('history-empty-state')).toContainText("Du har ikke svart på noen arrangementer ennå.");
+    await expect(page.getByTestId('history-empty-state')).toContainText(
+      'Du har ikke svart på noen arrangementer ennå.',
+    );
     await expect(page.getByTestId('history-item')).toHaveCount(0);
   });
 
@@ -125,7 +149,9 @@ test.describe('History UI migration', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/history');
 
-    const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    const hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
     expect(hasOverflow).toBe(false);
   });
 });

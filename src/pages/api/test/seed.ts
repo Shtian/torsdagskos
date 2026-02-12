@@ -1,5 +1,13 @@
 import type { APIRoute } from 'astro';
-import { db, Users, Events, Rsvps, NotificationLog, Invites, eq } from 'astro:db';
+import {
+  db,
+  Users,
+  Events,
+  Rsvps,
+  NotificationLog,
+  Invites,
+  eq,
+} from 'astro:db';
 
 /**
  * Test data seeding API endpoint
@@ -11,10 +19,13 @@ import { db, Users, Events, Rsvps, NotificationLog, Invites, eq } from 'astro:db
 export const POST: APIRoute = async ({ request }) => {
   // Only allow in development
   if (import.meta.env.PROD) {
-    return new Response(JSON.stringify({ error: 'Not available in production' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: 'Not available in production' }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   }
 
   try {
@@ -128,11 +139,13 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     console.error('Test seed error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     );
   }
 };

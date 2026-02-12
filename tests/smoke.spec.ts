@@ -12,13 +12,17 @@ import { test, expect } from './fixtures';
  */
 
 test.describe('Smoke tests @unauth', () => {
-  test('homepage redirects unauthenticated users to access denied page', async ({ page }) => {
+  test('homepage redirects unauthenticated users to access denied page', async ({
+    page,
+  }) => {
     // Attempt to visit the homepage without authentication
     await page.goto('/');
 
     // Should redirect to the custom access denied page
     await expect(page).toHaveURL(/\/access-denied/);
-    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Dette er en app kun for inviterte' }),
+    ).toBeVisible();
   });
 
   test('sign-in page is accessible', async ({ page }) => {

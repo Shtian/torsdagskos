@@ -30,7 +30,9 @@ if (!currentUser) {
       createdAt: new Date(),
     });
   } catch (error) {
-    if (!(error instanceof Error && error.message.includes('UNIQUE constraint'))) {
+    if (
+      !(error instanceof Error && error.message.includes('UNIQUE constraint'))
+    ) {
       throw error;
     }
   }

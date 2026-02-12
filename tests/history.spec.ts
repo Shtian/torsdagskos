@@ -7,7 +7,9 @@ import {
   uniqueEmail,
 } from './helpers/api-helpers';
 
-async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test').Page): Promise<number> {
+async function ensureAuthenticatedUserInDatabase(
+  page: import('@playwright/test').Page,
+): Promise<number> {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     await page.goto('/');
 
@@ -36,7 +38,9 @@ async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test'
         return { kind: 'retry' as const };
       }
 
-      throw new Error(`Unexpected response from /api/test/current-user: ${response.status}`);
+      throw new Error(
+        `Unexpected response from /api/test/current-user: ${response.status}`,
+      );
     });
 
     if (authInfo.kind === 'retry') {
@@ -63,7 +67,9 @@ async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test'
 test.describe('RSVP history page', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('shows Min historikk link in header and navigates to history page', async ({ page }) => {
+  test('shows Min historikk link in header and navigates to history page', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     const historyLink = page.getByRole('link', { name: 'Min historikk' });
@@ -71,10 +77,14 @@ test.describe('RSVP history page', () => {
 
     await historyLink.click();
     await expect(page).toHaveURL('/history');
-    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 }),
+    ).toBeVisible();
   });
 
-  test('shows only current user Svar sorted by event date descending', async ({ page }) => {
+  test('shows only current user Svar sorted by event date descending', async ({
+    page,
+  }) => {
     await cleanupTestData();
     const currentUserId = await ensureAuthenticatedUserInDatabase(page);
 
@@ -129,31 +139,48 @@ test.describe('RSVP history page', () => {
     await expect(historyItems).toHaveCount(2);
 
     const firstItem = historyItems.nth(0);
-    await expect(firstItem.getByRole('heading', { name: 'Future RSVP Event', level: 2 })).toBeVisible();
+    await expect(
+      firstItem.getByRole('heading', { name: 'Future RSVP Event', level: 2 }),
+    ).toBeVisible();
     await expect(firstItem.getByText('Future Venue')).toBeVisible();
     await expect(firstItem.getByTestId('history-status')).toHaveText('Kommer');
 
     const secondItem = historyItems.nth(1);
-    await expect(secondItem.getByRole('heading', { name: 'Past RSVP Event', level: 2 })).toBeVisible();
+    await expect(
+      secondItem.getByRole('heading', { name: 'Past RSVP Event', level: 2 }),
+    ).toBeVisible();
     await expect(secondItem.getByText('Past Venue')).toBeVisible();
-    await expect(secondItem.getByTestId('history-status')).toHaveText('Kommer ikke');
+    await expect(secondItem.getByTestId('history-status')).toHaveText(
+      'Kommer ikke',
+    );
 
-    await expect(page.getByRole('heading', { name: 'Other User Event', level: 2 })).toHaveCount(0);
+    await expect(
+      page.getByRole('heading', { name: 'Other User Event', level: 2 }),
+    ).toHaveCount(0);
 
     const firstLink = firstItem.getByRole('link');
     const secondLink = secondItem.getByRole('link');
-    await expect(firstLink).toHaveAttribute('href', `/events/${futureEvent.id}`);
+    await expect(firstLink).toHaveAttribute(
+      'href',
+      `/events/${futureEvent.id}`,
+    );
     await expect(secondLink).toHaveAttribute('href', `/events/${pastEvent.id}`);
   });
 
-  test('shows empty state when current user has no RSVP history', async ({ page }) => {
+  test('shows empty state when current user has no RSVP history', async ({
+    page,
+  }) => {
     await cleanupTestData();
     await ensureAuthenticatedUserInDatabase(page);
 
     await page.goto('/history');
 
-    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
-    await expect(page.getByText("Du har ikke svart på noen arrangementer ennå.")).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Du har ikke svart på noen arrangementer ennå.'),
+    ).toBeVisible();
     await expect(page.getByTestId('history-item')).toHaveCount(0);
   });
 });

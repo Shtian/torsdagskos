@@ -90,6 +90,8 @@ describe('ResendEmailProvider', () => {
     expect(result.success).toBe(false);
     expect(result.skipped).toBe(false);
     expect(result.provider).toBe('resend');
-    expect(result.error).toContain('Resend API request failed (500): provider-error');
+    expect(result.error).toContain(
+      'Resend API request failed (500): provider-error',
+    );
   });
 });

@@ -26,12 +26,17 @@ if (userId) {
       await db.insert(Users).values({
         clerkUserId: userId,
         email: user.emailAddresses[0]?.emailAddress || '',
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User',
-        createdAt: new Date()
+        name:
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+          user.emailAddresses[0]?.emailAddress ||
+          'User',
+        createdAt: new Date(),
       });
     } catch (error) {
       // Ignore unique constraint errors - user was already created by concurrent request
-      if (!(error instanceof Error && error.message.includes('UNIQUE constraint'))) {
+      if (
+        !(error instanceof Error && error.message.includes('UNIQUE constraint'))
+      ) {
         throw error;
       }
     }
@@ -42,9 +47,13 @@ if (userId) {
 const allEvents = await db.select().from(Events).all();
 
 // Get most recent event for duplication (sorted by createdAt descending)
-const mostRecentEvent = allEvents.length > 0
-  ? [...allEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
-  : null;
+const mostRecentEvent =
+  allEvents.length > 0
+    ? [...allEvents].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )[0]
+    : null;
 
 // Get RSVP counts for each event
 const eventsWithRsvps = await Promise.all(
@@ -55,26 +64,30 @@ const eventsWithRsvps = await Promise.all(
       .where(eq(Rsvps.eventId, event.id))
       .all();
 
-    const going = rsvps.filter(r => r.status === 'going').length;
-    const maybe = rsvps.filter(r => r.status === 'maybe').length;
-    const notGoing = rsvps.filter(r => r.status === 'not_going').length;
+    const going = rsvps.filter((r) => r.status === 'going').length;
+    const maybe = rsvps.filter((r) => r.status === 'maybe').length;
+    const notGoing = rsvps.filter((r) => r.status === 'not_going').length;
 
     return {
       ...event,
-      rsvpCounts: { going, maybe, notGoing }
+      rsvpCounts: { going, maybe, notGoing },
     };
-  })
+  }),
 );
 
 // Separate into upcoming and past events (Europe/Oslo timezone)
 const now = new Date();
 const upcomingEvents = eventsWithRsvps
-  .filter(event => new Date(event.dateTime) >= now)
-  .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  .filter((event) => new Date(event.dateTime) >= now)
+  .sort(
+    (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime(),
+  );
 
 const pastEvents = eventsWithRsvps
-  .filter(event => new Date(event.dateTime) < now)
-  .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+  .filter((event) => new Date(event.dateTime) < now)
+  .sort(
+    (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
+  );
 
 // Format date in Europe/Oslo timezone
 function formatEventDate(date: Date): string {
@@ -85,7 +98,7 @@ function formatEventDate(date: Date): string {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   }).format(new Date(date));
 }
 ---

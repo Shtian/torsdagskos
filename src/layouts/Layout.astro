@@ -1,18 +1,18 @@
 ---
-import "../styles/global.css";
+import '../styles/global.css';
 import { clerkClient } from '@clerk/astro/server';
 import { SignOutButton } from '@clerk/astro/components';
 import { Button } from '@/components/ui/button';
 import { buttonVariants } from '@/components/ui/button';
 
 interface Props {
-	title?: string;
-	description?: string;
+  title?: string;
+  description?: string;
 }
 
 const {
-	title = "Torsdagskos",
-	description = "Torsdagskos er en privat møteplanlegger for å koordinere gjentakende arrangementer med venner.",
+  title = 'Torsdagskos',
+  description = 'Torsdagskos er en privat møteplanlegger for å koordinere gjentakende arrangementer med venner.',
 } = Astro.props;
 
 // Get authenticated user
@@ -21,7 +21,7 @@ let user = null;
 const shouldRegisterServiceWorker = !!userId;
 
 if (userId) {
-	user = await clerkClient(Astro).users.getUser(userId);
+  user = await clerkClient(Astro).users.getUser(userId);
 }
 ---
 

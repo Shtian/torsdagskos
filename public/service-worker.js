@@ -28,7 +28,7 @@ self.addEventListener('push', (event) => {
       },
       badge: '/favicon.ico',
       icon: '/favicon.svg',
-    })
+    }),
   );
 });
 
@@ -38,21 +38,25 @@ self.addEventListener('notificationclick', (event) => {
   const targetUrl = event.notification?.data?.url || '/';
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ('focus' in client && client.url.includes(self.location.origin)) {
-          if ('navigate' in client) {
-            return client.navigate(targetUrl).then((navigatedClient) => navigatedClient?.focus());
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if ('focus' in client && client.url.includes(self.location.origin)) {
+            if ('navigate' in client) {
+              return client
+                .navigate(targetUrl)
+                .then((navigatedClient) => navigatedClient?.focus());
+            }
+            return client.focus();
           }
-          return client.focus();
         }
-      }
 
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(targetUrl);
-      }
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(targetUrl);
+        }
 
-      return undefined;
-    })
+        return undefined;
+      }),
   );
 });

@@ -100,6 +100,8 @@ describe('MailgunEmailProvider', () => {
     expect(result.success).toBe(false);
     expect(result.skipped).toBe(false);
     expect(result.provider).toBe('mailgun');
-    expect(result.error).toContain('Mailgun API request failed (429): rate limited');
+    expect(result.error).toContain(
+      'Mailgun API request failed (429): rate limited',
+    );
   });
 });

@@ -34,7 +34,7 @@ const rsvpsWithUsers = await Promise.all(
       .where(eq(Users.id, rsvp.userId))
       .get();
     return { ...rsvp, user };
-  })
+  }),
 );
 
 // Get current user's local database ID
@@ -45,12 +45,14 @@ const currentUser = await db
   .get();
 
 // Find current user's RSVP
-const currentUserRsvp = rsvpsWithUsers.find(r => r.userId === currentUser?.id);
+const currentUserRsvp = rsvpsWithUsers.find(
+  (r) => r.userId === currentUser?.id,
+);
 
 // Calculate RSVP counts
-const goingRsvps = rsvpsWithUsers.filter(r => r.status === 'going');
-const maybeRsvps = rsvpsWithUsers.filter(r => r.status === 'maybe');
-const notGoingRsvps = rsvpsWithUsers.filter(r => r.status === 'not_going');
+const goingRsvps = rsvpsWithUsers.filter((r) => r.status === 'going');
+const maybeRsvps = rsvpsWithUsers.filter((r) => r.status === 'maybe');
+const notGoingRsvps = rsvpsWithUsers.filter((r) => r.status === 'not_going');
 
 // Calculate no response count (total users - users who RSVPd)
 const totalUsers = await db.select().from(Users).all();
@@ -65,7 +67,7 @@ function formatEventDate(date: Date): string {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   }).format(new Date(date));
 }
 

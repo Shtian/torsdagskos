@@ -33,7 +33,9 @@ test.describe('Responsive mobile and tablet polish', () => {
     await cleanupTestData();
   });
 
-  test('mobile homepage keeps navigation touch-friendly and avoids horizontal scroll', async ({ page }) => {
+  test('mobile homepage keeps navigation touch-friendly and avoids horizontal scroll', async ({
+    page,
+  }) => {
     await page.setViewportSize(MOBILE_VIEWPORT);
 
     await createEvent(page, {
@@ -45,7 +47,9 @@ test.describe('Responsive mobile and tablet polish', () => {
 
     await page.goto('/');
 
-    const createEventLink = page.getByRole('link', { name: '+ Opprett arrangement' });
+    const createEventLink = page.getByRole('link', {
+      name: '+ Opprett arrangement',
+    });
     const historyLink = page.getByRole('link', { name: 'Min historikk' });
     const settingsLink = page.getByRole('link', { name: 'Innstillinger' });
     const signOutButton = page.getByRole('button', { name: 'Logg ut' });
@@ -60,7 +64,9 @@ test.describe('Responsive mobile and tablet polish', () => {
     await expectTouchTarget(settingsLink);
     await expectTouchTarget(signOutButton);
 
-    await expect(page.getByRole('heading', { name: /kommende arrangementer/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /kommende arrangementer/i }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await page.getByRole('heading', { name: /Mobile Card Event/ }).click();
@@ -68,20 +74,31 @@ test.describe('Responsive mobile and tablet polish', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test('mobile event forms keep 16px inputs and preserve usable action buttons', async ({ page }) => {
+  test('mobile event forms keep 16px inputs and preserve usable action buttons', async ({
+    page,
+  }) => {
     await page.setViewportSize(MOBILE_VIEWPORT);
 
     await page.goto('/events/new');
 
-    await expect(page.getByRole('heading', { name: /opprett nytt arrangement/i, level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name: /opprett nytt arrangement/i,
+        level: 1,
+      }),
+    ).toBeVisible();
 
     const titleInput = page.locator('#title');
     const dateInput = page.locator('#date');
     const timeInput = page.locator('#time');
-    const submitButton = page.getByRole('button', { name: 'Opprett arrangement' });
+    const submitButton = page.getByRole('button', {
+      name: 'Opprett arrangement',
+    });
     const cancelLink = page.getByRole('link', { name: 'Avbryt' });
 
-    const titleFontSize = await titleInput.evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize));
+    const titleFontSize = await titleInput.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).fontSize),
+    );
 
     expect(titleFontSize).toBeGreaterThanOrEqual(16);
     await expect(dateInput).toHaveAttribute('type', 'date');
@@ -110,20 +127,33 @@ test.describe('Responsive mobile and tablet polish', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test('tablet viewport keeps key pages readable without overflow', async ({ page }) => {
+  test('tablet viewport keeps key pages readable without overflow', async ({
+    page,
+  }) => {
     await page.setViewportSize(TABLET_VIEWPORT);
 
     await page.goto('/settings');
-    await expect(page.getByRole('heading', { name: 'Innstillinger', level: 1 })).toBeVisible();
-    await expect(page.getByRole('button', { name: /be om varslingstillatelse/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Innstillinger', level: 1 }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /be om varslingstillatelse/i }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await page.goto('/history');
-    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await page.goto('/events/new');
-    await expect(page.getByRole('heading', { name: /opprett nytt arrangement/i, level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name: /opprett nytt arrangement/i,
+        level: 1,
+      }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });

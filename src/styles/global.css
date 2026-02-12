@@ -71,7 +71,8 @@
 
   /* Typography */
   --font-heading: "Lora", "Georgia", "Times New Roman", serif;
-  --font-body: "Manrope", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
+  --font-body:
+    "Manrope", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -131,7 +132,12 @@ body {
   line-height: var(--line-height-normal);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: 600;
   line-height: var(--line-height-tight);
@@ -176,7 +182,15 @@ canvas {
   top: 1rem;
 }
 
-:where(a, button, input, textarea, select, [role="button"], [tabindex]):focus-visible {
+:where(
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    [role="button"],
+    [tabindex]
+  ):focus-visible {
   outline: 3px solid var(--color-accent-dark) !important;
   outline-offset: 2px;
 }

@@ -38,7 +38,7 @@ export function isPushDeliveryConfigured(): boolean {
 
 export async function sendPushNotification(
   subscriptionJson: string,
-  payload: PushPayload
+  payload: PushPayload,
 ): Promise<PushSendResult> {
   if (!ensureVapidConfigured()) {
     return {

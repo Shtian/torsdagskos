@@ -8,7 +8,7 @@ export const POST: APIRoute = async (context) => {
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -27,20 +27,23 @@ export const POST: APIRoute = async (context) => {
       await db.insert(Users).values({
         clerkUserId: userId,
         email: user.emailAddresses[0]?.emailAddress || '',
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User',
-        createdAt: new Date()
+        name:
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+          user.emailAddresses[0]?.emailAddress ||
+          'User',
+        createdAt: new Date(),
       });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error syncing user:', error);
     return new Response(JSON.stringify({ error: 'Failed to sync user' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 };

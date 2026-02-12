@@ -1,7 +1,7 @@
-import * as React from "react";
-import * as LabelPrimitive from "@radix-ui/react-label";
+import * as React from 'react';
+import * as LabelPrimitive from '@radix-ui/react-label';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
@@ -10,7 +10,10 @@ const Label = React.forwardRef<
   <LabelPrimitive.Root
     ref={ref}
     data-slot="label"
-    className={cn("text-sm font-semibold text-(--color-text-primary)", className)}
+    className={cn(
+      'text-sm font-semibold text-(--color-text-primary)',
+      className,
+    )}
     {...props}
   />
 ));

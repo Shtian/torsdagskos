@@ -17,11 +17,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     if (!eventId || !title || !dateTime || !location) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: eventId, title, dateTime, location' }),
+        JSON.stringify({
+          error: 'Missing required fields: eventId, title, dateTime, location',
+        }),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
 
@@ -39,10 +41,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     if (new Date(existingEvent.dateTime) < new Date()) {
-      return new Response(JSON.stringify({ error: 'Past events cannot be edited' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Past events cannot be edited' }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const updatedEvent = {
@@ -81,13 +86,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
         updated: updatedEvent,
       });
     } catch (notificationError) {
-      console.error('Error sending event update notifications:', notificationError);
+      console.error(
+        'Error sending event update notifications:',
+        notificationError,
+      );
     }
 
-    return new Response(JSON.stringify({ success: true, eventId: Number(eventId), notifications: notificationSummary }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        eventId: Number(eventId),
+        notifications: notificationSummary,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   } catch (error) {
     console.error('Error updating event:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

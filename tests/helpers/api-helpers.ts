@@ -5,7 +5,8 @@
  * avoiding the need to import Astro's virtual modules in Playwright tests.
  */
 
-const API_BASE = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4321';
+const API_BASE =
+  process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4321';
 
 /**
  * Generate a unique email address for testing
@@ -69,7 +70,9 @@ export async function createTestUser(data: {
     // But we keep this for backwards compatibility during transition
     if (error instanceof Error && error.message.includes('UNIQUE constraint')) {
       // Re-throw with more context
-      throw new Error(`User with clerkUserId ${data.clerkUserId} already exists. This should be handled by the seed endpoint now.`);
+      throw new Error(
+        `User with clerkUserId ${data.clerkUserId} already exists. This should be handled by the seed endpoint now.`,
+      );
     }
     throw error;
   }
@@ -113,25 +116,28 @@ export async function createEvent(
     dateTime: string; // ISO string
     location: string;
     mapLink?: string;
-  }
+  },
 ): Promise<{ eventId: number }> {
   // Navigate to a page first to ensure we have a proper browser context
   await page.goto('/');
 
   const result = await page.evaluate(async (eventData: any) => {
-    const response = await fetch(`${window.location.origin}/api/events/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${window.location.origin}/api/events/create`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: eventData.title,
+          description: eventData.description,
+          dateTime: eventData.dateTime,
+          location: eventData.location,
+          mapLink: eventData.mapLink || null,
+        }),
       },
-      body: JSON.stringify({
-        title: eventData.title,
-        description: eventData.description,
-        dateTime: eventData.dateTime,
-        location: eventData.location,
-        mapLink: eventData.mapLink || null,
-      }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error('Failed to opprett arrangement');

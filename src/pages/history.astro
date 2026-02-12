@@ -19,11 +19,16 @@ if (!currentUser && userId) {
     await db.insert(Users).values({
       clerkUserId: userId,
       email: clerkUser.emailAddresses[0]?.emailAddress || '',
-      name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.emailAddresses[0]?.emailAddress || 'User',
+      name:
+        `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
+        clerkUser.emailAddresses[0]?.emailAddress ||
+        'User',
       createdAt: new Date(),
     });
   } catch (error) {
-    if (!(error instanceof Error && error.message.includes('UNIQUE constraint'))) {
+    if (
+      !(error instanceof Error && error.message.includes('UNIQUE constraint'))
+    ) {
       throw error;
     }
   }
@@ -51,13 +56,17 @@ const historyItems = currentUser
           .get();
 
         return event ? { rsvp, event } : null;
-      })
+      }),
     )
   : [];
 
 const validHistoryItems = historyItems
   .filter((item): item is NonNullable<typeof item> => item !== null)
-  .sort((a, b) => new Date(b.event.dateTime).getTime() - new Date(a.event.dateTime).getTime());
+  .sort(
+    (a, b) =>
+      new Date(b.event.dateTime).getTime() -
+      new Date(a.event.dateTime).getTime(),
+  );
 
 function formatEventDate(date: Date): string {
   return new Intl.DateTimeFormat('no-NO', {
@@ -78,7 +87,8 @@ function formatStatus(status: string): string {
 }
 
 function statusClass(status: string): string {
-  if (status === 'going') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  if (status === 'going')
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700';
   if (status === 'maybe') return 'border-amber-200 bg-amber-50 text-amber-700';
   return 'border-rose-200 bg-rose-50 text-rose-700';
 }

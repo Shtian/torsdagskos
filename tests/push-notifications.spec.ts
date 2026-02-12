@@ -12,7 +12,9 @@ test.describe('Push notifications', () => {
     expect(body).toContain("self.addEventListener('notificationclick'");
   });
 
-  test('stores and clears push subscription for authenticated user', async ({ page }) => {
+  test('stores and clears push subscription for authenticated user', async ({
+    page,
+  }) => {
     await page.goto('/settings');
 
     const setResult = await page.evaluate(async () => {
@@ -46,7 +48,9 @@ test.describe('Push notifications', () => {
       return response.json();
     });
 
-    expect(userAfterSet.pushSubscription).toContain('https://example.invalid/push/test-subscription');
+    expect(userAfterSet.pushSubscription).toContain(
+      'https://example.invalid/push/test-subscription',
+    );
 
     const clearResult = await page.evaluate(async () => {
       const response = await fetch('/api/settings/push-subscription', {
