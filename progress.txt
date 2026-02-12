@@ -1,5 +1,6 @@
 # Codebase Patterns
 - Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
+- When restyling `src/pages/settings.astro`, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` IDs stable because the page script and settings specs depend on them.
 - Keep event create/edit forms aligned on shadcn inline feedback (`data-test-id="form-feedback-panel"`) and assert panel text + submit busy/disabled states in Playwright instead of toast nodes.
 - For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
 - Keep a semantic heading element on `/access-denied`; theme and typography unauth specs read heading computed styles from that route.
@@ -182,4 +183,14 @@
   - Keep history-page migration assertions split between behavior (`tests/history.spec.ts`) and shell/polish checks (`tests/history-ui.spec.ts`) so layout changes do not weaken data-contract coverage.
   - Reusing shared card slot markers (`data-slot="card"`) on Astro pages provides stable, cross-page assertions for migration UI checks.
   - Continue using the `/api/test/current-user` retry helper pattern in auth-dependent history tests to avoid known intermittent 401 flakes.
+---
+## 2026-02-12 18:15:32 CET - US-016
+- Migrated `src/pages/settings.astro` to the shadcn-aligned shell pattern with tokenized card header/content/footer sections, shared back-link action styling, and status summary surfaces while preserving existing notification settings behavior.
+- Preserved settings notification contracts by keeping existing IDs and API calls intact (`/api/settings/notifications`, `/api/settings/push-subscription`) and updated inline feedback rendering to a dedicated shadcn-style panel (`data-test-id="settings-feedback-panel"`).
+- Added frontend Playwright coverage in `tests/settings-ui.spec.ts` for migrated shell rendering, notification status surfaces, inline feedback panel behavior, and mobile overflow safety.
+- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite).
+- Files changed: `src/pages/settings.astro`, `tests/settings-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Keep settings-page script selector IDs (`#permission-status`, `#saved-preference`, `#request-permission`, `#feedback`) stable during UI refactors; both runtime behavior and Playwright coverage depend on them.
+  - For settings UI migration checks, pair existing behavior-focused specs (`tests/settings.spec.ts`) with a focused shell/mobile spec (`tests/settings-ui.spec.ts`) to avoid weakening API-behavior assertions.
 ---

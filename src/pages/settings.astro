@@ -2,6 +2,8 @@
 import { clerkClient } from '@clerk/astro/server';
 import { db, Users, eq } from 'astro:db';
 import Layout from '../layouts/Layout.astro';
+import { Button } from '@/components/ui';
+import { buttonVariants } from '@/components/ui/button';
 
 const { userId } = Astro.locals.auth();
 if (!userId) {
@@ -48,34 +50,54 @@ const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
   title="Settings - Torsdagskos"
   description="Manage browser notification permissions and push subscription preferences."
 >
-  <section class="mx-auto grid max-w-190 gap-6" aria-labelledby="settings-title">
-    <a href="/" class="w-fit text-(--color-accent) no-underline hover:text-(--color-accent-dark)">&larr; Back to Events</a>
-    <h1 id="settings-title" class="m-0 text-2xl sm:text-[2rem]">Settings</h1>
+  <section class="mx-auto mt-6 w-full max-w-4xl px-4 pb-8 sm:mt-10 sm:px-0" aria-labelledby="settings-title" data-test-id="settings-shell">
+    <div class="mb-6">
+      <a href="/" class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Back to Events</a>
+    </div>
 
-    <article class="rounded-lg border border-(--color-border) bg-white p-6 shadow-sm" aria-labelledby="notifications-title">
-      <h2 id="notifications-title" class="mb-2 mt-0 text-[1.4rem]">Browser Notifications</h2>
-      <p class="mb-5 mt-0 text-(--color-text-secondary)">
-        Enable browser notifications to receive alerts directly in this browser.
-      </p>
+    <article data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm" aria-labelledby="notifications-title">
+      <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
+        <h1 id="settings-title" class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Settings</h1>
+        <h2 id="notifications-title" class="m-0 text-xl text-foreground">Browser Notifications</h2>
+        <p class="m-0 text-sm text-muted-foreground">
+          Enable browser notifications to receive alerts directly in this browser.
+        </p>
+      </div>
 
-      <dl class="mb-5 grid gap-4 sm:grid-cols-2">
-        <div class="rounded-md border border-(--color-border) bg-(--color-primary-100) p-4">
-          <dt class="mb-1 text-[0.9rem] text-(--color-text-secondary)">Permission status</dt>
-          <dd id="permission-status" class="m-0 text-[1.05rem] font-semibold text-(--color-accent-dark)">Checking...</dd>
+      <div data-slot="card-content" class="space-y-6 px-6 py-6 sm:px-8">
+        <dl class="grid gap-4 sm:grid-cols-2">
+          <div data-test-id="settings-permission-card" class="bg-muted/40 rounded-md border px-4 py-4">
+            <dt class="mb-1 text-sm text-muted-foreground">Permission status</dt>
+            <dd id="permission-status" class="m-0 text-lg font-semibold text-(--color-accent-dark)">Checking...</dd>
+          </div>
+          <div data-test-id="settings-preference-card" class="bg-muted/40 rounded-md border px-4 py-4">
+            <dt class="mb-1 text-sm text-muted-foreground">Saved preference</dt>
+            <dd id="saved-preference" class="m-0 text-lg font-semibold text-(--color-accent-dark)" data-enabled={String(notificationsEnabled)}>
+              {notificationsEnabled ? 'Enabled' : 'Disabled'}
+            </dd>
+          </div>
+        </dl>
+
+        <div
+          id="settings-feedback-panel"
+          data-test-id="settings-feedback-panel"
+          class="hidden rounded-md border px-4 py-3"
+          role="status"
+          aria-live="polite"
+        >
+          <p id="feedback" class="m-0 text-sm text-foreground"></p>
         </div>
-        <div class="rounded-md border border-(--color-border) bg-(--color-primary-100) p-4">
-          <dt class="mb-1 text-[0.9rem] text-(--color-text-secondary)">Saved preference</dt>
-          <dd id="saved-preference" class="m-0 text-[1.05rem] font-semibold text-(--color-accent-dark)" data-enabled={String(notificationsEnabled)}>
-            {notificationsEnabled ? 'Enabled' : 'Disabled'}
-          </dd>
-        </div>
-      </dl>
+      </div>
 
-      <button type="button" id="request-permission" class="min-h-11 rounded-md bg-(--color-accent) px-5 py-3 text-base text-white transition-colors duration-200 hover:bg-(--color-accent-dark) disabled:cursor-not-allowed disabled:opacity-60 focus:outline-2 focus:outline-offset-2 focus:outline-(--color-accent)">
-        Request notification permission
-      </button>
-
-      <p id="feedback" class="mb-0 mt-4 min-h-6 text-(--color-text-secondary)" role="status" aria-live="polite"></p>
+      <div data-slot="card-footer" class="flex flex-col gap-3 border-t px-6 py-5 sm:flex-row sm:px-8">
+        <Button
+          type="button"
+          id="request-permission"
+          className="touch-target h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
+        >
+          Request notification permission
+        </Button>
+      </div>
     </article>
   </section>
 </Layout>
@@ -85,6 +107,7 @@ const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
   const permissionStatus = document.getElementById('permission-status');
   const savedPreference = document.getElementById('saved-preference');
   const requestButton = document.getElementById('request-permission');
+  const feedbackPanel = document.getElementById('settings-feedback-panel');
   const feedback = document.getElementById('feedback');
   const supportsPush = 'serviceWorker' in navigator && 'PushManager' in window;
 
@@ -96,10 +119,21 @@ const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
 
   /** @type {(message: string, type: 'success' | 'error') => void} */
   const setFeedback = (message, type) => {
-    if (!feedback) return;
+    if (!feedback || !feedbackPanel) return;
     feedback.textContent = message;
-    feedback.classList.remove('text-(--color-success)', 'text-(--color-error)', 'text-(--color-text-secondary)');
-    feedback.classList.add(type === 'success' ? 'text-(--color-success)' : 'text-(--color-error)');
+
+    const baseClasses = 'block rounded-md border px-4 py-3';
+    feedbackPanel.classList.remove('hidden');
+
+    if (type === 'success') {
+      feedbackPanel.className = `${baseClasses} border-emerald-200 bg-emerald-50`;
+      feedbackPanel.setAttribute('role', 'status');
+      feedbackPanel.setAttribute('aria-live', 'polite');
+    } else {
+      feedbackPanel.className = `${baseClasses} border-destructive/30 bg-destructive/10`;
+      feedbackPanel.setAttribute('role', 'alert');
+      feedbackPanel.setAttribute('aria-live', 'assertive');
+    }
   }
 
   function setPermissionDisplay() {
