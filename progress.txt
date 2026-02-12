@@ -82,3 +82,19 @@
   - The ghost button variant is useful for icon-only buttons in UI components like dropdown triggers.
   - Radix UI primitives (used by shadcn) handle focus management and keyboard interactions automatically.
 ---
+## 2026-02-12 10:54:00 CET - US-007
+- Migrated app shell layout (header, footer, wrappers) to use shadcn component patterns and design tokens.
+- Replaced custom-styled navigation buttons with shadcn buttonVariants() applied directly to anchor elements, preserving all navigation functionality.
+- Updated header to use semantic shadcn tokens (bg-background, text-foreground, text-muted-foreground) for consistent theming.
+- Enhanced Button component with Slot.Root for proper asChild support (merges props/classes to child elements).
+- Set navigation buttons to lg size (h-11/44px) to meet touch-target accessibility requirements (44px minimum).
+- Created comprehensive Playwright test suite in tests/app-shell.spec.ts covering header rendering, responsive behavior, accessibility (skip link), and main content structure.
+- All app shell tests passing (5/5) and responsive touch-target test now passing.
+- Files changed: src/layouts/Layout.astro, src/components/ui/button.tsx, tests/app-shell.spec.ts, prd.json, progress.txt.
+- **Learnings for future iterations**
+  - When using shadcn Button with asChild in Astro templates, applying buttonVariants() directly to <a> elements works better than wrapping in React islands for static navigation.
+  - Navigation buttons need size="lg" (h-11/44px) to meet WCAG touch-target requirements on mobile (44px minimum).
+  - Use getByRole('banner') instead of locator('header') in tests to avoid matching Astro dev toolbar elements.
+  - Radix UI Slot.Root properly merges className and other props onto child elements when asChild={true}.
+  - Pre-existing test failures in overlay-primitives and surface-primitives specs (7 failures) are unrelated to app shell changes.
+---
