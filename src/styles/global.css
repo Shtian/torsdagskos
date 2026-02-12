@@ -180,19 +180,3 @@ canvas {
   outline: 3px solid var(--color-accent-dark) !important;
   outline-offset: 2px;
 }
-
-.toast-message {
-  left: 1rem;
-  right: 1rem;
-  top: 5.5rem;
-  width: auto;
-}
-
-@media (min-width: 640px) {
-  .toast-message {
-    left: auto;
-    right: 1.5rem;
-    max-width: 24rem;
-    top: 6rem;
-  }
-}

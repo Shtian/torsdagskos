@@ -18,14 +18,24 @@ Inside of your Astro project, you'll see the following folders and files:
 ├── public/
 │   └── favicon.svg
 ├── src
-│   ├── assets
-│   │   └── astro.svg
 │   ├── components
-│   │   └── Welcome.astro
+│   │   ├── EventCard.tsx
+│   │   ├── ShadcnIslandDemo.tsx
+│   │   └── ui/
 │   ├── layouts
 │   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
+│   ├── pages/
+│   │   ├── index.astro
+│   │   ├── history.astro
+│   │   ├── settings.astro
+│   │   └── ...
+│   └── styles/
+│       └── global.css
+├── tests/
+│   └── *.spec.ts
+├── prd.json
+├── progress.txt
+├── playwright.config.ts
 └── package.json
 ```
 

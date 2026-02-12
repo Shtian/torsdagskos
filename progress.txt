@@ -12,6 +12,7 @@
 - Event detail RSVP UX now uses inline feedback (`data-test-id="rsvp-feedback-panel"` + `#rsvp-feedback`) and `aria-busy` button states; avoid toast-based assertions in RSVP tests.
 - For UI migrations, keep behavior coverage in existing specs and add focused `*-ui.spec.ts` shells/mobile tests so visual refactors do not weaken functional assertions.
 - For Norwegian localization stories, update accessible-name assertions and prefer test IDs for badge/count checks when translated labels overlap (for example `kommer` vs `kommer ikke`).
+- After shadcn migration, remove unused Astro starter artifacts (`src/components/Welcome.astro`, `src/assets/*`) and stale global CSS selectors to avoid carrying duplicate legacy UI paths.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -205,4 +206,14 @@
   - Localization refactors should update both static shell text and inline script-driven feedback text to keep accessibility names and error/loading assertions in sync.
   - Badge/count assertions can become ambiguous after translation (substring overlap); use targeted test IDs (`rsvp-going`, `rsvp-maybe`, `rsvp-not-going`) instead of plain text matching.
   - For external auth widgets (Clerk), keep assertions tolerant with regex around provider-rendered headings while asserting app-owned wrapper copy exactly.
+---
+## 2026-02-12 20:38:00 CET - US-018
+- Removed deprecated legacy UI assets that are no longer used after shadcn migration: deleted `src/components/Welcome.astro`, `src/assets/astro.svg`, and `src/assets/background.svg`.
+- Removed unused legacy global CSS toast rules (`.toast-message`) from `src/styles/global.css` since UI feedback now uses inline shadcn-compatible panels.
+- Updated `README.md` project structure to reflect current app layout and remove references to deleted starter artifacts.
+- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite, 111 passed).
+- Files changed: `src/components/Welcome.astro`, `src/assets/astro.svg`, `src/assets/background.svg`, `src/styles/global.css`, `README.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - When a UI migration reaches parity, explicitly search for orphaned starter files and stale selectors (`rg`) and remove them in the same story to keep one authoritative UI path.
+  - Keep README structure snippets aligned with real repository contents when deleting legacy scaffolding so onboarding docs do not point to removed files.
 ---
