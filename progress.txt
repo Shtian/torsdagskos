@@ -3,6 +3,7 @@
 - For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
 - Load Google Fonts once in `src/layouts/Layout.astro` and map them via global CSS font tokens (`--font-heading`, `--font-body`) so typography stays consistent across all routes.
 - When rendering React `Textarea` components from `.astro` pages, prefer `defaultValue` over children content to avoid accidental `"[object Object]"` rendering in SSR output.
+- For Playwright interactions with `ShadcnIslandDemo`, wait for `data-hydrated="true"` on `data-test-id="shadcn-island"` before tab/select/dialog/dropdown actions to avoid pre-hydration flakes.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -97,4 +98,14 @@
   - Use getByRole('banner') instead of locator('header') in tests to avoid matching Astro dev toolbar elements.
   - Radix UI Slot.Root properly merges className and other props onto child elements when asChild={true}.
   - Pre-existing test failures in overlay-primitives and surface-primitives specs (7 failures) are unrelated to app shell changes.
+---
+## 2026-02-12 11:38:37 CET - US-008
+- Migrated remaining homepage shell UI in `src/pages/index.astro` to shadcn-compatible surface/action patterns: tokenized card shells, shadcn-style separator, and `buttonVariants()`-driven duplicate action states while preserving event sort, links, and duplicate query behavior.
+- Added frontend Playwright coverage in `tests/homepage-ui.spec.ts` for populated and empty homepage states, including section shell rendering and duplicate-action behavior.
+- Stabilized React-island interaction tests by introducing a hydration marker (`data-hydrated`) in `ShadcnIslandDemo` and waiting for it before interaction in overlay/surface/island specs.
+- Files changed: `src/pages/index.astro`, `tests/homepage-ui.spec.ts`, `src/components/ShadcnIslandDemo.tsx`, `tests/overlay-primitives.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/surface-primitives.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Wait for React island hydration (`data-hydrated="true"`) before interacting with tabbed Radix content in Playwright; otherwise hidden-panel controls can intermittently time out.
+  - Use direct-child selectors when asserting top-level `data-slot="card"` containers on pages that also embed card-based child components to avoid strict-locator collisions.
+  - Homepage migration can preserve existing test contracts by keeping `Upcoming Events` and `Past Events` heading semantics while changing only shell styling primitives.
 ---

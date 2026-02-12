@@ -1,11 +1,18 @@
 import { test, expect } from "./fixtures";
 
+async function gotoHomepageAndWaitForIsland(page: any) {
+  await page.goto("/");
+  const island = page.getByTestId("shadcn-island");
+  await expect(island).toBeVisible();
+  await expect(island).toHaveAttribute("data-hydrated", "true");
+}
+
 test.describe("Surface and Feedback Primitives", () => {
 
   test("shadcn island renders Card component with all slots", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoHomepageAndWaitForIsland(page);
 
     const island = page.getByTestId("shadcn-island");
     await expect(island).toBeVisible();
@@ -31,7 +38,7 @@ test.describe("Surface and Feedback Primitives", () => {
   });
 
   test("Badge components render with correct variants", async ({ page }) => {
-    await page.goto("/");
+    await gotoHomepageAndWaitForIsland(page);
 
     const island = page.getByTestId("shadcn-island");
 
@@ -63,7 +70,7 @@ test.describe("Surface and Feedback Primitives", () => {
   });
 
   test("Separator component renders correctly", async ({ page }) => {
-    await page.goto("/");
+    await gotoHomepageAndWaitForIsland(page);
 
     const separator = page.getByTestId("separator");
     await expect(separator).toBeVisible();

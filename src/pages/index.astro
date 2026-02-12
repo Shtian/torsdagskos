@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import ShadcnIslandDemo from '../components/ShadcnIslandDemo';
 import { EventCard } from '../components/EventCard';
+import { buttonVariants } from '@/components/ui/button';
 import { db, Users, Events, Rsvps, eq } from 'astro:db';
 import { clerkClient } from '@clerk/astro/server';
 
@@ -93,66 +94,98 @@ function formatEventDate(date: Date): string {
   title="Events - Torsdagskos"
   description="Browse upcoming and past Torsdagskos events, including location, time, and RSVP summaries."
 >
-  <div class="mx-auto p-4 sm:p-6">
+  <div class="mx-auto w-full max-w-[75rem] p-4 sm:p-6">
     <ShadcnIslandDemo client:load />
 
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
-      <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Upcoming Events</h1>
-      {mostRecentEvent && (
-        <a
-          href={`/events/new?duplicate=true&title=${encodeURIComponent(mostRecentEvent.title)}&description=${encodeURIComponent(mostRecentEvent.description || '')}&location=${encodeURIComponent(mostRecentEvent.location)}&mapLink=${encodeURIComponent(mostRecentEvent.mapLink || '')}`}
-          class="cursor-pointer whitespace-nowrap rounded-md border-2 border-(--color-accent) bg-white px-4 py-2 text-center text-[0.9rem] font-medium text-(--color-accent) no-underline transition-all duration-200 hover:-translate-y-px hover:bg-(--color-accent) hover:text-white max-sm:w-full"
-        >
-          Duplicate Last Event
-        </a>
-      )}
-      {!mostRecentEvent && (
-        <button class="cursor-not-allowed whitespace-nowrap rounded-md border-2 border-(--color-border) bg-white px-4 py-2 text-center text-[0.9rem] font-medium text-(--color-text-muted) opacity-40 max-sm:w-full" disabled aria-label="Duplicate last event unavailable">
-          Duplicate Last Event
-        </button>
-      )}
-    </div>
+    <section class="space-y-4" data-test-id="homepage-upcoming">
+      <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+        <div data-slot="card-header" class="grid auto-rows-min gap-4 px-6 sm:grid-cols-[1fr_auto] sm:items-start">
+          <div class="space-y-2">
+            <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Upcoming Events</h1>
+            <p data-slot="card-description" class="m-0 text-sm text-muted-foreground">
+              All upcoming events are sorted by date and time.
+            </p>
+          </div>
+          <div>
+            {mostRecentEvent && (
+              <a
+                href={`/events/new?duplicate=true&title=${encodeURIComponent(mostRecentEvent.title)}&description=${encodeURIComponent(mostRecentEvent.description || '')}&location=${encodeURIComponent(mostRecentEvent.location)}&mapLink=${encodeURIComponent(mostRecentEvent.mapLink || '')}`}
+                data-test-id="duplicate-last-event"
+                class:list={[buttonVariants({ variant: 'outline' }), 'w-full no-underline sm:w-auto']}
+              >
+                Duplicate Last Event
+              </a>
+            )}
+            {!mostRecentEvent && (
+              <button
+                data-test-id="duplicate-last-event"
+                class:list={[buttonVariants({ variant: 'outline' }), 'w-full cursor-not-allowed sm:w-auto']}
+                disabled
+                aria-label="Duplicate last event unavailable"
+              >
+                Duplicate Last Event
+              </button>
+            )}
+          </div>
+        </div>
 
-    {upcomingEvents.length === 0 && pastEvents.length === 0 && (
-      <div class="rounded-lg border-2 border-dashed border-(--color-border) bg-white px-6 py-12 text-center text-(--color-text-muted)" data-test-id="empty-state">
-        <p>No events yet. Check back soon!</p>
-      </div>
-    )}
+        <div data-slot="card-content" class="px-6">
+          {upcomingEvents.length === 0 && pastEvents.length === 0 && (
+            <div
+              data-slot="card"
+              class="border-border bg-muted/20 rounded-xl border border-dashed p-8 text-center"
+              data-test-id="empty-state"
+            >
+              <p class="m-0 text-muted-foreground">No events yet. Check back soon!</p>
+            </div>
+          )}
 
-    {upcomingEvents.length > 0 && (
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {upcomingEvents.map(event => (
-          <EventCard
-            client:load
-            id={event.id}
-            title={event.title}
-            dateTime={formatEventDate(event.dateTime)}
-            location={event.location}
-            rsvpCounts={event.rsvpCounts}
-          />
-        ))}
+          {upcomingEvents.length > 0 && (
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {upcomingEvents.map(event => (
+                <EventCard
+                  client:load
+                  id={event.id}
+                  title={event.title}
+                  dateTime={formatEventDate(event.dateTime)}
+                  location={event.location}
+                  rsvpCounts={event.rsvpCounts}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    )}
+    </section>
 
     {pastEvents.length > 0 && (
       <>
-        <div class="my-8">
-          <hr class="border-border" data-test-id="section-separator" />
-        </div>
-        <h1 class="mt-12 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Past Events</h1>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pastEvents.map(event => (
-            <EventCard
-              client:load
-              id={event.id}
-              title={event.title}
-              dateTime={formatEventDate(event.dateTime)}
-              location={event.location}
-              rsvpCounts={event.rsvpCounts}
-              isPast={true}
-            />
-          ))}
-        </div>
+        <div data-slot="separator" class="bg-border my-8 h-px w-full" data-test-id="section-separator" />
+        <section class="space-y-4" data-test-id="homepage-past">
+          <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+            <div data-slot="card-header" class="px-6">
+              <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Past Events</h1>
+              <p data-slot="card-description" class="mt-2 mb-0 text-sm text-muted-foreground">
+                Past events are sorted from newest to oldest.
+              </p>
+            </div>
+            <div data-slot="card-content" class="px-6">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {pastEvents.map(event => (
+                  <EventCard
+                    client:load
+                    id={event.id}
+                    title={event.title}
+                    dateTime={formatEventDate(event.dateTime)}
+                    location={event.location}
+                    rsvpCounts={event.rsvpCounts}
+                    isPast={true}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </>
     )}
   </div>

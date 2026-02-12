@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Badge,
   Button,
@@ -35,9 +35,14 @@ import {
 export default function ShadcnIslandDemo() {
   const [selection, setSelection] = useState("ready");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   return (
-    <Card data-test-id="shadcn-island" className="mb-6">
+    <Card data-test-id="shadcn-island" data-hydrated={isHydrated ? "true" : "false"} className="mb-6">
       <CardHeader>
         <CardTitle>shadcn Interactive Overlay Primitives</CardTitle>
         <CardDescription>

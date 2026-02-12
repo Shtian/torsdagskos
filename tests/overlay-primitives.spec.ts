@@ -1,9 +1,16 @@
 import { test, expect } from "./fixtures";
 
+async function gotoHomepageAndWaitForIsland(page: any) {
+  await page.goto("/");
+  const island = page.getByTestId("shadcn-island");
+  await expect(island).toBeVisible();
+  await expect(island).toHaveAttribute("data-hydrated", "true");
+}
+
 test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
   test.describe("ShadcnIslandDemo - Tabs Component", () => {
     test("should render tabs with correct initial state", async ({ page }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       const tabsDemo = page.getByTestId("tabs-demo");
       await expect(tabsDemo).toBeVisible();
@@ -26,7 +33,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     });
 
     test("should switch tabs when clicked", async ({ page }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Click on Components tab
       await page.getByTestId("tab-trigger-components").click();
@@ -52,7 +59,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     });
 
     test("should support keyboard navigation for tabs", async ({ page }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Focus on first tab
       await page.getByTestId("tab-trigger-overview").focus();
@@ -75,7 +82,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
 
   test.describe("ShadcnIslandDemo - Dialog Component", () => {
     test("should open dialog when trigger is clicked", async ({ page }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab first
       await page.getByTestId("tab-trigger-interactions").click();
@@ -103,7 +110,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     test("should close dialog when cancel button is clicked", async ({
       page,
     }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab and open dialog
       await page.getByTestId("tab-trigger-interactions").click();
@@ -122,7 +129,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     test("should close dialog when confirm button is clicked", async ({
       page,
     }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab and open dialog
       await page.getByTestId("tab-trigger-interactions").click();
@@ -139,7 +146,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     });
 
     test("should close dialog when Escape key is pressed", async ({ page }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab and open dialog
       await page.getByTestId("tab-trigger-interactions").click();
@@ -160,7 +167,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     test("should open dropdown menu when trigger is clicked", async ({
       page,
     }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab first
       await page.getByTestId("tab-trigger-interactions").click();
@@ -181,7 +188,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     test("should close dropdown menu when item is clicked", async ({
       page,
     }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab and open dropdown
       await page.getByTestId("tab-trigger-interactions").click();
@@ -200,7 +207,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     test("should close dropdown menu when Escape key is pressed", async ({
       page,
     }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab and open dropdown
       await page.getByTestId("tab-trigger-interactions").click();
@@ -219,7 +226,7 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
     test("should support keyboard navigation in dropdown menu", async ({
       page,
     }) => {
-      await page.goto("/");
+      await gotoHomepageAndWaitForIsland(page);
 
       // Switch to Interactions tab and open dropdown
       await page.getByTestId("tab-trigger-interactions").click();

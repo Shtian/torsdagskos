@@ -1,8 +1,15 @@
 import { test, expect } from './fixtures';
 
+async function gotoHomepageAndWaitForIsland(page: any) {
+  await page.goto('/');
+  const island = page.getByTestId('shadcn-island');
+  await expect(island).toBeVisible();
+  await expect(island).toHaveAttribute('data-hydrated', 'true');
+}
+
 test.describe('shadcn react island', () => {
   test('renders the shadcn demo island on the homepage', async ({ page }) => {
-    await page.goto('/');
+    await gotoHomepageAndWaitForIsland(page);
 
     const island = page.getByTestId('shadcn-island');
     await expect(island).toBeVisible();
@@ -13,7 +20,7 @@ test.describe('shadcn react island', () => {
   });
 
   test('allows selecting a shadcn select option in the island', async ({ page }) => {
-    await page.goto('/');
+    await gotoHomepageAndWaitForIsland(page);
 
     // The select is now in the bottom section (outside tabs)
     // Wait for the island to be visible
@@ -25,7 +32,7 @@ test.describe('shadcn react island', () => {
     await expect(page.getByRole('button', { name: 'Shadcn Ready' })).toBeVisible();
 
     await selectTrigger.click();
-    await page.getByRole('option', { name: 'In Progress' }).click();
+    await page.getByRole('option', { name: 'In Progress' }).first().click();
 
     await expect(page.getByRole('button', { name: 'Shadcn Configured' })).toBeVisible();
   });
