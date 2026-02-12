@@ -8,6 +8,7 @@
 - For Playwright interactions with `ShadcnIslandDemo`, wait for `data-hydrated="true"` on `data-test-id="shadcn-island"` before tab/select/dialog/dropdown actions to avoid pre-hydration flakes.
 - Full Playwright runs can intermittently 401 in `tests/history.spec.ts` (`/api/test/current-user`) late in the suite; validate with an isolated rerun of that spec when this known auth-state flake appears.
 - In auth-sensitive Playwright helpers that call `/api/test/current-user` inside `page.evaluate()`, guard for occasional 401/non-JSON responses and retry before hard-failing.
+- Event detail RSVP UX now uses inline feedback (`data-test-id="rsvp-feedback-panel"` + `#rsvp-feedback`) and `aria-busy` button states; avoid toast-based assertions in RSVP tests.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -160,4 +161,14 @@
   - Keep create/edit event forms visually and behaviorally aligned by sharing the same shadcn card sections (`data-slot="card-header|content|footer"`) and inline feedback contract.
   - For migrated update forms, assert inline feedback panel content and submit busy state transitions instead of waiting for transient success/error nodes.
   - Preserve existing form field IDs when migrating to shadcn primitives so API and test contracts remain stable.
+---
+## 2026-02-12 17:53:04 CET - US-014
+- Migrated `src/pages/events/[id].astro` to a shadcn-compatible event detail shell using tokenized card sections, `buttonVariants` actions, and consistent RSVP/status/count/list surface patterns while preserving all existing event data rendering and RSVP action contracts.
+- Replaced RSVP toast messaging with inline feedback states (`loading`, `success`, `error`) via `data-test-id="rsvp-feedback-panel"` and preserved button disable/busy + reload behavior after successful RSVP updates.
+- Added frontend Playwright coverage in `tests/event-detail-ui.spec.ts` for migrated shell rendering, past-event behavior, and mobile overflow safety; updated RSVP-related selectors in `tests/rsvp.spec.ts` and `tests/accessibility-polish.spec.ts` to assert inline feedback.
+- Files changed: `src/pages/events/[id].astro`, `tests/event-detail-ui.spec.ts`, `tests/rsvp.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - For event detail migrations, keep RSVP controls on stable `data-rsvp-button`/`data-status`/`data-active` attributes so existing RSVP behavior and tests remain compatible while restyling.
+  - RSVP error/success checks should target the inline feedback panel (`data-test-id="rsvp-feedback-panel"`) and `#rsvp-feedback` message text rather than transient toast selectors.
+  - Reusing `buttonVariants` on Astro `<a>` and `<button>` elements keeps interaction styling aligned with shadcn without introducing extra client islands.
 ---

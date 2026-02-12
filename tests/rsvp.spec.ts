@@ -69,7 +69,7 @@ test.describe('RSVP Functionality', () => {
     // First, RSVP "Going"
     const goingButton = page.getByRole('button', { name: 'Going', exact: true });
     await goingButton.click();
-    await expect(page.locator('[data-test-id="rsvp-success-message"]')).toBeVisible();
+    await expect(page.getByTestId('rsvp-feedback-panel')).toContainText('RSVP updated successfully');
     await page.waitForLoadState('load');
 
     // Verify "Going" is active
@@ -79,7 +79,7 @@ test.describe('RSVP Functionality', () => {
     // Change to "Maybe"
     const maybeButton = page.getByRole('button', { name: 'Maybe', exact: true });
     await maybeButton.click();
-    await expect(page.locator('[data-test-id="rsvp-success-message"]')).toBeVisible();
+    await expect(page.getByTestId('rsvp-feedback-panel')).toContainText('RSVP updated successfully');
     await page.waitForLoadState('load');
 
     // Verify "Maybe" is now active
@@ -90,7 +90,7 @@ test.describe('RSVP Functionality', () => {
     // Change to "Not Going"
     const notGoingButton = page.getByRole('button', { name: 'Not Going', exact: true });
     await notGoingButton.click();
-    await expect(page.locator('[data-test-id="rsvp-success-message"]')).toBeVisible();
+    await expect(page.getByTestId('rsvp-feedback-panel')).toContainText('RSVP updated successfully');
     await page.waitForLoadState('load');
 
     // Verify "Not Going" is now active

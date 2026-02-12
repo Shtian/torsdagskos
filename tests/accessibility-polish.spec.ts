@@ -101,7 +101,7 @@ test.describe('Accessibility polish', () => {
 
     await expect(page.getByRole('button', { name: 'Saving...' })).toBeDisabled();
     await expect(page.getByText('Saving RSVP...')).toBeVisible();
-    await expect(page.getByTestId('rsvp-error-message')).toBeVisible();
+    await expect(page.getByTestId('rsvp-feedback-panel')).toBeVisible();
     await expect(page.locator('#rsvp-feedback')).toHaveText(/failed to update rsvp/i);
     await expect(page.getByRole('button', { name: 'Going', exact: true })).toBeEnabled();
   });
