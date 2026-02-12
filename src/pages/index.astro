@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ShadcnIslandDemo from '../components/ShadcnIslandDemo';
+import { EventCard } from '../components/EventCard';
 import { db, Users, Events, Rsvps, eq } from 'astro:db';
 import { clerkClient } from '@clerk/astro/server';
 
@@ -113,7 +114,7 @@ function formatEventDate(date: Date): string {
     </div>
 
     {upcomingEvents.length === 0 && pastEvents.length === 0 && (
-      <div class="rounded-lg border-2 border-dashed border-(--color-border) bg-white px-6 py-12 text-center text-(--color-text-muted)">
+      <div class="rounded-lg border-2 border-dashed border-(--color-border) bg-white px-6 py-12 text-center text-(--color-text-muted)" data-test-id="empty-state">
         <p>No events yet. Check back soon!</p>
       </div>
     )}
@@ -121,35 +122,35 @@ function formatEventDate(date: Date): string {
     {upcomingEvents.length > 0 && (
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {upcomingEvents.map(event => (
-          <a href={`/events/${event.id}`} data-test-id="event-card" class="block rounded-lg border border-(--color-border) bg-white p-6 text-inherit no-underline transition-all duration-200 hover:-translate-y-0.5 hover:border-(--color-accent) hover:shadow-md">
-            <h2 class="mb-3 mt-0 text-[1.1rem] text-(--color-accent-dark) sm:text-xl">{event.title}</h2>
-            <p class="mb-2 mt-0 text-[0.95rem] text-(--color-text-secondary)">{formatEventDate(event.dateTime)}</p>
-            <p class="mb-4 mt-0 text-[0.9rem] text-(--color-text-secondary)">{event.location}</p>
-            <div class="flex flex-wrap gap-3">
-              <span class="rounded-full bg-[#e8f5e9] px-3 py-1 text-[0.85rem] font-medium text-(--color-success)">{event.rsvpCounts.going} going</span>
-              <span class="rounded-full bg-[#fff3e0] px-3 py-1 text-[0.85rem] font-medium text-(--color-warning)">{event.rsvpCounts.maybe} maybe</span>
-              <span class="rounded-full bg-[#ffebee] px-3 py-1 text-[0.85rem] font-medium text-(--color-error)">{event.rsvpCounts.notGoing} not going</span>
-            </div>
-          </a>
+          <EventCard
+            client:load
+            id={event.id}
+            title={event.title}
+            dateTime={formatEventDate(event.dateTime)}
+            location={event.location}
+            rsvpCounts={event.rsvpCounts}
+          />
         ))}
       </div>
     )}
 
     {pastEvents.length > 0 && (
       <>
+        <div class="my-8">
+          <hr class="border-border" data-test-id="section-separator" />
+        </div>
         <h1 class="mt-12 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Past Events</h1>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {pastEvents.map(event => (
-            <a href={`/events/${event.id}`} data-test-id="event-card" class="block rounded-lg border border-(--color-border) bg-white p-6 text-inherit no-underline opacity-70 transition-all duration-200 hover:-translate-y-0.5 hover:border-(--color-accent) hover:shadow-md">
-              <h2 class="mb-3 mt-0 text-[1.1rem] text-(--color-accent-dark) sm:text-xl">{event.title}</h2>
-              <p class="mb-2 mt-0 text-[0.95rem] text-(--color-text-secondary)">{formatEventDate(event.dateTime)}</p>
-              <p class="mb-4 mt-0 text-[0.9rem] text-(--color-text-secondary)">{event.location}</p>
-              <div class="flex flex-wrap gap-3">
-                <span class="rounded-full bg-[#e8f5e9] px-3 py-1 text-[0.85rem] font-medium text-(--color-success)">{event.rsvpCounts.going} going</span>
-                <span class="rounded-full bg-[#fff3e0] px-3 py-1 text-[0.85rem] font-medium text-(--color-warning)">{event.rsvpCounts.maybe} maybe</span>
-                <span class="rounded-full bg-[#ffebee] px-3 py-1 text-[0.85rem] font-medium text-(--color-error)">{event.rsvpCounts.notGoing} not going</span>
-              </div>
-            </a>
+            <EventCard
+              client:load
+              id={event.id}
+              title={event.title}
+              dateTime={formatEventDate(event.dateTime)}
+              location={event.location}
+              rsvpCounts={event.rsvpCounts}
+              isPast={true}
+            />
           ))}
         </div>
       </>
