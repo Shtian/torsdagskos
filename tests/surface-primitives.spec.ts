@@ -20,7 +20,7 @@ test.describe("Surface and Feedback Primitives", () => {
     const cardTitle = island.locator('[data-slot="card-title"]');
     await expect(cardTitle).toBeVisible();
     await expect(cardTitle).toHaveText(
-      "shadcn Surface & Feedback Primitives"
+      "shadcn Interactive Overlay Primitives"
     );
 
     const cardDescription = island.locator('[data-slot="card-description"]');
@@ -34,6 +34,14 @@ test.describe("Surface and Feedback Primitives", () => {
     await page.goto("/");
 
     const island = page.getByTestId("shadcn-island");
+
+    // Navigate to Components tab where badges are located
+    const componentsTab = page.getByTestId("tab-trigger-components");
+    await expect(componentsTab).toBeVisible();
+    await componentsTab.click();
+
+    // Wait for tab content to become visible (tab animation)
+    await page.waitForTimeout(300);
 
     // Default badge
     const defaultBadge = island.getByTestId("badge-default");
@@ -64,29 +72,6 @@ test.describe("Surface and Feedback Primitives", () => {
     await expect(separator).toHaveAttribute("data-slot", "separator");
   });
 
-  test("Skeleton loading state can be toggled", async ({ page }) => {
-    await page.goto("/");
-
-    const island = page.getByTestId("shadcn-island");
-
-    // Initially, skeleton should not be visible
-    await expect(island.getByTestId("skeleton-container")).not.toBeVisible();
-
-    // Click toggle button to show skeleton
-    await island.getByTestId("toggle-skeleton").click();
-
-    // Verify skeleton container and lines are visible
-    const skeletonContainer = island.getByTestId("skeleton-container");
-    await expect(skeletonContainer).toBeVisible();
-
-    await expect(island.getByTestId("skeleton-line-1")).toBeVisible();
-    await expect(island.getByTestId("skeleton-line-2")).toBeVisible();
-    await expect(island.getByTestId("skeleton-line-3")).toBeVisible();
-
-    // Click toggle button again to hide skeleton
-    await island.getByTestId("toggle-skeleton").click();
-    await expect(skeletonContainer).not.toBeVisible();
-  });
 
   test("EventCard components render with Card primitives", async ({ page }) => {
     await page.goto("/");

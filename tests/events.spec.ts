@@ -87,16 +87,22 @@ test.describe('Events List Page', () => {
 
     // Verify upcoming event is displayed (h2 heading within event card)
     await expect(page.getByRole('heading', { name: 'Upcoming Event', level: 2 })).toBeVisible();
-    await expect(page.getByText('Future Location')).toBeVisible();
-    await expect(page.getByText('1 going')).toBeVisible();
+
+    // Get the first event card and verify its details
+    const upcomingCard = page.getByTestId('event-card').first();
+    await expect(upcomingCard.getByText('Future Location')).toBeVisible();
+    await expect(upcomingCard.getByText('1 going')).toBeVisible();
 
     // Verify "Past Events" section exists
     await expect(page.getByRole('heading', { name: /past events/i })).toBeVisible();
 
     // Verify past event is displayed (h2 heading within event card)
     await expect(page.getByRole('heading', { name: 'Past Event', level: 2 })).toBeVisible();
-    await expect(page.getByText('Past Location')).toBeVisible();
-    await expect(page.getByText('1 maybe')).toBeVisible();
+
+    // Get the last event card and verify its details
+    const pastCard = page.getByTestId('event-card').last();
+    await expect(pastCard.getByText('Past Location')).toBeVisible();
+    await expect(pastCard.getByText('1 maybe')).toBeVisible();
   });
 
   test('displays empty state when no events exist', async ({ page }) => {
