@@ -12,7 +12,7 @@ interface Props {
 
 const {
 	title = "Torsdagskos",
-	description = "Torsdagskos is a private meetup planner for coordinating recurring events with friends.",
+	description = "Torsdagskos er en privat møteplanlegger for å koordinere gjentakende arrangementer med venner.",
 } = Astro.props;
 
 // Get authenticated user
@@ -26,7 +26,7 @@ if (userId) {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="no">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -40,7 +40,7 @@ if (userId) {
 		<title>{title}</title>
 	</head>
 	<body>
-		<a href="#main-content" class="skip-link">Skip to main content</a>
+		<a href="#main-content" class="skip-link">Hopp til hovedinnhold</a>
 		<div class="flex min-h-screen flex-col">
 			<header class="sticky top-0 z-50 border-b bg-background shadow-sm">
 				<div class="mx-auto flex w-full max-w-[75rem] flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between lg:px-6 lg:py-5">
@@ -56,11 +56,11 @@ if (userId) {
 								</span>
 							</div>
 							<div class="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 md:flex md:w-auto md:flex-wrap md:justify-end md:gap-3">
-								<a href="/events/new" class:list={[buttonVariants({ size: "lg" }), "touch-target no-underline"]}>+ Create Event</a>
-								<a href="/history" class:list={[buttonVariants({ variant: "outline", size: "lg" }), "touch-target no-underline"]}>My History</a>
-								<a href="/settings" class:list={[buttonVariants({ variant: "outline", size: "lg" }), "touch-target no-underline"]}>Settings</a>
+								<a href="/events/new" class:list={[buttonVariants({ size: "lg" }), "touch-target no-underline"]}>+ Opprett arrangement</a>
+								<a href="/history" class:list={[buttonVariants({ variant: "outline", size: "lg" }), "touch-target no-underline"]}>Min historikk</a>
+								<a href="/settings" class:list={[buttonVariants({ variant: "outline", size: "lg" }), "touch-target no-underline"]}>Innstillinger</a>
 								<SignOutButton asChild redirectUrl="/sign-in">
-									<Button client:load size="lg" className="touch-target">Sign Out</Button>
+									<Button client:load size="lg" className="touch-target">Logg ut</Button>
 								</SignOutButton>
 							</div>
 						</div>

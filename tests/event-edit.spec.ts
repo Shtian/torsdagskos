@@ -35,7 +35,7 @@ test.describe('Event Edit', () => {
     await cleanupTestData();
   });
 
-  test('shows Edit Event button on upcoming event detail page', async ({ page }) => {
+  test('shows Rediger arrangement button on upcoming event detail page', async ({ page }) => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -49,8 +49,8 @@ test.describe('Event Edit', () => {
 
     await page.goto(`/events/${eventId}`);
 
-    await expect(page.getByRole('link', { name: 'Edit Event' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Edit Event' })).toHaveAttribute('href', `/events/${eventId}/edit`);
+    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toHaveAttribute('href', `/events/${eventId}/edit`);
   });
 
   test('prefills edit form with existing event data', async ({ page }) => {
@@ -74,7 +74,7 @@ test.describe('Event Edit', () => {
     await page.goto(`/events/${eventId}/edit`);
 
     await expect(page.getByTestId('edit-event-shell')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /edit event/i, level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /rediger arrangement/i, level: 1 })).toBeVisible();
     await expect(page.locator('#event-form[data-slot="card"]')).toBeVisible();
     await expect(page.locator('[data-slot="card-header"]')).toBeVisible();
     await expect(page.locator('[data-slot="card-content"]')).toBeVisible();
@@ -116,16 +116,16 @@ test.describe('Event Edit', () => {
     await page.locator('#date').fill('2026-12-24');
     await page.locator('#time').fill('20:15');
 
-    await page.getByRole('button', { name: 'Save Changes' }).click();
+    await page.getByRole('button', { name: 'Lagre endringer' }).click();
 
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/event updated successfully/i);
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/arrangement oppdatert/i);
     await page.waitForURL(`/events/${eventId}`, { timeout: 10000 });
 
     await expect(page.getByRole('heading', { name: updatedTitle, level: 1 })).toBeVisible();
     await expect(page.getByText(updatedDescription)).toBeVisible();
     await expect(page.getByText(updatedLocation)).toBeVisible();
-    await expect(page.getByRole('link', { name: /open in maps/i })).toHaveAttribute('href', updatedMapLink);
+    await expect(page.getByRole('link', { name: /åpne i kart/i })).toHaveAttribute('href', updatedMapLink);
   });
 
   test('shows loading and disabled submit state while saving changes', async ({ page }) => {
@@ -133,7 +133,7 @@ test.describe('Event Edit', () => {
     futureDate.setDate(futureDate.getDate() + 4);
 
     const { eventId } = await createEvent(page, {
-      title: `Loading Edit Event ${Date.now()}`,
+      title: `Loading Rediger arrangement ${Date.now()}`,
       description: 'Loading state description',
       dateTime: futureDate.toISOString(),
       location: 'Loading location',
@@ -151,15 +151,15 @@ test.describe('Event Edit', () => {
       });
     });
 
-    await page.locator('#title').fill(`Loading Edit Event Updated ${Date.now()}`);
-    await page.getByRole('button', { name: 'Save Changes' }).click();
+    await page.locator('#title').fill(`Loading Rediger arrangement Updated ${Date.now()}`);
+    await page.getByRole('button', { name: 'Lagre endringer' }).click();
 
-    await expect(page.getByRole('button', { name: /saving\.\.\./i, exact: true })).toBeDisabled();
-    await expect(page.getByRole('button', { name: /saving\.\.\./i, exact: true })).toHaveAttribute('aria-busy', 'true');
+    await expect(page.getByRole('button', { name: /lagrer\.\.\./i, exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: /lagrer\.\.\./i, exact: true })).toHaveAttribute('aria-busy', 'true');
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/saving event changes/i);
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/lagrer endringer i arrangement/i);
     await expect(page.getByTestId('form-feedback-panel')).toContainText(/internal server error/i, { timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Save Changes', exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Lagre endringer', exact: true })).toBeEnabled();
   });
 
   test('redirects from edit page for past events and hides edit button', async ({ page }) => {
@@ -175,7 +175,7 @@ test.describe('Event Edit', () => {
     });
 
     await page.goto(`/events/${pastEvent.id}`);
-    await expect(page.getByRole('link', { name: 'Edit Event' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toHaveCount(0);
 
     await page.goto(`/events/${pastEvent.id}/edit`);
     await expect(page).toHaveURL(`/events/${pastEvent.id}`);

@@ -4,14 +4,14 @@ test.describe('Sign-up wrapper UI @unauth', () => {
   test('renders migrated shell with Clerk sign-up intact', async ({ page }) => {
     await page.goto('/sign-up');
 
-    await expect(page).toHaveTitle(/Sign Up - Torsdagskos/);
+    await expect(page).toHaveTitle(/Registrer deg - Torsdagskos/);
     await expect(page.getByTestId('sign-up-shell')).toBeVisible();
-    await expect(page.getByTestId('sign-up-kicker')).toHaveText('Join Torsdagskos');
-    await expect(page.getByRole('heading', { name: 'Create your account', level: 1 })).toBeVisible();
-    await expect(page.getByTestId('sign-up-description')).toContainText('Use your invite');
+    await expect(page.getByTestId('sign-up-kicker')).toHaveText('Bli med i Torsdagskos');
+    await expect(page.getByRole('heading', { name: 'Opprett kontoen din', level: 1 })).toBeVisible();
+    await expect(page.getByTestId('sign-up-description')).toContainText('Bruk invitasjonen din');
 
-    await expect(page.getByRole('heading', { name: /create.*account|sign up/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Already have an account? Go to Sign In' })).toHaveAttribute(
+    await expect(page.getByRole('heading', { name: /opprett kontoen din|registrer deg/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Har du allerede en konto? Gå til innlogging' })).toHaveAttribute(
       'href',
       '/sign-in'
     );

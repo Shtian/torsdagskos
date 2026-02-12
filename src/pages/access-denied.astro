@@ -6,8 +6,8 @@ const requestedPath = Astro.url.searchParams.get('from');
 ---
 
 <Layout
-  title="Invite-Only Access - Torsdagskos"
-  description="This private app is invite-only. Sign in with an invited account to continue."
+  title="Kun invitert tilgang - Torsdagskos"
+  description="Denne private appen er kun for inviterte. Logg inn med en invitert konto for å fortsette."
 >
   <section class="mx-auto mt-10 w-full max-w-2xl px-4 sm:mt-16 sm:px-0" data-test-id="access-denied-shell">
     <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 text-center shadow-sm">
@@ -16,19 +16,19 @@ const requestedPath = Astro.url.searchParams.get('from');
           class="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
           data-test-id="access-denied-kicker"
         >
-          Access Restricted
+          Tilgang begrenset
         </p>
         <h2 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl" data-test-id="access-denied-title">
-          This is an invite-only application
+          Dette er en app kun for inviterte
         </h2>
       </div>
 
       <div data-slot="card-content" class="space-y-6 px-6">
         <p class="mx-auto max-w-lg text-base text-muted-foreground" data-test-id="access-denied-message">
-          You need an account invitation to continue.
+          Du trenger en kontoinvitasjon for å fortsette.
           {requestedPath && (
             <>
-              {' '}You tried to open <code class="rounded bg-muted px-1 py-0.5 text-sm">{requestedPath}</code>.
+              {' '}Du prøvde å åpne <code class="rounded bg-muted px-1 py-0.5 text-sm">{requestedPath}</code>.
             </>
           )}
         </p>
@@ -38,7 +38,7 @@ const requestedPath = Astro.url.searchParams.get('from');
             href="/sign-in"
             class:list={[buttonVariants({ size: 'lg' }), 'min-w-44 no-underline']}
           >
-            Go to Sign In
+            Gå til innlogging
           </a>
         </div>
       </div>

@@ -60,26 +60,26 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 ---
 
 <Layout
-  title={`Edit ${event.title} - Torsdagskos`}
-  description={`Update details for ${event.title}, including date, location, and optional map link.`}
+  title={`Rediger ${event.title} - Torsdagskos`}
+  description={`Oppdater detaljer for ${event.title}, inkludert dato, sted og valgfri kartlenke.`}
 >
   <section class="mx-auto mt-6 w-full max-w-4xl px-4 pb-8 sm:mt-10 sm:px-0" data-test-id="edit-event-shell">
     <div class="mb-6">
-      <a href={`/events/${event.id}`} class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Back to Event</a>
+      <a href={`/events/${event.id}`} class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Tilbake til arrangement</a>
     </div>
 
     <form id="event-form" data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
       <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
-        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Edit Event</h1>
+        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Rediger arrangement</h1>
         <p class="m-0 text-sm text-muted-foreground">
-          Update event details below. Fields marked with * are required.
+          Oppdater arrangementsdetaljene nedenfor. Felt merket med * er påkrevd.
         </p>
       </div>
 
       <div data-slot="card-content" class="space-y-6 px-6 py-6 sm:px-8">
         <div class="space-y-2">
           <Label htmlFor="title">
-            Event Title <span class="text-destructive">*</span>
+            Arrangementstittel <span class="text-destructive">*</span>
           </Label>
           <Input
             type="text"
@@ -93,7 +93,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 
         <div class="space-y-2">
           <Label htmlFor="description">
-            Description
+            Beskrivelse
           </Label>
           <Textarea
             id="description"
@@ -107,7 +107,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="space-y-2">
             <Label htmlFor="date">
-              Date <span class="text-destructive">*</span>
+              Dato <span class="text-destructive">*</span>
             </Label>
             <Input
               type="date"
@@ -121,7 +121,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 
           <div class="space-y-2">
             <Label htmlFor="time">
-              Time <span class="text-destructive">*</span>
+              Tid <span class="text-destructive">*</span>
             </Label>
             <Input
               type="time"
@@ -136,7 +136,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 
         <div class="space-y-2">
           <Label htmlFor="location">
-            Location <span class="text-destructive">*</span>
+            Sted <span class="text-destructive">*</span>
           </Label>
           <Input
             type="text"
@@ -150,7 +150,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 
         <div class="space-y-2">
           <Label htmlFor="mapLink">
-            Map Link <span class="text-sm font-normal text-muted-foreground">(optional)</span>
+            Kartlenke <span class="text-sm font-normal text-muted-foreground">(valgfritt)</span>
           </Label>
           <Input
             type="url"
@@ -179,13 +179,13 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
           data-test-id="submit-edit-event-button"
           className="touch-target h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
         >
-          Save Changes
+          Lagre endringer
         </Button>
         <a
           href={`/events/${event.id}`}
           class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'touch-target px-6 py-3 text-base no-underline sm:w-auto']}
         >
-          Cancel
+          Avbryt
         </a>
       </div>
     </form>
@@ -198,8 +198,8 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
     const submitButton = document.getElementById('submit-button');
     const feedbackPanel = document.getElementById('form-feedback-panel');
     const feedbackText = document.getElementById('form-feedback');
-    const defaultSubmitLabel = 'Save Changes';
-    const loadingSubmitLabel = 'Saving...';
+    const defaultSubmitLabel = 'Lagre endringer';
+    const loadingSubmitLabel = 'Lagrer...';
 
     if (!form || !submitButton || !feedbackPanel || !feedbackText) {
       return;
@@ -245,7 +245,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
       const mapLink = formData.get('mapLink');
 
       if (!title || !date || !time || !location) {
-        setFeedback('Please fill in all required fields.', 'error');
+        setFeedback('Fyll ut alle påkrevde felt.', 'error');
         return;
       }
 
@@ -255,7 +255,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
       submitButton.disabled = true;
       submitButton.textContent = loadingSubmitLabel;
       submitButton.setAttribute('aria-busy', 'true');
-      setFeedback('Saving event changes...', 'loading');
+      setFeedback('Lagrer endringer i arrangement...', 'loading');
 
       try {
         const response = await fetch('/api/events/update', {
@@ -275,18 +275,18 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 
         if (!response.ok) {
           const errorPayload = await response.json().catch(() => null);
-          throw new Error(errorPayload?.error || 'Failed to update event');
+          throw new Error(errorPayload?.error || 'Kunne ikke oppdatere arrangement');
         }
 
         const result = await response.json();
 
-        setFeedback('Event updated successfully. Redirecting to details...', 'success');
+        setFeedback('Arrangement oppdatert. Videresender til detaljer...', 'success');
 
         setTimeout(() => {
           window.location.href = `/events/${result.eventId}`;
         }, 1000);
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : 'Failed to update event. Please try again.', 'error');
+        setFeedback(error instanceof Error ? error.message : 'Kunne ikke oppdatere arrangement. Prøv igjen.', 'error');
         submitButton.disabled = false;
         submitButton.textContent = defaultSubmitLabel;
         submitButton.removeAttribute('aria-busy');

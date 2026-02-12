@@ -27,7 +27,7 @@ test.describe("Surface and Feedback Primitives", () => {
     const cardTitle = island.locator('[data-slot="card-title"]');
     await expect(cardTitle).toBeVisible();
     await expect(cardTitle).toHaveText(
-      "shadcn Interactive Overlay Primitives"
+      "shadcn interaktive overlay-primitiver"
     );
 
     const cardDescription = island.locator('[data-slot="card-description"]');
@@ -54,19 +54,19 @@ test.describe("Surface and Feedback Primitives", () => {
     const defaultBadge = island.getByTestId("badge-default");
     await expect(defaultBadge).toBeVisible();
     await expect(defaultBadge).toHaveAttribute("data-variant", "default");
-    await expect(defaultBadge).toHaveText("Default Badge");
+    await expect(defaultBadge).toHaveText("Standard-merke");
 
     // Secondary badge
     const secondaryBadge = island.getByTestId("badge-secondary");
     await expect(secondaryBadge).toBeVisible();
     await expect(secondaryBadge).toHaveAttribute("data-variant", "secondary");
-    await expect(secondaryBadge).toHaveText("Secondary");
+    await expect(secondaryBadge).toHaveText("Sekundar");
 
     // Outline badge
     const outlineBadge = island.getByTestId("badge-outline");
     await expect(outlineBadge).toBeVisible();
     await expect(outlineBadge).toHaveAttribute("data-variant", "outline");
-    await expect(outlineBadge).toHaveText("Outline");
+    await expect(outlineBadge).toHaveText("Omriss");
   });
 
   test("Separator component renders correctly", async ({ page }) => {
@@ -108,15 +108,15 @@ test.describe("Surface and Feedback Primitives", () => {
       // Verify RSVP badges
       const goingBadge = firstCard.getByTestId("rsvp-going");
       await expect(goingBadge).toBeVisible();
-      await expect(goingBadge).toContainText("going");
+      await expect(goingBadge).toContainText("kommer");
 
       const maybeBadge = firstCard.getByTestId("rsvp-maybe");
       await expect(maybeBadge).toBeVisible();
-      await expect(maybeBadge).toContainText("maybe");
+      await expect(maybeBadge).toContainText("kanskje");
 
       const notGoingBadge = firstCard.getByTestId("rsvp-not-going");
       await expect(notGoingBadge).toBeVisible();
-      await expect(notGoingBadge).toContainText("not going");
+      await expect(notGoingBadge).toContainText("kommer ikke");
     }
   });
 
@@ -132,7 +132,7 @@ test.describe("Surface and Feedback Primitives", () => {
 
     if (!hasEvents) {
       await expect(emptyState).toBeVisible();
-      await expect(emptyState).toContainText("No events yet");
+      await expect(emptyState).toContainText("Ingen arrangementer ennå");
     }
   });
 });

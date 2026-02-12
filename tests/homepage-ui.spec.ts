@@ -30,7 +30,7 @@ test.describe("Homepage shadcn migration", () => {
     const upcomingSection = page.getByTestId("homepage-upcoming");
     await expect(upcomingSection.locator('> [data-slot="card"]')).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Upcoming Events", level: 1 })
+      page.getByRole("heading", { name: "Kommende arrangementer", level: 1 })
     ).toBeVisible();
 
     const duplicateAction = page.getByTestId("duplicate-last-event");
@@ -58,7 +58,7 @@ test.describe("Homepage shadcn migration", () => {
     await cleanupTestData();
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { name: "Upcoming Events", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Kommende arrangementer", level: 1 })).toBeVisible();
 
     const duplicateAction = page.getByTestId("duplicate-last-event");
     await expect(duplicateAction).toBeVisible();
@@ -67,6 +67,6 @@ test.describe("Homepage shadcn migration", () => {
     const emptyState = page.getByTestId("empty-state");
     await expect(emptyState).toBeVisible();
     await expect(emptyState).toHaveAttribute("data-slot", "card");
-    await expect(emptyState).toContainText("No events yet. Check back soon!");
+    await expect(emptyState).toContainText("Ingen arrangementer ennå. Kom tilbake snart!");
   });
 });

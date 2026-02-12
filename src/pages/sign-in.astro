@@ -11,8 +11,8 @@ if (userId) {
 ---
 
 <Layout
-  title="Sign In - Torsdagskos"
-  description="Sign in to access your private Torsdagskos meetup dashboard."
+  title="Logg inn - Torsdagskos"
+  description="Logg inn for å få tilgang til ditt private Torsdagskos-område."
 >
   <section class="mx-auto mt-10 w-full max-w-3xl px-4 sm:mt-16 sm:px-0" data-test-id="sign-in-shell">
     <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
@@ -21,13 +21,13 @@ if (userId) {
           class="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
           data-test-id="sign-in-kicker"
         >
-          Welcome Back
+          Velkommen tilbake
         </p>
         <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl" data-test-id="sign-in-title">
-          Sign in to Torsdagskos
+          Logg inn på Torsdagskos
         </h1>
         <p class="mx-auto max-w-xl text-base text-muted-foreground" data-test-id="sign-in-description">
-          Use your invited account to access events, RSVPs, and meetup planning.
+          Bruk den inviterte kontoen din for å få tilgang til arrangementer, svar og planlegging.
         </p>
       </div>
 
@@ -37,7 +37,7 @@ if (userId) {
         </div>
         <div class="flex justify-center">
           <a href="/sign-up" class:list={[buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline']}>
-            Need an account? Go to Sign Up
+            Trenger du en konto? Gå til registrering
           </a>
         </div>
       </div>

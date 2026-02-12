@@ -16,19 +16,19 @@ test.describe('App Shell Layout', () => {
     await expect(logo.locator('..')).toHaveAttribute('href', '/');
 
     // Navigation buttons should use shadcn Button components
-    const createEventBtn = page.getByRole('link', { name: '+ Create Event' });
+    const createEventBtn = page.getByRole('link', { name: '+ Opprett arrangement' });
     await expect(createEventBtn).toBeVisible();
     await expect(createEventBtn).toHaveAttribute('href', '/events/new');
 
-    const historyBtn = page.getByRole('link', { name: 'My History' });
+    const historyBtn = page.getByRole('link', { name: 'Min historikk' });
     await expect(historyBtn).toBeVisible();
     await expect(historyBtn).toHaveAttribute('href', '/history');
 
-    const settingsBtn = page.getByRole('link', { name: 'Settings' });
+    const settingsBtn = page.getByRole('link', { name: 'Innstillinger' });
     await expect(settingsBtn).toBeVisible();
     await expect(settingsBtn).toHaveAttribute('href', '/settings');
 
-    const signOutBtn = page.getByRole('button', { name: 'Sign Out' });
+    const signOutBtn = page.getByRole('button', { name: 'Logg ut' });
     await expect(signOutBtn).toBeVisible();
   });
 
@@ -41,10 +41,10 @@ test.describe('App Shell Layout', () => {
     await expect(header).toBeVisible();
 
     // All navigation buttons should still be accessible
-    await expect(page.getByRole('link', { name: '+ Create Event' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'My History' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Settings' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign Out' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '+ Opprett arrangement' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Min historikk' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Innstillinger' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Logg ut' })).toBeVisible();
   });
 
   test('header is responsive at desktop breakpoint', async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe('App Shell Layout', () => {
   test('skip link is present for accessibility', async ({ page }) => {
     await page.goto('/');
 
-    const skipLink = page.getByRole('link', { name: 'Skip to main content' });
+    const skipLink = page.getByRole('link', { name: 'Hopp til hovedinnhold' });
     await expect(skipLink).toBeAttached();
     await expect(skipLink).toHaveAttribute('href', '#main-content');
   });

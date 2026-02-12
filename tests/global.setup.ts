@@ -51,7 +51,7 @@ setup("authenticate", async ({ page }) => {
     });
   }
   await page.goto("/");
-  await page.waitForSelector("h1:has-text('Upcoming Events')");
+  await page.waitForSelector("h1:has-text('Kommende arrangementer')");
 
   // Verify auth state is properly saved and session is valid
   await page.waitForLoadState('networkidle');

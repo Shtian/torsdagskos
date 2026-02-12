@@ -63,18 +63,18 @@ async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test'
 test.describe('RSVP history page', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('shows My History link in header and navigates to history page', async ({ page }) => {
+  test('shows Min historikk link in header and navigates to history page', async ({ page }) => {
     await page.goto('/');
 
-    const historyLink = page.getByRole('link', { name: 'My History' });
+    const historyLink = page.getByRole('link', { name: 'Min historikk' });
     await expect(historyLink).toBeVisible();
 
     await historyLink.click();
     await expect(page).toHaveURL('/history');
-    await expect(page.getByRole('heading', { name: 'My RSVP History', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
   });
 
-  test('shows only current user RSVPs sorted by event date descending', async ({ page }) => {
+  test('shows only current user Svar sorted by event date descending', async ({ page }) => {
     await cleanupTestData();
     const currentUserId = await ensureAuthenticatedUserInDatabase(page);
 
@@ -131,12 +131,12 @@ test.describe('RSVP history page', () => {
     const firstItem = historyItems.nth(0);
     await expect(firstItem.getByRole('heading', { name: 'Future RSVP Event', level: 2 })).toBeVisible();
     await expect(firstItem.getByText('Future Venue')).toBeVisible();
-    await expect(firstItem.getByTestId('history-status')).toHaveText('Going');
+    await expect(firstItem.getByTestId('history-status')).toHaveText('Kommer');
 
     const secondItem = historyItems.nth(1);
     await expect(secondItem.getByRole('heading', { name: 'Past RSVP Event', level: 2 })).toBeVisible();
     await expect(secondItem.getByText('Past Venue')).toBeVisible();
-    await expect(secondItem.getByTestId('history-status')).toHaveText('Not Going');
+    await expect(secondItem.getByTestId('history-status')).toHaveText('Kommer ikke');
 
     await expect(page.getByRole('heading', { name: 'Other User Event', level: 2 })).toHaveCount(0);
 
@@ -152,8 +152,8 @@ test.describe('RSVP history page', () => {
 
     await page.goto('/history');
 
-    await expect(page.getByRole('heading', { name: 'My RSVP History', level: 1 })).toBeVisible();
-    await expect(page.getByText("You haven't RSVPd to any events yet.")).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
+    await expect(page.getByText("Du har ikke svart på noen arrangementer ennå.")).toBeVisible();
     await expect(page.getByTestId('history-item')).toHaveCount(0);
   });
 });

@@ -96,10 +96,10 @@ test.describe("Overlay Primitives (Dialog, DropdownMenu, Tabs)", () => {
 
       // Verify dialog content
       await expect(page.getByTestId("dialog-title")).toHaveText(
-        "Example Dialog"
+        "Eksempeldialog"
       );
       await expect(page.getByTestId("dialog-description")).toContainText(
-        "This is a modal dialog"
+        "Dette er en modal dialog"
       );
 
       // Verify dialog buttons are visible

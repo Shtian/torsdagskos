@@ -26,7 +26,7 @@ test.describe('Authentication - Unauthenticated access @unauth', () => {
 
     // Should redirect to custom access denied page
     await expect(page).toHaveURL(/\/access-denied/);
-    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
   });
 
   test('sign-in page is accessible and displays Clerk sign-in UI', async ({ page }) => {
@@ -56,9 +56,9 @@ test.describe('Authentication - Unauthenticated access @unauth', () => {
 
     // Should redirect to custom access denied page
     await expect(page).toHaveURL(/\/access-denied\?from=%2Fevents%2F1/);
-    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
 
-    const signInLink = page.getByRole('link', { name: 'Go to Sign In' });
+    const signInLink = page.getByRole('link', { name: 'Gå til innlogging' });
     await expect(signInLink).toHaveAttribute('href', '/sign-in');
 
     await signInLink.click();
@@ -112,8 +112,8 @@ test.describe('Authentication - Authenticated access', () => {
     // Navigate to homepage
     await page.goto('/');
 
-    // Our layout renders a Sign Out button when authenticated
-    const signOutButton = page.getByRole('button', { name: /sign out/i });
+    // Our layout renders a Logg ut button when authenticated
+    const signOutButton = page.getByRole('button', { name: /logg ut/i });
     await expect(signOutButton).toBeVisible({ timeout: 10000 });
   });
 });

@@ -4,7 +4,7 @@ test.describe('typography fonts @unauth', () => {
   test('uses Manrope for body text and Lora for headings', async ({ page }) => {
     await page.goto('/access-denied');
 
-    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
 
     const typography = await page.evaluate(() => {
       const body = getComputedStyle(document.body);

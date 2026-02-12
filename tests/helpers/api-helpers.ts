@@ -134,7 +134,7 @@ export async function createEvent(
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create event');
+      throw new Error('Failed to opprett arrangement');
     }
 
     return response.json();

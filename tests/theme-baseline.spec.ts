@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 test.describe('theme baseline @unauth', () => {
   test('applies global light-theme tokens and baseline styles', async ({ page }) => {
     await page.goto('/access-denied');
-    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
 
     const styles = await page.evaluate(() => {
       const root = getComputedStyle(document.documentElement);

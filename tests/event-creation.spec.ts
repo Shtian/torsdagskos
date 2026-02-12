@@ -6,7 +6,7 @@ test.describe('Event Creation', () => {
 
     // Check that form elements are visible
     await expect(page.getByTestId('new-event-shell')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /create new event/i, level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /opprett nytt arrangement/i, level: 1 })).toBeVisible();
     await expect(page.locator('#event-form[data-slot="card"]')).toBeVisible();
     await expect(page.locator('[data-slot="card-header"]')).toBeVisible();
     await expect(page.locator('[data-slot="card-content"]')).toBeVisible();
@@ -20,7 +20,7 @@ test.describe('Event Creation', () => {
     await expect(page.locator('#time')).toBeVisible();
     await expect(page.locator('#location')).toBeVisible();
     await expect(page.locator('#mapLink')).toBeVisible();
-    await expect(page.getByRole('button', { name: /create event/i, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /opprett arrangement/i, exact: true })).toBeVisible();
   });
 
   test('should show loading and disabled submit state while creating event', async ({ page }) => {
@@ -40,19 +40,19 @@ test.describe('Event Creation', () => {
     await page.locator('#time').fill('19:00');
     await page.locator('#location').fill('Loading Test Location');
 
-    await page.getByRole('button', { name: /create event/i, exact: true }).click();
+    await page.getByRole('button', { name: /opprett arrangement/i, exact: true }).click();
 
-    await expect(page.getByRole('button', { name: /creating\.\.\./i, exact: true })).toBeDisabled();
-    await expect(page.getByRole('button', { name: /creating\.\.\./i, exact: true })).toHaveAttribute('aria-busy', 'true');
+    await expect(page.getByRole('button', { name: /oppretter\.\.\./i, exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: /oppretter\.\.\./i, exact: true })).toHaveAttribute('aria-busy', 'true');
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/creating event/i);
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/oppretter arrangement/i);
   });
 
   test('should show validation for required fields', async ({ page }) => {
     await page.goto('/events/new');
 
     // Try to submit without filling required fields
-    await page.getByRole('button', { name: /create event/i, exact: true }).click();
+    await page.getByRole('button', { name: /opprett arrangement/i, exact: true }).click();
 
     // Browser should show validation errors (HTML5 validation)
     // We can't directly check the browser's validation UI, but we can check that form didn't submit
@@ -77,11 +77,11 @@ test.describe('Event Creation', () => {
     await page.locator('#mapLink').fill(eventMapLink);
 
     // Submit the form
-    await page.getByRole('button', { name: /create event/i, exact: true }).click();
+    await page.getByRole('button', { name: /opprett arrangement/i, exact: true }).click();
 
     // Wait for success feedback
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/event created successfully/i);
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/arrangement opprettet/i);
 
     // Wait for redirect to event detail page (URL pattern)
     await page.waitForURL(/\/events\/\d+$/, { timeout: 10000 });
@@ -90,7 +90,7 @@ test.describe('Event Creation', () => {
     await expect(page.getByRole('heading', { name: eventTitle, level: 1 })).toBeVisible();
     await expect(page.getByText(eventDescription)).toBeVisible();
     await expect(page.getByText(eventLocation)).toBeVisible();
-    await expect(page.getByRole('link', { name: /open in maps/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /åpne i kart/i })).toBeVisible();
   });
 
   test('should create event without optional fields', async ({ page }) => {
@@ -106,7 +106,7 @@ test.describe('Event Creation', () => {
     await page.locator('#location').fill(eventLocation);
 
     // Submit the form
-    await page.getByRole('button', { name: /create event/i, exact: true }).click();
+    await page.getByRole('button', { name: /opprett arrangement/i, exact: true }).click();
 
     // Wait for redirect to event detail page (URL pattern)
     await page.waitForURL(/\/events\/\d+$/, { timeout: 10000 });
@@ -116,25 +116,25 @@ test.describe('Event Creation', () => {
     await expect(page.getByText(eventLocation)).toBeVisible();
 
     // Map link should not be present
-    await expect(page.getByRole('link', { name: /open in maps/i })).not.toBeVisible();
+    await expect(page.getByRole('link', { name: /åpne i kart/i })).not.toBeVisible();
   });
 
-  test('should have Create Event button in header on homepage', async ({ page }) => {
+  test('should have Opprett arrangement button in header on homepage', async ({ page }) => {
     await page.goto('/');
 
-    // Check that Create Event button is visible in header
-    await expect(page.getByRole('link', { name: /create event/i })).toBeVisible();
+    // Check that Opprett arrangement button is visible in header
+    await expect(page.getByRole('link', { name: /opprett arrangement/i })).toBeVisible();
   });
 
   test('should navigate to event creation page from header button', async ({ page }) => {
     await page.goto('/');
 
-    // Click Create Event button
-    await page.getByRole('link', { name: /create event/i }).click();
+    // Click Opprett arrangement button
+    await page.getByRole('link', { name: /opprett arrangement/i }).click();
 
     // Should navigate to event creation page
     await expect(page).toHaveURL('/events/new');
-    await expect(page.getByRole('heading', { name: /create new event/i, level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /opprett nytt arrangement/i, level: 1 })).toBeVisible();
   });
 
   test('should allow canceling event creation', async ({ page }) => {
@@ -144,7 +144,7 @@ test.describe('Event Creation', () => {
     await page.locator('#title').fill('Test Event');
 
     // Click Cancel button
-    await page.getByRole('link', { name: /cancel/i }).click();
+    await page.getByRole('link', { name: /avbryt/i }).click();
 
     // Should navigate back to homepage
     await expect(page).toHaveURL('/');
@@ -169,12 +169,12 @@ test.describe('Event Creation', () => {
     await page.locator('#location').fill('Test Location');
 
     // Submit the form
-    await page.getByRole('button', { name: /create event/i, exact: true }).click();
+    await page.getByRole('button', { name: /opprett arrangement/i, exact: true }).click();
 
     // Should show inline error feedback and restore submit state
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
     await expect(page.getByTestId('form-feedback-panel')).toContainText(/internal server error/i);
-    await expect(page.getByRole('button', { name: /create event/i, exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: /opprett arrangement/i, exact: true })).toBeEnabled();
   });
 
   test('should display newly created event on homepage', async ({ page }) => {
@@ -182,14 +182,14 @@ test.describe('Event Creation', () => {
 
     await page.goto('/events/new');
 
-    // Create event
+    // opprett arrangement
     await page.locator('#title').fill(eventTitle);
     await page.locator('#date').fill('2026-12-31');
     await page.locator('#time').fill('19:00');
     await page.locator('#location').fill('Test Location');
 
     // Submit the form
-    await page.getByRole('button', { name: /create event/i, exact: true }).click();
+    await page.getByRole('button', { name: /opprett arrangement/i, exact: true }).click();
 
     // Wait for redirect to event detail page
     await page.waitForURL(/\/events\/\d+$/, { timeout: 10000 });

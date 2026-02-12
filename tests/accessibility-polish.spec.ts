@@ -4,17 +4,17 @@ import { createTestEvent } from './helpers/api-helpers';
 test.describe('Accessibility polish', () => {
   test('should expose page titles and meta descriptions', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle('Events - Torsdagskos');
+    await expect(page).toHaveTitle('Arrangementer - Torsdagskos');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
-      /upcoming and past torsdagskos events/i
+      /kommende og tidligere torsdagskos-arrangementer/i
     );
 
     await page.goto('/settings');
-    await expect(page).toHaveTitle('Settings - Torsdagskos');
+    await expect(page).toHaveTitle('Innstillinger - Torsdagskos');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
-      /manage browser notification permissions/i
+      /administrer varslingstillatelser i nettleseren/i
     );
   });
 
@@ -22,7 +22,7 @@ test.describe('Accessibility polish', () => {
     await page.goto('/');
 
     await page.keyboard.press('Tab');
-    const skipLink = page.getByRole('link', { name: /skip to main content/i });
+    const skipLink = page.getByRole('link', { name: /hopp til hovedinnhold/i });
     await expect(skipLink).toBeVisible();
     await expect(skipLink).toBeFocused();
 
@@ -62,17 +62,17 @@ test.describe('Accessibility polish', () => {
     await page.locator('#time').fill('19:00');
     await page.locator('#location').fill('Test Venue');
 
-    const submitButton = page.getByRole('button', { name: 'Create Event', exact: true });
+    const submitButton = page.getByRole('button', { name: 'Opprett arrangement', exact: true });
     await submitButton.click();
 
-    await expect(page.getByRole('button', { name: 'Creating...' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Creating...' })).toHaveAttribute('aria-busy', 'true');
-    await expect(page.getByText('Creating event...')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Oppretter...' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Oppretter...' })).toHaveAttribute('aria-busy', 'true');
+    await expect(page.getByText('Oppretter arrangement...')).toBeVisible();
 
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
     await expect(page.getByTestId('form-feedback-panel')).toContainText(/temporarily unavailable/i);
     await expect(page.getByText(/temporarily unavailable/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Create Event', exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Opprett arrangement', exact: true })).toBeEnabled();
   });
 
   test('should show loading and inline error feedback when RSVP update fails', async ({ page }) => {
@@ -97,13 +97,13 @@ test.describe('Accessibility polish', () => {
       });
     });
 
-    await page.getByRole('button', { name: 'Going', exact: true }).click();
+    await page.getByRole('button', { name: 'Kommer', exact: true }).click();
 
-    await expect(page.getByRole('button', { name: 'Saving...' })).toBeDisabled();
-    await expect(page.getByText('Saving RSVP...')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Lagrer...' })).toBeDisabled();
+    await expect(page.getByText('Lagrer svar...')).toBeVisible();
     await expect(page.getByTestId('rsvp-feedback-panel')).toBeVisible();
-    await expect(page.locator('#rsvp-feedback')).toHaveText(/failed to update rsvp/i);
-    await expect(page.getByRole('button', { name: 'Going', exact: true })).toBeEnabled();
+    await expect(page.locator('#rsvp-feedback')).toHaveText(/kunne ikke oppdatere svar/i);
+    await expect(page.getByRole('button', { name: 'Kommer', exact: true })).toBeEnabled();
   });
 
   test('should show loading and friendly feedback when settings update fails', async ({ page }) => {
@@ -135,19 +135,19 @@ test.describe('Accessibility polish', () => {
       await route.fulfill({
         status: 500,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'Unable to save notification preference' }),
+        body: JSON.stringify({ error: 'kunne ikke lagre varslingspreferanse' }),
       });
     });
 
-    const actionButton = page.getByRole('button', { name: /request notification permission/i });
+    const actionButton = page.getByRole('button', { name: /be om varslingstillatelse/i });
     await actionButton.click();
 
-    await expect(page.getByRole('button', { name: 'Updating...' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Updating...' })).toHaveAttribute('aria-busy', 'true');
-    await expect(page.locator('#feedback')).toHaveText(/updating notification settings/i);
+    await expect(page.getByRole('button', { name: 'Oppdaterer...' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Oppdaterer...' })).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('#feedback')).toHaveText(/oppdaterer varslingsinnstillinger/i);
 
-    await expect(page.locator('#feedback')).toHaveText(/unable to save notification preference/i);
-    await expect(page.getByRole('button', { name: /request notification permission/i })).toBeEnabled();
+    await expect(page.locator('#feedback')).toHaveText(/kunne ikke lagre varslingspreferanse/i);
+    await expect(page.getByRole('button', { name: /be om varslingstillatelse/i })).toBeEnabled();
   });
 
   test('should keep key text color pairs at WCAG AA contrast levels', async ({ page }) => {

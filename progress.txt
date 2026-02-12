@@ -11,6 +11,7 @@
 - In auth-sensitive Playwright helpers that call `/api/test/current-user` inside `page.evaluate()`, guard for occasional 401/non-JSON responses and retry before hard-failing.
 - Event detail RSVP UX now uses inline feedback (`data-test-id="rsvp-feedback-panel"` + `#rsvp-feedback`) and `aria-busy` button states; avoid toast-based assertions in RSVP tests.
 - For UI migrations, keep behavior coverage in existing specs and add focused `*-ui.spec.ts` shells/mobile tests so visual refactors do not weaken functional assertions.
+- For Norwegian localization stories, update accessible-name assertions and prefer test IDs for badge/count checks when translated labels overlap (for example `kommer` vs `kommer ikke`).
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -193,4 +194,15 @@
 - **Learnings for future iterations**
   - Keep settings-page script selector IDs (`#permission-status`, `#saved-preference`, `#request-permission`, `#feedback`) stable during UI refactors; both runtime behavior and Playwright coverage depend on them.
   - For settings UI migration checks, pair existing behavior-focused specs (`tests/settings.spec.ts`) with a focused shell/mobile spec (`tests/settings-ui.spec.ts`) to avoid weakening API-behavior assertions.
+---
+## 2026-02-12 18:34:15 CET - US-017
+- Translated user-facing copy to Norwegian across the targeted non-API pages (`index`, `access-denied`, `sign-in`, `sign-up`, `events/new`, `events/[id]/edit`, `events/[id]`, `history`, `settings`) including inline validation/feedback states while preserving routes, payload contracts, and runtime behavior.
+- Localized shared shell/component UI text rendered on those pages (`src/layouts/Layout.astro`, `src/components/EventCard.tsx`, `src/components/ShadcnIslandDemo.tsx`) so header actions, badges, and demo interactions match Norwegian interface language.
+- Updated Playwright coverage to Norwegian accessible names and messages, fixed localization-related selector collisions, and kept behavior assertions intact across auth, event, RSVP, history, settings, responsive, and primitive suites.
+- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite, 111 passed).
+- Files changed: `src/pages/index.astro`, `src/pages/access-denied.astro`, `src/pages/sign-in.astro`, `src/pages/sign-up.astro`, `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `src/pages/events/[id].astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `src/layouts/Layout.astro`, `src/components/EventCard.tsx`, `src/components/ShadcnIslandDemo.tsx`, `tests/access-denied-ui.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/app-shell.spec.ts`, `tests/auth.spec.ts`, `tests/duplicate-event.spec.ts`, `tests/event-creation.spec.ts`, `tests/event-detail-ui.spec.ts`, `tests/event-edit.spec.ts`, `tests/events.spec.ts`, `tests/history-ui.spec.ts`, `tests/history.spec.ts`, `tests/overlay-primitives.spec.ts`, `tests/responsive.spec.ts`, `tests/rsvp.spec.ts`, `tests/settings.spec.ts`, `tests/settings-ui.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/sign-in-ui.spec.ts`, `tests/sign-up-ui.spec.ts`, `tests/surface-primitives.spec.ts`, `tests/typography-fonts.spec.ts`, `tests/theme-baseline.spec.ts`, `tests/global.setup.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Localization refactors should update both static shell text and inline script-driven feedback text to keep accessibility names and error/loading assertions in sync.
+  - Badge/count assertions can become ambiguous after translation (substring overlap); use targeted test IDs (`rsvp-going`, `rsvp-maybe`, `rsvp-not-going`) instead of plain text matching.
+  - For external auth widgets (Clerk), keep assertions tolerant with regex around provider-rendered headings while asserting app-owned wrapper copy exactly.
 ---

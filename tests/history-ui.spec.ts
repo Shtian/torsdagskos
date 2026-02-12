@@ -94,27 +94,27 @@ test.describe('History UI migration', () => {
     await page.goto('/history');
 
     await expect(page.getByTestId('history-shell')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'My RSVP History', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 })).toBeVisible();
     await expect(page.locator('[data-slot="card"]')).toHaveCount(3);
 
     const historyItems = page.getByTestId('history-item');
     await expect(historyItems).toHaveCount(2);
 
     await expect(historyItems.nth(0).getByRole('heading', { name: 'Newest History UI Event', level: 2 })).toBeVisible();
-    await expect(historyItems.nth(0).getByTestId('history-status')).toHaveText('Going');
+    await expect(historyItems.nth(0).getByTestId('history-status')).toHaveText('Kommer');
 
     await expect(historyItems.nth(1).getByRole('heading', { name: 'Older History UI Event', level: 2 })).toBeVisible();
-    await expect(historyItems.nth(1).getByTestId('history-status')).toHaveText('Not Going');
+    await expect(historyItems.nth(1).getByTestId('history-status')).toHaveText('Kommer ikke');
   });
 
-  test('renders migrated empty-state surface when there are no RSVPs', async ({ page }) => {
+  test('renders migrated empty-state surface when there are no Svar', async ({ page }) => {
     await cleanupTestData();
     await ensureAuthenticatedUserInDatabase(page);
 
     await page.goto('/history');
 
     await expect(page.getByTestId('history-empty-state')).toBeVisible();
-    await expect(page.getByTestId('history-empty-state')).toContainText("You haven't RSVPd to any events yet.");
+    await expect(page.getByTestId('history-empty-state')).toContainText("Du har ikke svart på noen arrangementer ennå.");
     await expect(page.getByTestId('history-item')).toHaveCount(0);
   });
 

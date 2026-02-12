@@ -22,17 +22,17 @@ test.describe('Event Detail UI Migration', () => {
 
     await expect(page.getByTestId('event-detail-shell')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Migrated Detail Shell Event', level: 1 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Event Details', level: 2 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'RSVPs', level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Arrangementsdetaljer', level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Svar', level: 2 })).toBeVisible();
 
     await expect(page.locator('[data-slot="card"]')).toHaveCount(3);
-    await expect(page.getByRole('link', { name: /back to events/i })).toHaveAttribute('href', '/');
-    await expect(page.getByRole('link', { name: 'Edit Event' })).toHaveAttribute('href', `/events/${event.id}/edit`);
-    await expect(page.getByRole('link', { name: /open in maps/i })).toHaveAttribute('href', 'https://maps.google.com/?q=Oslo');
+    await expect(page.getByRole('link', { name: /tilbake til arrangementer/i })).toHaveAttribute('href', '/');
+    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toHaveAttribute('href', `/events/${event.id}/edit`);
+    await expect(page.getByRole('link', { name: /åpne i kart/i })).toHaveAttribute('href', 'https://maps.google.com/?q=Oslo');
 
-    await expect(page.getByRole('button', { name: 'Going', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Maybe', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Not Going', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kommer', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kanskje', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kommer ikke', exact: true })).toBeVisible();
   });
 
   test('hides RSVP actions for past events and keeps migrated notice styling', async ({ page }) => {
@@ -50,11 +50,11 @@ test.describe('Event Detail UI Migration', () => {
 
     await page.goto(`/events/${event.id}`);
 
-    await expect(page.getByRole('button', { name: 'Going', exact: true })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Maybe', exact: true })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Not Going', exact: true })).not.toBeVisible();
-    await expect(page.getByTestId('past-event-notice')).toContainText('This event has passed');
-    await expect(page.getByRole('link', { name: 'Edit Event' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kommer', exact: true })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kanskje', exact: true })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kommer ikke', exact: true })).not.toBeVisible();
+    await expect(page.getByTestId('past-event-notice')).toContainText('Dette arrangementet er over');
+    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).not.toBeVisible();
   });
 
   test('has no horizontal overflow on mobile viewport', async ({ page }) => {

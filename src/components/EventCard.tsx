@@ -43,13 +43,13 @@ export function EventCard({
         <CardContent>
           <div className="flex flex-wrap gap-2">
             <Badge variant="default" data-test-id="rsvp-going">
-              {rsvpCounts.going} going
+              {rsvpCounts.going} kommer
             </Badge>
             <Badge variant="secondary" data-test-id="rsvp-maybe">
-              {rsvpCounts.maybe} maybe
+              {rsvpCounts.maybe} kanskje
             </Badge>
             <Badge variant="outline" data-test-id="rsvp-not-going">
-              {rsvpCounts.notGoing} not going
+              {rsvpCounts.notGoing} kommer ikke
             </Badge>
           </div>
         </CardContent>

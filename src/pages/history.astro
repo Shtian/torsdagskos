@@ -72,9 +72,9 @@ function formatEventDate(date: Date): string {
 }
 
 function formatStatus(status: string): string {
-  if (status === 'going') return 'Going';
-  if (status === 'maybe') return 'Maybe';
-  return 'Not Going';
+  if (status === 'going') return 'Kommer';
+  if (status === 'maybe') return 'Kanskje';
+  return 'Kommer ikke';
 }
 
 function statusClass(status: string): string {
@@ -85,14 +85,14 @@ function statusClass(status: string): string {
 ---
 
 <Layout
-  title="My RSVP History - Torsdagskos"
-  description="Review your RSVP history across upcoming and past Torsdagskos events."
+  title="Min svarhistorikk - Torsdagskos"
+  description="Se svarhistorikken din på tvers av kommende og tidligere Torsdagskos-arrangementer."
 >
   <section class="mx-auto mt-6 w-full max-w-5xl px-4 pb-8 sm:mt-10 sm:px-6" data-test-id="history-shell">
     <div data-slot="card" class="bg-card text-card-foreground mb-6 rounded-xl border shadow-sm">
       <div data-slot="card-header" class="space-y-2 px-6 py-5 sm:px-8">
-        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">My RSVP History</h1>
-        <p class="m-0 text-sm text-muted-foreground">All events you have responded to, newest first.</p>
+        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Min svarhistorikk</h1>
+        <p class="m-0 text-sm text-muted-foreground">Alle arrangementer du har svart på, nyeste først.</p>
       </div>
     </div>
 
@@ -102,7 +102,7 @@ function statusClass(status: string): string {
         data-slot="card"
         class="bg-card text-card-foreground rounded-xl border border-dashed px-6 py-12 text-center shadow-sm"
       >
-        <p class="m-0 text-base text-muted-foreground">You haven't RSVPd to any events yet.</p>
+        <p class="m-0 text-base text-muted-foreground">Du har ikke svart på noen arrangementer ennå.</p>
       </div>
     )}
 

@@ -27,13 +27,13 @@ test.describe('shadcn react island', () => {
     await expect(page.getByTestId('shadcn-island')).toBeVisible();
 
     // Find and interact with the select
-    const selectTrigger = page.getByRole('combobox', { name: 'Shadcn status' });
+    const selectTrigger = page.getByRole('combobox', { name: 'Shadcn-status' });
     await expect(selectTrigger).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Shadcn Ready' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Shadcn Klar' })).toBeVisible();
 
     await selectTrigger.click();
-    await page.getByRole('option', { name: 'In Progress' }).first().click();
+    await page.getByRole('option', { name: 'Pågår' }).first().click();
 
-    await expect(page.getByRole('button', { name: 'Shadcn Configured' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Shadcn Konfigurert' })).toBeVisible();
   });
 });

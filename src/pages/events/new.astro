@@ -18,12 +18,12 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 ---
 
 <Layout
-  title="Create New Event - Torsdagskos"
-  description="Create a new Torsdagskos event with title, date, location, and optional details."
+  title="Opprett nytt arrangement - Torsdagskos"
+  description="Opprett et nytt Torsdagskos-arrangement med tittel, dato, sted og valgfri informasjon."
 >
   <section class="mx-auto mt-6 w-full max-w-4xl px-4 pb-8 sm:mt-10 sm:px-0" data-test-id="new-event-shell">
     <div class="mb-6">
-      <a href="/" class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Back to Events</a>
+      <a href="/" class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Tilbake til arrangementer</a>
     </div>
 
     {isDuplicate && (
@@ -33,27 +33,27 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
         class="bg-primary/5 text-card-foreground mb-6 rounded-xl border border-primary/30 px-5 py-4 shadow-sm"
       >
         <p class="m-0 text-sm font-medium text-foreground">
-          Duplicated from last event
+          Duplisert fra forrige arrangement
         </p>
         <p class="mt-1 mb-0 text-sm text-muted-foreground">
-          Title, description, location, and map link were pre-filled.
-          Please set date and time for this event.
+          Tittel, beskrivelse, sted og kartlenke ble forhåndsutfylt.
+          Angi dato og klokkeslett for dette arrangementet.
         </p>
       </div>
     )}
 
     <form id="event-form" data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
       <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
-        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Create New Event</h1>
+        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Opprett nytt arrangement</h1>
         <p class="m-0 text-sm text-muted-foreground">
-          Fill out the event details below. Fields marked with * are required.
+          Fyll ut arrangementsdetaljene nedenfor. Felt merket med * er påkrevd.
         </p>
       </div>
 
       <div data-slot="card-content" class="space-y-6 px-6 py-6 sm:px-8">
         <div class="space-y-2">
           <Label htmlFor="title">
-            Event Title <span class="text-destructive">*</span>
+            Arrangementstittel <span class="text-destructive">*</span>
           </Label>
           <Input
             type="text"
@@ -61,21 +61,21 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
             name="title"
             className="h-auto px-3 py-3"
             required
-            placeholder="e.g., Torsdagskos at John's place"
+            placeholder="f.eks. Torsdagskos hos Ola"
             value={prefillTitle}
           />
         </div>
 
         <div class="space-y-2">
           <Label htmlFor="description">
-            Description
+            Beskrivelse
           </Label>
           <Textarea
             id="description"
             name="description"
             className="min-h-[120px] resize-y px-3 py-3"
             rows={5}
-            placeholder="What's the plan? Any special details?"
+            placeholder="Hva er planen? Noen spesielle detaljer?"
             defaultValue={prefillDescription}
           />
         </div>
@@ -83,7 +83,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="space-y-2">
             <Label htmlFor="date">
-              Date <span class="text-destructive">*</span>
+              Dato <span class="text-destructive">*</span>
             </Label>
             <Input
               type="date"
@@ -96,7 +96,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
           <div class="space-y-2">
             <Label htmlFor="time">
-              Time <span class="text-destructive">*</span>
+              Tid <span class="text-destructive">*</span>
             </Label>
             <Input
               type="time"
@@ -110,7 +110,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
         <div class="space-y-2">
           <Label htmlFor="location">
-            Location <span class="text-destructive">*</span>
+            Sted <span class="text-destructive">*</span>
           </Label>
           <Input
             type="text"
@@ -118,14 +118,14 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
             name="location"
             className="h-auto px-3 py-3"
             required
-            placeholder="e.g., John's apartment, Oslo City Center"
+            placeholder="f.eks. Olas leilighet, Oslo sentrum"
             value={prefillLocation}
           />
         </div>
 
         <div class="space-y-2">
           <Label htmlFor="mapLink">
-            Map Link <span class="text-sm font-normal text-muted-foreground">(optional)</span>
+            Kartlenke <span class="text-sm font-normal text-muted-foreground">(valgfritt)</span>
           </Label>
           <Input
             type="url"
@@ -155,13 +155,13 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
           data-test-id="submit-event-button"
           className="touch-target h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
         >
-          Create Event
+          Opprett arrangement
         </Button>
         <a
           href="/"
           class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'touch-target px-6 py-3 text-base no-underline sm:w-auto']}
         >
-          Cancel
+          Avbryt
         </a>
       </div>
     </form>
@@ -174,8 +174,8 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
     const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
     const feedbackPanel = document.getElementById('form-feedback-panel') as HTMLDivElement;
     const feedbackText = document.getElementById('form-feedback') as HTMLParagraphElement;
-    const defaultSubmitLabel = 'Create Event';
-    const loadingSubmitLabel = 'Creating...';
+    const defaultSubmitLabel = 'Opprett arrangement';
+    const loadingSubmitLabel = 'Oppretter...';
 
     function setFeedback(message: string, type: 'idle' | 'loading' | 'success' | 'error') {
       if (type === 'idle') {
@@ -218,7 +218,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
       // Validate required fields
       if (!title || !date || !time || !location) {
-        setFeedback('Please fill in all required fields.', 'error');
+        setFeedback('Fyll ut alle påkrevde felt.', 'error');
         return;
       }
 
@@ -231,7 +231,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
       submitButton.disabled = true;
       submitButton.textContent = loadingSubmitLabel;
       submitButton.setAttribute('aria-busy', 'true');
-      setFeedback('Creating event...', 'loading');
+      setFeedback('Oppretter arrangement...', 'loading');
 
       try {
         const response = await fetch('/api/events/create', {
@@ -250,19 +250,19 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
         if (!response.ok) {
           const errorPayload = await response.json().catch(() => null);
-          throw new Error(errorPayload?.error || 'Failed to create event');
+          throw new Error(errorPayload?.error || 'Kunne ikke opprette arrangement');
         }
 
         const result = await response.json();
 
-        setFeedback('Event created successfully. Redirecting to details...', 'success');
+        setFeedback('Arrangement opprettet. Videresender til detaljer...', 'success');
 
         // Redirect to event detail page after short delay
         setTimeout(() => {
           window.location.href = `/events/${result.eventId}`;
         }, 1000);
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : 'Failed to create event. Please try again.', 'error');
+        setFeedback(error instanceof Error ? error.message : 'Kunne ikke opprette arrangement. Prøv igjen.', 'error');
 
         // Re-enable submit button on error
         submitButton.disabled = false;

@@ -91,8 +91,8 @@ function formatEventDate(date: Date): string {
 ---
 
 <Layout
-  title="Events - Torsdagskos"
-  description="Browse upcoming and past Torsdagskos events, including location, time, and RSVP summaries."
+  title="Arrangementer - Torsdagskos"
+  description="Se kommende og tidligere Torsdagskos-arrangementer med sted, tidspunkt og svaroversikt."
 >
   <div class="mx-auto w-full max-w-[75rem] p-4 sm:p-6">
     <ShadcnIslandDemo client:load />
@@ -101,9 +101,9 @@ function formatEventDate(date: Date): string {
       <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
         <div data-slot="card-header" class="grid auto-rows-min gap-4 px-6 sm:grid-cols-[1fr_auto] sm:items-start">
           <div class="space-y-2">
-            <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Upcoming Events</h1>
+            <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Kommende arrangementer</h1>
             <p data-slot="card-description" class="m-0 text-sm text-muted-foreground">
-              All upcoming events are sorted by date and time.
+              Alle kommende arrangementer er sortert etter dato og klokkeslett.
             </p>
           </div>
           <div>
@@ -113,7 +113,7 @@ function formatEventDate(date: Date): string {
                 data-test-id="duplicate-last-event"
                 class:list={[buttonVariants({ variant: 'outline' }), 'w-full no-underline sm:w-auto']}
               >
-                Duplicate Last Event
+                Dupliser forrige arrangement
               </a>
             )}
             {!mostRecentEvent && (
@@ -121,9 +121,9 @@ function formatEventDate(date: Date): string {
                 data-test-id="duplicate-last-event"
                 class:list={[buttonVariants({ variant: 'outline' }), 'w-full cursor-not-allowed sm:w-auto']}
                 disabled
-                aria-label="Duplicate last event unavailable"
+                aria-label="Duplisering av forrige arrangement er ikke tilgjengelig"
               >
-                Duplicate Last Event
+                Dupliser forrige arrangement
               </button>
             )}
           </div>
@@ -136,7 +136,7 @@ function formatEventDate(date: Date): string {
               class="border-border bg-muted/20 rounded-xl border border-dashed p-8 text-center"
               data-test-id="empty-state"
             >
-              <p class="m-0 text-muted-foreground">No events yet. Check back soon!</p>
+              <p class="m-0 text-muted-foreground">Ingen arrangementer ennå. Kom tilbake snart!</p>
             </div>
           )}
 
@@ -164,9 +164,9 @@ function formatEventDate(date: Date): string {
         <section class="space-y-4" data-test-id="homepage-past">
           <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
             <div data-slot="card-header" class="px-6">
-              <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Past Events</h1>
+              <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Tidligere arrangementer</h1>
               <p data-slot="card-description" class="mt-2 mb-0 text-sm text-muted-foreground">
-                Past events are sorted from newest to oldest.
+                Tidligere arrangementer er sortert fra nyeste til eldste.
               </p>
             </div>
             <div data-slot="card-content" class="px-6">

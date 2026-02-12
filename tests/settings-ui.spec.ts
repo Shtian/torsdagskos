@@ -1,23 +1,23 @@
 import { test, expect } from './fixtures';
 
-test.describe('Settings UI migration', () => {
+test.describe('Innstillinger UI migration', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
   test('renders migrated shell and notification status surfaces', async ({ page }) => {
     await page.goto('/settings');
 
     await expect(page.getByTestId('settings-shell')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Browser Notifications', level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Innstillinger', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Nettleslervarsler', level: 2 })).toBeVisible();
 
     await expect(page.locator('[data-slot="card"]')).toHaveCount(1);
     await expect(page.getByTestId('settings-permission-card')).toBeVisible();
     await expect(page.getByTestId('settings-preference-card')).toBeVisible();
 
-    await expect(page.locator('#permission-status')).toHaveText(/checking|default|granted|denied|unsupported/i);
-    await expect(page.locator('#saved-preference')).toHaveText(/enabled|disabled/i);
-    await expect(page.getByRole('button', { name: /request notification permission/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /back to events/i })).toHaveAttribute('href', '/');
+    await expect(page.locator('#permission-status')).toHaveText(/sjekker|standard|tillatt|avvist|ikke støttet/i);
+    await expect(page.locator('#saved-preference')).toHaveText(/aktivert|deaktivert/i);
+    await expect(page.getByRole('button', { name: /be om varslingstillatelse/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /tilbake til arrangementer/i })).toHaveAttribute('href', '/');
   });
 
   test('shows migrated inline feedback panel during notification update', async ({ page }) => {
@@ -48,11 +48,11 @@ test.describe('Settings UI migration', () => {
       page.waitForResponse((response) =>
         response.url().includes('/api/settings/notifications') && response.request().method() === 'POST'
       ),
-      page.getByRole('button', { name: /request notification permission/i }).click(),
+      page.getByRole('button', { name: /be om varslingstillatelse/i }).click(),
     ]);
 
     await expect(page.getByTestId('settings-feedback-panel')).toBeVisible();
-    await expect(page.locator('#feedback')).toHaveText(/browser notifications enabled/i);
+    await expect(page.locator('#feedback')).toHaveText(/nettleslervarsler aktivert/i);
   });
 
   test('has no horizontal overflow on mobile viewport', async ({ page }) => {

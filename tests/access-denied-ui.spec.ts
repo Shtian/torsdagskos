@@ -4,20 +4,20 @@ test.describe('Access denied UI @unauth', () => {
   test('renders migrated shell with unchanged status and sign-in action', async ({ page }) => {
     await page.goto('/access-denied');
 
-    await expect(page).toHaveTitle(/Invite-Only Access - Torsdagskos/);
+    await expect(page).toHaveTitle(/Kun invitert tilgang - Torsdagskos/);
     await expect(page.getByTestId('access-denied-shell')).toBeVisible();
-    await expect(page.getByTestId('access-denied-kicker')).toHaveText('Access Restricted');
-    await expect(page.getByRole('heading', { name: 'This is an invite-only application' })).toBeVisible();
-    await expect(page.getByTestId('access-denied-message')).toContainText('You need an account invitation to continue.');
+    await expect(page.getByTestId('access-denied-kicker')).toHaveText('Tilgang begrenset');
+    await expect(page.getByRole('heading', { name: 'Dette er en app kun for inviterte' })).toBeVisible();
+    await expect(page.getByTestId('access-denied-message')).toContainText('Du trenger en kontoinvitasjon for å fortsette.');
 
-    const signInLink = page.getByRole('link', { name: 'Go to Sign In' });
+    const signInLink = page.getByRole('link', { name: 'Gå til innlogging' });
     await expect(signInLink).toHaveAttribute('href', '/sign-in');
   });
 
   test('shows requested path context when redirected from protected route', async ({ page }) => {
     await page.goto('/access-denied?from=%2Fevents%2F1');
 
-    await expect(page.getByTestId('access-denied-message')).toContainText('You tried to open');
+    await expect(page.getByTestId('access-denied-message')).toContainText('Du prøvde å åpne');
     await expect(page.getByText('/events/1')).toBeVisible();
   });
 
