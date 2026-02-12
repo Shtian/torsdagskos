@@ -69,8 +69,8 @@ test.describe('Accessibility polish', () => {
     await expect(page.getByRole('button', { name: 'Creating...' })).toHaveAttribute('aria-busy', 'true');
     await expect(page.getByText('Creating event...')).toBeVisible();
 
-    await expect(page.getByTestId('error-message')).toBeVisible();
-    await expect(page.getByTestId('error-message')).toContainText(/failed to create event/i);
+    await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/temporarily unavailable/i);
     await expect(page.getByText(/temporarily unavailable/i)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create Event', exact: true })).toBeEnabled();
   });

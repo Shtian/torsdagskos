@@ -8,42 +8,56 @@ import {
 } from './helpers/api-helpers';
 
 async function ensureAuthenticatedUserInDatabase(page: import('@playwright/test').Page): Promise<number> {
-  await page.goto('/');
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await page.goto('/');
 
-  const authInfo = await page.evaluate(async () => {
-    const response = await fetch('/api/test/current-user');
-    const data = await response.json();
+    const authInfo = await page.evaluate(async () => {
+      const response = await fetch('/api/test/current-user');
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json')
+        ? await response.json().catch(() => null)
+        : null;
 
-    if (response.ok) {
-      return {
-        userId: data.id as number,
-        clerkUserId: data.clerkUserId as string,
-        exists: true,
-      };
+      if (response.ok && payload?.id && payload?.clerkUserId) {
+        return {
+          kind: 'existing' as const,
+          userId: payload.id as number,
+        };
+      }
+
+      if (response.status === 404 && payload?.userId) {
+        return {
+          kind: 'missing' as const,
+          clerkUserId: payload.userId as string,
+        };
+      }
+
+      if (response.status === 401) {
+        return { kind: 'retry' as const };
+      }
+
+      throw new Error(`Unexpected response from /api/test/current-user: ${response.status}`);
+    });
+
+    if (authInfo.kind === 'retry') {
+      await page.waitForTimeout(250 * attempt);
+      continue;
     }
 
-    if (response.status === 404 && data.userId) {
-      return {
-        userId: null,
-        clerkUserId: data.userId as string,
-        exists: false,
-      };
+    if (authInfo.kind === 'existing') {
+      return authInfo.userId;
     }
 
-    throw new Error(`Unexpected response from /api/test/current-user: ${response.status}`);
-  });
+    const createdUser = await createTestUser({
+      clerkUserId: authInfo.clerkUserId,
+      email: uniqueEmail(),
+      name: 'Authenticated Test User',
+    });
 
-  if (authInfo.exists && authInfo.userId) {
-    return authInfo.userId;
+    return createdUser.id;
   }
 
-  const createdUser = await createTestUser({
-    clerkUserId: authInfo.clerkUserId,
-    email: uniqueEmail(),
-    name: 'Authenticated Test User',
-  });
-
-  return createdUser.id;
+  throw new Error('Unable to resolve authenticated test user after retries.');
 }
 
 test.describe('RSVP history page', () => {

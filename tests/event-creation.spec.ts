@@ -5,7 +5,12 @@ test.describe('Event Creation', () => {
     await page.goto('/events/new');
 
     // Check that form elements are visible
+    await expect(page.getByTestId('new-event-shell')).toBeVisible();
     await expect(page.getByRole('heading', { name: /create new event/i, level: 1 })).toBeVisible();
+    await expect(page.locator('#event-form[data-slot="card"]')).toBeVisible();
+    await expect(page.locator('[data-slot="card-header"]')).toBeVisible();
+    await expect(page.locator('[data-slot="card-content"]')).toBeVisible();
+    await expect(page.locator('[data-slot="card-footer"]')).toBeVisible();
     await expect(page.locator('[data-slot="label"]').first()).toBeVisible();
     await expect(page.locator('#title[data-slot="input"]')).toBeVisible();
     await expect(page.locator('#description[data-slot="textarea"]')).toBeVisible();
@@ -16,6 +21,31 @@ test.describe('Event Creation', () => {
     await expect(page.locator('#location')).toBeVisible();
     await expect(page.locator('#mapLink')).toBeVisible();
     await expect(page.getByRole('button', { name: /create event/i, exact: true })).toBeVisible();
+  });
+
+  test('should show loading and disabled submit state while creating event', async ({ page }) => {
+    await page.goto('/events/new');
+
+    await page.route('**/api/events/create', async route => {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Internal server error' }),
+      });
+    });
+
+    await page.locator('#title').fill('Loading State Event');
+    await page.locator('#date').fill('2026-12-31');
+    await page.locator('#time').fill('19:00');
+    await page.locator('#location').fill('Loading Test Location');
+
+    await page.getByRole('button', { name: /create event/i, exact: true }).click();
+
+    await expect(page.getByRole('button', { name: /creating\.\.\./i, exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: /creating\.\.\./i, exact: true })).toHaveAttribute('aria-busy', 'true');
+    await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/creating event/i);
   });
 
   test('should show validation for required fields', async ({ page }) => {
@@ -49,8 +79,9 @@ test.describe('Event Creation', () => {
     // Submit the form
     await page.getByRole('button', { name: /create event/i, exact: true }).click();
 
-    // Wait for success message
-    await expect(page.locator('[data-test-id="success-message"]')).toBeVisible({ timeout: 10000 });
+    // Wait for success feedback
+    await expect(page.getByTestId('form-feedback-panel')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/event created successfully/i);
 
     // Wait for redirect to event detail page (URL pattern)
     await page.waitForURL(/\/events\/\d+$/, { timeout: 10000 });
@@ -140,9 +171,10 @@ test.describe('Event Creation', () => {
     // Submit the form
     await page.getByRole('button', { name: /create event/i, exact: true }).click();
 
-    // Should show error message
-    await expect(page.locator('[data-test-id="error-message"]')).toBeVisible();
-    await expect(page.locator('[data-test-id="error-message"]')).toHaveText(/failed to create event/i);
+    // Should show inline error feedback and restore submit state
+    await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/internal server error/i);
+    await expect(page.getByRole('button', { name: /create event/i, exact: true })).toBeEnabled();
   });
 
   test('should display newly created event on homepage', async ({ page }) => {

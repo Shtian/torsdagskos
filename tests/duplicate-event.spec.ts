@@ -68,7 +68,7 @@ test.describe('Duplicate Event Functionality', () => {
     const banner = page.locator('[data-test-id="duplicate-banner"]');
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('Duplicated from last event');
-    await expect(banner).toContainText('Please set the date and time');
+    await expect(banner).toContainText('Please set date and time for this event.');
 
     // Check that form fields are pre-filled (except date and time)
     const titleInput = page.locator('#title');
@@ -122,8 +122,9 @@ test.describe('Duplicate Event Functionality', () => {
     const submitButton = page.getByRole('button', { name: /create event/i, exact: true });
     await submitButton.click();
 
-    // Wait for success message and redirect
-    await expect(page.locator('[data-test-id="success-message"]')).toBeVisible();
+    // Wait for success feedback and redirect
+    await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(/event created successfully/i);
     await page.waitForURL(/\/events\/\d+$/);
 
     // Verify new event page shows the duplicated data

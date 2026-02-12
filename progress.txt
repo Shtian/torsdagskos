@@ -6,6 +6,7 @@
 - When rendering React `Textarea` components from `.astro` pages, prefer `defaultValue` over children content to avoid accidental `"[object Object]"` rendering in SSR output.
 - For Playwright interactions with `ShadcnIslandDemo`, wait for `data-hydrated="true"` on `data-test-id="shadcn-island"` before tab/select/dialog/dropdown actions to avoid pre-hydration flakes.
 - Full Playwright runs can intermittently 401 in `tests/history.spec.ts` (`/api/test/current-user`) late in the suite; validate with an isolated rerun of that spec when this known auth-state flake appears.
+- In auth-sensitive Playwright helpers that call `/api/test/current-user` inside `page.evaluate()`, guard for occasional 401/non-JSON responses and retry before hard-failing.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -137,4 +138,15 @@
   - For Clerk sign-up wrapper migrations, keep the Clerk component server-rendered and migrate only the surrounding Astro shell to avoid introducing auth flow regressions.
   - Pair wrapper `data-test-id` assertions with user-facing Clerk heading assertions so tests validate both local shell migration and external auth UI continuity.
   - Full-suite Playwright validation remains stable with `pnpm test --workers=1` in this repo.
+---
+## 2026-02-12 14:43:53 CET - US-012
+- Migrated `src/pages/events/new.astro` to a shadcn-compatible card shell with tokenized header/content/footer structure, shared action styling via `buttonVariants`, and updated duplicate-event notice styling while preserving form field IDs, submit API contract, and redirect behavior.
+- Replaced legacy toast feedback on event creation with inline shadcn-style feedback states (`loading`, `success`, `error`) and ensured the submit control reflects disabled/busy/loading behavior during requests.
+- Updated frontend Playwright coverage for event creation and dependent flows to assert the new shell and inline feedback patterns (`tests/event-creation.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/duplicate-event.spec.ts`), and stabilized history auth-state checks with retry guarding in `tests/history.spec.ts`.
+- Added reusable Playwright guidance for auth-sensitive `/api/test/current-user` calls in `tests/AGENTS.md`.
+- Files changed: `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/duplicate-event.spec.ts`, `tests/history.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Event form feedback in this codebase now uses inline status panels (`data-test-id="form-feedback-panel"`) instead of transient toast nodes; tests should assert user-visible panel text and submit button state.
+  - When UI copy changes for duplicate-event banners, prefer focused substring assertions on stable meaning rather than exact phrase variants to avoid brittle failures.
+  - Authenticated full-suite runs remain prone to intermittent `/api/test/current-user` 401 responses; handling retry in evaluate-based helpers substantially reduces flaky failures.
 ---
