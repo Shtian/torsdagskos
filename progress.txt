@@ -44,3 +44,20 @@
   - For React form primitives rendered in Astro pages, preserve existing element IDs so current scripts and Playwright locators keep working without refactors.
   - `data-slot` attributes on shadcn primitives provide stable selectors for focused UI tests when role/text assertions are not specific enough.
 ---
+## 2026-02-12 09:55:00 CET - US-005
+- Added shadcn surface and feedback primitives: Card, Badge, Separator, and Skeleton components.
+- Created EventCard React component to replace legacy event card markup with shadcn primitives on homepage.
+- Enhanced ShadcnIslandDemo to showcase all four new components with interactive Skeleton toggle.
+- Replaced custom event card HTML with EventCard islands on homepage (both upcoming and past events).
+- Migrated RSVP count badges from custom styled spans to shadcn Badge components with semantic variants.
+- Added Separator component between "Upcoming Events" and "Past Events" sections.
+- Added comprehensive Playwright test coverage in `tests/surface-primitives.spec.ts` validating Card slots, Badge variants, Separator rendering, and Skeleton state toggling.
+- Files changed: `package.json`, `pnpm-lock.yaml`, `src/components/ui/badge.tsx`, `src/components/ui/card.tsx`, `src/components/ui/separator.tsx`, `src/components/ui/skeleton.tsx`, `src/components/ui/index.ts`, `src/components/EventCard.tsx`, `src/components/ShadcnIslandDemo.tsx`, `src/pages/index.astro`, `tests/surface-primitives.spec.ts`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Use test fixtures `import { test, expect } from "./fixtures"` instead of manual sign-in in Playwright tests for authenticated routes.
+  - When wrapping Astro pages with React islands for shadcn components, use `client:load` directive on the component in `.astro` files.
+  - For EventCard components used as links, wrap shadcn Card with `<a>` element instead of making Card itself a link to preserve accessibility.
+  - Use semantic HTML (h2) for card titles instead of div-based CardTitle when heading role is required for existing test compatibility.
+  - Skeleton component requires explicit React import statement despite TSX file extension.
+  - shadcn Separator uses `role="none"` for decorative separators (default `decorative={true}`), not `role="separator"`.
+---
