@@ -5,6 +5,7 @@
 - Load Google Fonts once in `src/layouts/Layout.astro` and map them via global CSS font tokens (`--font-heading`, `--font-body`) so typography stays consistent across all routes.
 - When rendering React `Textarea` components from `.astro` pages, prefer `defaultValue` over children content to avoid accidental `"[object Object]"` rendering in SSR output.
 - For Playwright interactions with `ShadcnIslandDemo`, wait for `data-hydrated="true"` on `data-test-id="shadcn-island"` before tab/select/dialog/dropdown actions to avoid pre-hydration flakes.
+- Full Playwright runs can intermittently 401 in `tests/history.spec.ts` (`/api/test/current-user`) late in the suite; validate with an isolated rerun of that spec when this known auth-state flake appears.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -118,4 +119,13 @@
   - Typography/theme tests in this repo rely on `/access-denied` for unauthenticated assertions, so keep the invite-only title as a semantic heading element when restyling that page.
   - For migrated Astro links styled with `buttonVariants`, assert role/name/href in Playwright instead of component-only `data-slot` attributes.
   - Mobile regression checks for single-card pages are cheap and effective using viewport + horizontal overflow assertions.
+---
+## 2026-02-12 12:15:48 CET - US-010
+- Migrated `src/pages/sign-in.astro` wrapper UI to a shadcn-compatible card shell with shared tokenized hierarchy (kicker, title, description, content container) while preserving Clerk sign-in routing and authenticated redirect behavior.
+- Added frontend Playwright coverage in `tests/sign-in-ui.spec.ts` to verify migrated wrapper content, preserved Clerk sign-in UI visibility, sign-up navigation link, and mobile overflow safety.
+- Files changed: `src/pages/sign-in.astro`, `tests/sign-in-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - For Clerk auth wrapper migrations, keep the Clerk component server-rendered inside the Astro shell and only restyle the surrounding container to avoid auth-flow regressions.
+  - Pair wrapper assertions (`data-test-id`) with user-facing Clerk heading assertions so tests validate both local shell migration and external auth widget continuity.
+  - `pnpm test --workers=1` still shows a known unrelated auth flake in `tests/history.spec.ts`; `pnpm test tests/history.spec.ts --workers=1` passes in isolation.
 ---
