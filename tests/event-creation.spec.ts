@@ -84,18 +84,45 @@ test.describe('Event Creation', () => {
     );
   });
 
-  test('should show validation for required fields', async ({ page }) => {
+  test('should show field-level validation and block submit for invalid form', async ({
+    page,
+  }) => {
     await page.goto('/events/new');
+    let createRequests = 0;
 
-    // Try to submit without filling required fields
+    await page.route('**/api/events/create', async (route) => {
+      createRequests += 1;
+      await route.continue();
+    });
+
+    await page.locator('#title').fill('ab');
+    await page.locator('#location').fill('a');
+    await page.locator('#mapLink').fill('not-a-url');
+
     await page
       .getByRole('button', { name: /opprett arrangement/i, exact: true })
       .click();
 
-    // Browser should show validation errors (HTML5 validation)
-    // We can't directly check the browser's validation UI, but we can check that form didn't submit
-    // by checking we're still on the same page
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /rett feltene som er markert/i,
+    );
+    await expect(page.getByTestId('field-error-title')).toContainText(
+      /minst 3 tegn/i,
+    );
+    await expect(page.getByTestId('field-error-date')).toContainText(
+      /dato er påkrevd/i,
+    );
+    await expect(page.getByTestId('field-error-time')).toContainText(
+      /tid er påkrevd/i,
+    );
+    await expect(page.getByTestId('field-error-location')).toContainText(
+      /minst 2 tegn/i,
+    );
+    await expect(page.getByTestId('field-error-mapLink')).toContainText(
+      /gyldig url/i,
+    );
     await expect(page).toHaveURL(/\/events\/new/);
+    expect(createRequests).toBe(0);
   });
 
   test('should create event with all fields and redirect to detail page', async ({

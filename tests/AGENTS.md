@@ -17,6 +17,7 @@
 - Unauthenticated route assertions should target local `/access-denied` first; validate the invite-only message and sign-in link instead of expecting direct middleware redirects to Clerk-hosted domains.
 - For Clerk wrapper page migrations (`/sign-in`, `/sign-up`), add stable `data-test-id` hooks on the local shell and assert both wrapper content and Clerk heading presence to ensure visual migration without breaking auth UI.
 - For event create/edit form migrations, use the shared inline feedback contract (`data-test-id="form-feedback-panel"`) and assert panel text plus submit `aria-busy`/disabled transitions instead of toast-style selectors.
+- For Zod-backed client-side form validation on event create/edit, keep `novalidate` on the form, expose per-field error hooks (`data-test-id="field-error-<field>"`), and assert invalid submits do not call the API route.
 - For event detail RSVP flows, use the inline feedback panel (`data-test-id="rsvp-feedback-panel"`) and assert the `#rsvp-feedback` message instead of ephemeral toast selectors.
 - For settings page UI refactors, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` selectors stable because both page scripts and settings specs rely on them.
 - For page UI migrations, keep existing behavior-focused specs intact and add a dedicated `*-ui.spec.ts` file for shell/list surface and mobile overflow assertions.

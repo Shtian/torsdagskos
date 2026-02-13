@@ -21,6 +21,7 @@
 - For intermittent Playwright `page.goto()` detach/network abort flakes on local dev server, use a small bounded retry helper in the affected spec instead of increasing global timeouts.
 - In shared authenticated Playwright suites, avoid executing real logout actions with the default storage state; it can invalidate session assumptions for later specs. Prefer verifying menu action presence/order/keyboard behavior instead.
 - Shared Zod validation helpers should return `{ error: 'Validation failed' }` plus normalized `issues` and dot-path `fieldErrors` (using `_form` for root-level errors) so forms and APIs can share one error contract.
+- For client-side event create/edit validation, use `novalidate` plus shared Zod parsing and field error hooks (`data-test-id="field-error-<field>"`) so invalid submits show per-field feedback and can be asserted as API-free in Playwright.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -302,4 +303,14 @@
   - Use `parseWithSchema()` instead of direct `safeParse` in new form/API validation to keep success/failure handling and response shaping consistent.
   - Keep error paths in dot notation (for example `event.title`) and reserve `_form` for payload-wide failures to simplify UI field mapping.
   - Preserve the top-level `error` string in validation responses to stay aligned with existing API error handling conventions in this codebase.
+---
+## 2026-02-13 22:28:51 CET - US-007
+- Added shared form schemas in `src/lib/event-form-validation.ts` using Zod + `parseWithSchema()` for create/edit event payloads, including Norwegian field-specific validation messages and typed create/update validators.
+- Updated event create/edit pages to use explicit client-side Zod validation before submit logic, render field-level errors (`data-test-id="field-error-*"`), keep inline feedback panel behavior, and block invalid submissions from reaching API routes.
+- Added Playwright coverage for invalid form submissions in `tests/event-creation.spec.ts` and `tests/event-edit.spec.ts`, asserting user-facing field errors and that no request is sent to `/api/events/create` or `/api/events/update` when validation fails.
+- Files changed: `src/lib/event-form-validation.ts`, `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `tests/event-creation.spec.ts`, `tests/event-edit.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Shared form validators should normalize all input values through one schema entrypoint before UI submit state changes, so invalid states never trigger loading/busy transitions.
+  - Pair form-level feedback (`form-feedback-panel`) with per-field error hooks (`field-error-*`) to keep validation UX clear and make Playwright assertions deterministic.
+  - When validating submit blocking behavior, intercept the API route and assert request count remains zero in addition to visible error messaging.
 ---

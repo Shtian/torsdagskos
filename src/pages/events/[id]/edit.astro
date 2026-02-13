@@ -68,7 +68,8 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
       <a href={`/events/${event.id}`} class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Tilbake til arrangement</a>
     </div>
 
-    <form id="event-form" data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
+    <form id="event-form" data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm" novalidate>
+      <input type="hidden" id="eventId" name="eventId" value={event.id} />
       <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
         <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Rediger arrangement</h1>
         <p class="m-0 text-sm text-muted-foreground">
@@ -86,9 +87,9 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
             id="title"
             name="title"
             className="h-auto px-3 py-3"
-            required
             value={event.title}
           />
+          <p id="title-error" data-test-id="field-error-title" class="hidden text-sm text-destructive" role="alert"></p>
         </div>
 
         <div class="space-y-2">
@@ -102,6 +103,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
             rows={5}
             defaultValue={event.description || ''}
           />
+          <p id="description-error" data-test-id="field-error-description" class="hidden text-sm text-destructive" role="alert"></p>
         </div>
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -114,9 +116,9 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
               id="date"
               name="date"
               className="h-auto px-3 py-3"
-              required
               value={prefillDate}
             />
+            <p id="date-error" data-test-id="field-error-date" class="hidden text-sm text-destructive" role="alert"></p>
           </div>
 
           <div class="space-y-2">
@@ -128,9 +130,9 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
               id="time"
               name="time"
               className="h-auto px-3 py-3"
-              required
               value={prefillTime}
             />
+            <p id="time-error" data-test-id="field-error-time" class="hidden text-sm text-destructive" role="alert"></p>
           </div>
         </div>
 
@@ -143,9 +145,9 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
             id="location"
             name="location"
             className="h-auto px-3 py-3"
-            required
             value={event.location}
           />
+          <p id="location-error" data-test-id="field-error-location" class="hidden text-sm text-destructive" role="alert"></p>
         </div>
 
         <div class="space-y-2">
@@ -159,6 +161,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
             className="h-auto px-3 py-3"
             value={event.mapLink || ''}
           />
+          <p id="mapLink-error" data-test-id="field-error-mapLink" class="hidden text-sm text-destructive" role="alert"></p>
         </div>
 
         <div
@@ -192,20 +195,39 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
   </section>
 </Layout>
 
-<script is:inline define:vars={{ eventId }}>
+<script>
+  import { validateUpdateEventForm } from '@/lib/event-form-validation';
+
   document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('event-form');
-    const submitButton = document.getElementById('submit-button');
-    const feedbackPanel = document.getElementById('form-feedback-panel');
-    const feedbackText = document.getElementById('form-feedback');
+    const form = document.getElementById('event-form') as HTMLFormElement;
+    const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
+    const feedbackPanel = document.getElementById('form-feedback-panel') as HTMLDivElement;
+    const feedbackText = document.getElementById('form-feedback') as HTMLParagraphElement;
+    const fieldErrors = {
+      date: document.getElementById('date-error') as HTMLParagraphElement,
+      description: document.getElementById('description-error') as HTMLParagraphElement,
+      location: document.getElementById('location-error') as HTMLParagraphElement,
+      mapLink: document.getElementById('mapLink-error') as HTMLParagraphElement,
+      time: document.getElementById('time-error') as HTMLParagraphElement,
+      title: document.getElementById('title-error') as HTMLParagraphElement,
+    };
+    const formFields = {
+      date: document.getElementById('date') as HTMLInputElement,
+      description: document.getElementById('description') as HTMLTextAreaElement,
+      location: document.getElementById('location') as HTMLInputElement,
+      mapLink: document.getElementById('mapLink') as HTMLInputElement,
+      time: document.getElementById('time') as HTMLInputElement,
+      title: document.getElementById('title') as HTMLInputElement,
+    };
+    const eventIdInput = document.getElementById('eventId') as HTMLInputElement;
     const defaultSubmitLabel = 'Lagre endringer';
     const loadingSubmitLabel = 'Lagrer...';
 
-    if (!form || !submitButton || !feedbackPanel || !feedbackText) {
+    if (!form || !submitButton || !feedbackPanel || !feedbackText || !eventIdInput) {
       return;
     }
 
-    function setFeedback(message, type) {
+    function setFeedback(message: string, type: 'idle' | 'loading' | 'success' | 'error') {
       if (type === 'idle') {
         feedbackPanel.className = 'hidden rounded-md border px-4 py-3';
         feedbackText.textContent = '';
@@ -233,22 +255,56 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
       feedbackText.textContent = message;
     }
 
+    function clearFieldErrors() {
+      for (const [name, field] of Object.entries(formFields)) {
+        field.removeAttribute('aria-invalid');
+        field.removeAttribute('aria-describedby');
+        fieldErrors[name as keyof typeof fieldErrors].className = 'hidden text-sm text-destructive';
+        fieldErrors[name as keyof typeof fieldErrors].textContent = '';
+      }
+    }
+
+    function setFieldError(fieldName: keyof typeof fieldErrors, message: string) {
+      const errorElement = fieldErrors[fieldName];
+      const field = formFields[fieldName];
+      errorElement.className = 'block text-sm text-destructive';
+      errorElement.textContent = message;
+      field.setAttribute('aria-invalid', 'true');
+      field.setAttribute('aria-describedby', errorElement.id);
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const formData = new FormData(form);
-      const title = formData.get('title');
-      const description = formData.get('description');
-      const date = formData.get('date');
-      const time = formData.get('time');
-      const location = formData.get('location');
-      const mapLink = formData.get('mapLink');
+      const parsedForm = validateUpdateEventForm({
+        date: formData.get('date'),
+        description: formData.get('description'),
+        eventId: eventIdInput.value,
+        location: formData.get('location'),
+        mapLink: formData.get('mapLink'),
+        time: formData.get('time'),
+        title: formData.get('title'),
+      });
 
-      if (!title || !date || !time || !location) {
-        setFeedback('Fyll ut alle påkrevde felt.', 'error');
+      clearFieldErrors();
+      setFeedback('', 'idle');
+
+      if (!parsedForm.success) {
+        const fieldNames = Object.keys(formFields) as Array<keyof typeof formFields>;
+
+        for (const fieldName of fieldNames) {
+          const message = parsedForm.error.fieldErrors[fieldName]?.[0];
+          if (message) {
+            setFieldError(fieldName, message);
+          }
+        }
+
+        setFeedback('Rett feltene som er markert og prøv igjen.', 'error');
         return;
       }
 
+      const { eventId, title, description, date, time, location, mapLink } = parsedForm.data;
       const dateTimeString = `${date}T${time}:00`;
       const dateTime = new Date(dateTimeString);
 

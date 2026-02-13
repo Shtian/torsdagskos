@@ -107,6 +107,57 @@ test.describe('Event Edit', () => {
     );
   });
 
+  test('shows field-level validation and blocks submit for invalid edits', async ({
+    page,
+  }) => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 2);
+
+    const { eventId } = await createEvent(page, {
+      title: `Invalid Edit Event ${Date.now()}`,
+      description: 'Original description',
+      dateTime: futureDate.toISOString(),
+      location: 'Valid location',
+      mapLink: 'https://maps.google.com/?q=original',
+    });
+
+    await page.goto(`/events/${eventId}/edit`);
+    let updateRequests = 0;
+
+    await page.route('**/api/events/update', async (route) => {
+      updateRequests += 1;
+      await route.continue();
+    });
+
+    await page.locator('#title').fill('ab');
+    await page.locator('#location').fill('a');
+    await page.locator('#mapLink').fill('invalid-map-link');
+    await page.locator('#date').fill('');
+    await page.locator('#time').fill('');
+
+    await page.getByRole('button', { name: 'Lagre endringer' }).click();
+
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /rett feltene som er markert/i,
+    );
+    await expect(page.getByTestId('field-error-title')).toContainText(
+      /minst 3 tegn/i,
+    );
+    await expect(page.getByTestId('field-error-date')).toContainText(
+      /dato er påkrevd/i,
+    );
+    await expect(page.getByTestId('field-error-time')).toContainText(
+      /tid er påkrevd/i,
+    );
+    await expect(page.getByTestId('field-error-location')).toContainText(
+      /minst 2 tegn/i,
+    );
+    await expect(page.getByTestId('field-error-mapLink')).toContainText(
+      /gyldig url/i,
+    );
+    expect(updateRequests).toBe(0);
+  });
+
   test('updates event and redirects to event detail page', async ({ page }) => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 3);
