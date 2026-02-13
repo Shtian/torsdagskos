@@ -107,90 +107,71 @@
 }
 
 /* Baseline styles */
-html {
-  text-size-adjust: 100%;
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: var(--line-height-normal);
-  background-color: var(--background);
-  color: var(--foreground);
-}
+@layer base {
+  html {
+    text-size-adjust: 100%;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: var(--line-height-normal);
+    background-color: var(--background);
+    color: var(--foreground);
+  }
 
-* {
-  box-sizing: border-box;
-}
+  * {
+    box-sizing: border-box;
+  }
 
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  overflow-x: hidden;
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-body);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
-}
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+  }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  line-height: var(--line-height-tight);
-  color: var(--color-accent-dark);
-  text-wrap: balance;
-}
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--color-accent-dark);
+    text-wrap: balance;
+  }
 
-p {
-  color: var(--color-text-primary);
-}
+  p {
+    color: var(--color-text-primary);
+  }
 
-a {
-  color: inherit;
-}
+  a {
+    color: inherit;
+  }
 
-img,
-svg,
-video,
-canvas {
-  max-width: 100%;
-  height: auto;
-}
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
 
-.touch-target {
-  min-height: 2.75rem;
-  min-width: 2.75rem;
-}
-
-.skip-link {
-  position: absolute;
-  left: 1rem;
-  top: -10rem;
-  z-index: 1000;
-  border-radius: var(--radius-md);
-  background: var(--color-accent-dark);
-  color: #fff;
-  padding: 0.5rem 0.75rem;
-  text-decoration: none;
-}
-
-.skip-link:focus-visible {
-  top: 1rem;
-}
-
-:where(
-    a,
-    button,
-    input,
-    textarea,
-    select,
-    [role="button"],
-    [tabindex]
-  ):focus-visible {
-  outline: 3px solid var(--color-accent-dark) !important;
-  outline-offset: 2px;
+  :where(
+      a,
+      button,
+      input,
+      textarea,
+      select,
+      [role="button"],
+      [tabindex]
+    ):focus-visible {
+    outline: 3px solid var(--color-accent-dark) !important;
+    outline-offset: 2px;
+  }
 }

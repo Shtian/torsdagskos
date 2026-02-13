@@ -153,13 +153,13 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
           type="submit"
           id="submit-button"
           data-test-id="submit-event-button"
-          className="touch-target h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
+          className="min-h-11 min-w-11 h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
         >
           Opprett arrangement
         </Button>
         <a
           href="/"
-          class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'touch-target px-6 py-3 text-base no-underline sm:w-auto']}
+          class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'min-h-11 min-w-11 px-6 py-3 text-base no-underline sm:w-auto']}
         >
           Avbryt
         </a>

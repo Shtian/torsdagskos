@@ -94,7 +94,7 @@ const isUpcoming = new Date(event.dateTime) >= now;
         <div data-slot="card-footer" class="flex border-t px-6 py-4 sm:px-8">
           <a
             href={`/events/${event.id}/edit`}
-            class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'touch-target no-underline']}
+            class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'min-h-11 min-w-11 no-underline']}
           >
             Rediger arrangement
           </a>
@@ -141,7 +141,7 @@ const isUpcoming = new Date(event.dateTime) >= now;
               <button
                 class:list={[
                   buttonVariants({ variant: 'outline', size: 'default' }),
-                  'touch-target min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
+                  'min-h-11 min-w-11 min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
                   currentUserRsvp?.status === 'going' && 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                 ]}
                 data-slot="button"
@@ -155,7 +155,7 @@ const isUpcoming = new Date(event.dateTime) >= now;
               <button
                 class:list={[
                   buttonVariants({ variant: 'outline', size: 'default' }),
-                  'touch-target min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
+                  'min-h-11 min-w-11 min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
                   currentUserRsvp?.status === 'maybe' && 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'
                 ]}
                 data-slot="button"
@@ -169,7 +169,7 @@ const isUpcoming = new Date(event.dateTime) >= now;
               <button
                 class:list={[
                   buttonVariants({ variant: 'outline', size: 'default' }),
-                  'touch-target min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
+                  'min-h-11 min-w-11 min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
                   currentUserRsvp?.status === 'not_going' && 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
                 ]}
                 data-slot="button"
