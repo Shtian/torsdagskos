@@ -31,7 +31,11 @@ const navLinks = [
     label: 'Innstillinger',
     icon: 'settings',
   },
-];
+] satisfies Array<{
+  href: string;
+  label: string;
+  icon: 'clock' | 'settings';
+}>;
 
 if (userId) {
   user = await clerkClient(Astro).users.getUser(userId);

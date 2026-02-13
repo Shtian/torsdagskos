@@ -15,6 +15,7 @@
 - For Norwegian localization stories, update accessible-name assertions and prefer test IDs for badge/count checks when translated labels overlap (for example `kommer` vs `kommer ikke`).
 - After shadcn migration, remove unused Astro starter artifacts (`src/components/Welcome.astro`, `src/assets/*`) and stale global CSS selectors to avoid carrying duplicate legacy UI paths.
 - Keep migration documentation synchronized between `README.md` conventions and `docs/shadcn-migration-checklist.md` mapping/status whenever UI primitives or exceptions change.
+- Capture spacing work in `docs/spacing-audit-checklist.md` first and keep follow-up fixes tied to checklist IDs (`SP-###`) so multi-story spacing cleanup stays traceable.
 - For intermittent Playwright `page.goto()` detach/network abort flakes on local dev server, use a small bounded retry helper in the affected spec instead of increasing global timeouts.
 - In shared authenticated Playwright suites, avoid executing real logout actions with the default storage state; it can invalidate session assumptions for later specs. Prefer verifying menu action presence/order/keyboard behavior instead.
 
@@ -265,4 +266,15 @@
   - Header auth-menu tests are most stable when they assert item order, semantics, and keyboard interactions directly, and avoid forcing session-destructive logout flows in the shared authenticated suite.
   - When introducing authenticated account actions in the shared layout, update existing shell/auth/responsive specs in the same story to keep baseline assertions aligned with the new header interaction model.
   - Keep authenticated/unauthenticated header behavior explicitly covered in dedicated specs (`@unauth` + authenticated describe blocks) so account-state regressions are caught early.
+---
+## 2026-02-13 13:40:39 CET - US-004
+- Completed an app-wide spacing audit covering primary routes and shared shell/navigation surfaces, with desktop and mobile observations documented per area.
+- Added a tracked, actionable spacing checklist in `docs/spacing-audit-checklist.md` with concrete issue IDs (`SP-001` to `SP-008`), target files/components, and preserved spacing conventions.
+- Added documentation discoverability updates in `README.md` and resolved a pre-existing layout type mismatch in `src/layouts/Layout.astro` (`navLinks` icon narrowing) so required quality gates pass.
+- Verified required quality checks with `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, and `pnpm test --workers=1` (117 passed).
+- Files changed: `docs/spacing-audit-checklist.md`, `README.md`, `src/layouts/Layout.astro`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - For spacing-only stories, capture an audit first with route-level desktop/mobile notes and explicit fix IDs before implementation work begins.
+  - `Layout.astro` nav link literals should use explicit icon literal typing (`'clock' | 'settings'`) to keep Astro prop inference compatible with typed React island props.
+  - Keep spacing cleanup scoped to existing tokens/utilities and use checklist IDs in PR notes/tests so cross-route refactors remain reviewable.
 ---

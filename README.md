@@ -22,6 +22,10 @@ Private meetup coordination website for monthly recurring events among close fri
 - Full migration status and old-to-new mapping checklist: `docs/shadcn-migration-checklist.md`
 - Current state: all planned migration stories are implemented and verified.
 
+## Spacing Audit
+
+- App-wide spacing audit checklist for follow-up fixes: `docs/spacing-audit-checklist.md`
+
 ## Approved Exceptions and Follow-up
 
 - Exception: Clerk auth UIs (`SignIn`/`SignUp`) remain provider-rendered; only local wrapper shells are styled with project shadcn patterns.
@@ -36,7 +40,8 @@ Inside of your Astro project, you'll see the following folders and files:
 ```text
 /
 ├── docs/
-│   └── shadcn-migration-checklist.md
+│   ├── shadcn-migration-checklist.md
+│   └── spacing-audit-checklist.md
 ├── public/
 │   └── favicon.svg
 ├── src
