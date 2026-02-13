@@ -13,6 +13,7 @@
 - For responsive checks, set explicit viewport sizes in-spec (`page.setViewportSize`) and assert no horizontal overflow with `document.documentElement.scrollWidth <= window.innerWidth`.
 - For mobile accessibility touch targets, assert clickable control dimensions with `locator.boundingBox()` and keep both width/height `>= 44`.
 - Keep specs focused: one behavior per test, minimal setup.
+- Avoid sign-out side effects in shared authenticated suites: asserting the presence/order/keyboard behavior of account-menu actions is stable, while executing logout can invalidate auth context used by later tests.
 - Unauthenticated route assertions should target local `/access-denied` first; validate the invite-only message and sign-in link instead of expecting direct middleware redirects to Clerk-hosted domains.
 - For Clerk wrapper page migrations (`/sign-in`, `/sign-up`), add stable `data-test-id` hooks on the local shell and assert both wrapper content and Clerk heading presence to ensure visual migration without breaking auth UI.
 - For event create/edit form migrations, use the shared inline feedback contract (`data-test-id="form-feedback-panel"`) and assert panel text plus submit `aria-busy`/disabled transitions instead of toast-style selectors.

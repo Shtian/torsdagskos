@@ -52,17 +52,17 @@ test.describe('Responsive mobile and tablet polish', () => {
     });
     const historyLink = page.getByRole('link', { name: 'Min historikk' });
     const settingsLink = page.getByRole('link', { name: 'Innstillinger' });
-    const signOutButton = page.getByRole('button', { name: 'Logg ut' });
+    const accountButton = page.getByRole('button', { name: 'Account' });
 
     await expect(createEventLink).toBeVisible();
     await expect(historyLink).toBeVisible();
     await expect(settingsLink).toBeVisible();
-    await expect(signOutButton).toBeVisible();
+    await expect(accountButton).toBeVisible();
 
     await expectTouchTarget(createEventLink);
     await expectTouchTarget(historyLink);
     await expectTouchTarget(settingsLink);
-    await expectTouchTarget(signOutButton);
+    await expectTouchTarget(accountButton);
 
     await expect(
       page.getByRole('heading', { name: /kommende arrangementer/i }),

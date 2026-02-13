@@ -16,6 +16,7 @@
 - After shadcn migration, remove unused Astro starter artifacts (`src/components/Welcome.astro`, `src/assets/*`) and stale global CSS selectors to avoid carrying duplicate legacy UI paths.
 - Keep migration documentation synchronized between `README.md` conventions and `docs/shadcn-migration-checklist.md` mapping/status whenever UI primitives or exceptions change.
 - For intermittent Playwright `page.goto()` detach/network abort flakes on local dev server, use a small bounded retry helper in the affected spec instead of increasing global timeouts.
+- In shared authenticated Playwright suites, avoid executing real logout actions with the default storage state; it can invalidate session assumptions for later specs. Prefer verifying menu action presence/order/keyboard behavior instead.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -251,4 +252,17 @@
   - Use `aria-current="page"` plus a persistent text-decoration class for active header links so visual active state and accessibility state stay in sync.
   - In authenticated shell tests, scope generic heading locators to `role="banner"` and use `exact: true` when homepage content can contain similar heading text.
   - A lightweight in-spec `page.goto()` retry helper is preferable to inflating global test timeouts when occasional detached-frame navigation flakes appear.
+---
+## 2026-02-13 09:43:16 CET - US-003
+- Added an authenticated account dropdown in `src/layouts/Layout.astro` with an `Account` trigger and menu items `Profile`, `Settings`, and `Log out` in the required order.
+- Implemented accessible menu behavior for the header dropdown (menu semantics, Enter/Space open path via button semantics, Escape close support, outside-click close, and preserved keyboard focus patterns).
+- Added logged-out header state in `src/layouts/Layout.astro` that shows only a `Login` action link.
+- Added a protected profile page at `src/pages/profile.astro` and wired the new `Profile` menu destination.
+- Added/updated Playwright coverage for the new header auth menu flows in `tests/auth-header-menu.spec.ts` and aligned dependent shell/auth/responsive tests (`tests/app-shell.spec.ts`, `tests/auth.spec.ts`, `tests/responsive.spec.ts`).
+- Verified quality gates: `pnpm lint`, `pnpm astro check`, and `pnpm test` (117 passed).
+- Files changed: `src/layouts/Layout.astro`, `src/pages/profile.astro`, `tests/auth-header-menu.spec.ts`, `tests/app-shell.spec.ts`, `tests/auth.spec.ts`, `tests/responsive.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Header auth-menu tests are most stable when they assert item order, semantics, and keyboard interactions directly, and avoid forcing session-destructive logout flows in the shared authenticated suite.
+  - When introducing authenticated account actions in the shared layout, update existing shell/auth/responsive specs in the same story to keep baseline assertions aligned with the new header interaction model.
+  - Keep authenticated/unauthenticated header behavior explicitly covered in dedicated specs (`@unauth` + authenticated describe blocks) so account-state regressions are caught early.
 ---

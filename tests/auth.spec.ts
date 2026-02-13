@@ -130,12 +130,12 @@ test.describe('Authentication - Authenticated access', () => {
     await expect(page).toHaveURL('/');
   });
 
-  test('authenticated user can see user button component', async ({ page }) => {
+  test('authenticated user can see account menu trigger', async ({ page }) => {
     // Navigate to homepage
     await page.goto('/');
 
-    // Our layout renders a Logg ut button when authenticated
-    const signOutButton = page.getByRole('button', { name: /logg ut/i });
-    await expect(signOutButton).toBeVisible({ timeout: 10000 });
+    // Our layout renders an Account menu trigger when authenticated
+    const accountButton = page.getByRole('button', { name: 'Account' });
+    await expect(accountButton).toBeVisible({ timeout: 10000 });
   });
 });

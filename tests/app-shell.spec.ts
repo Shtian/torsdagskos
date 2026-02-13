@@ -37,8 +37,8 @@ test.describe('App Shell Layout', () => {
     await expect(settingsBtn).toBeVisible();
     await expect(settingsBtn).toHaveAttribute('href', '/settings');
 
-    const signOutBtn = page.getByRole('button', { name: 'Logg ut' });
-    await expect(signOutBtn).toBeVisible();
+    const accountButton = page.getByRole('button', { name: 'Account' });
+    await expect(accountButton).toBeVisible();
   });
 
   test('header is responsive at mobile breakpoint', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('App Shell Layout', () => {
     await expect(
       page.getByRole('link', { name: 'Innstillinger' }),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Logg ut' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Account' })).toBeVisible();
   });
 
   test('header is responsive at desktop breakpoint', async ({ page }) => {
