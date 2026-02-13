@@ -22,6 +22,20 @@ async function openMobileMenuAndWait(page: Page): Promise<Locator> {
   return mobileNav;
 }
 
+async function gotoWithRetry(page: Page, path: string): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(300);
+    }
+  }
+}
+
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const metrics = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
@@ -62,7 +76,7 @@ test.describe('Responsive mobile and tablet polish', () => {
       location: 'Compact Venue',
     });
 
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     const createEventButton = page.getByRole('button', {
       name: 'Opprett',
@@ -104,7 +118,7 @@ test.describe('Responsive mobile and tablet polish', () => {
   }) => {
     await page.setViewportSize(MOBILE_VIEWPORT);
 
-    await page.goto('/events/new');
+    await gotoWithRetry(page, '/events/new');
 
     await expect(
       page.getByRole('heading', {
@@ -140,7 +154,7 @@ test.describe('Responsive mobile and tablet polish', () => {
       location: 'Edit Venue',
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoWithRetry(page, `/events/${eventId}/edit`);
 
     const saveButton = page.getByRole('button', { name: 'Lagre endringer' });
     const editCancelLink = page.getByRole('link', { name: 'Avbryt' });
@@ -157,7 +171,7 @@ test.describe('Responsive mobile and tablet polish', () => {
   }) => {
     await page.setViewportSize(TABLET_VIEWPORT);
 
-    await page.goto('/settings');
+    await gotoWithRetry(page, '/settings');
     await expect(
       page.getByRole('heading', { name: 'Innstillinger', level: 1 }),
     ).toBeVisible();
@@ -166,13 +180,13 @@ test.describe('Responsive mobile and tablet polish', () => {
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await page.goto('/history');
+    await gotoWithRetry(page, '/history');
     await expect(
       page.getByRole('heading', { name: 'Min svarhistorikk', level: 1 }),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await page.goto('/events/new');
+    await gotoWithRetry(page, '/events/new');
     await expect(
       page.getByRole('heading', {
         name: /opprett nytt arrangement/i,

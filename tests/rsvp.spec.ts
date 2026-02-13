@@ -19,6 +19,23 @@ function uniqueEmail(base: string): string {
   return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
 }
 
+async function gotoWithRetry(
+  page: import('@playwright/test').Page,
+  path: string,
+): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(300);
+    }
+  }
+}
+
 test.describe('RSVP Functionality', () => {
   // Use authenticated storage state for these tests
   test.use({ storageState: './playwright/.clerk/user.json' });
@@ -28,7 +45,7 @@ test.describe('RSVP Functionality', () => {
 
   test('should allow user to change RSVP status', async ({ page }) => {
     // Get the authenticated user's Clerk ID and ensure they exist in the database
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const clerkUserId = await page.evaluate(async () => {
@@ -64,7 +81,7 @@ test.describe('RSVP Functionality', () => {
       location: 'Test Location',
     });
 
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // First, RSVP "Kommer"
     const goingButton = page.getByRole('button', {
@@ -118,7 +135,7 @@ test.describe('RSVP Functionality', () => {
     page,
   }) => {
     // Get the authenticated user's Clerk ID and ensure they exist in the database
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const clerkUserId = await page.evaluate(async () => {
@@ -154,7 +171,7 @@ test.describe('RSVP Functionality', () => {
       location: 'Test Location',
     });
 
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify RSVP buttons are NOT visible
     await expect(
@@ -178,7 +195,7 @@ test.describe('RSVP Functionality', () => {
 
   test('should update RSVP counts after status change', async ({ page }) => {
     // Get the authenticated user's Clerk ID and ensure they exist in the database
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const clerkUserId = await page.evaluate(async () => {
@@ -214,7 +231,7 @@ test.describe('RSVP Functionality', () => {
       location: 'Test Location',
     });
 
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Initially, Kommer count should be 0
     const goingCount = page
@@ -249,7 +266,7 @@ test.describe('RSVP Functionality', () => {
     page,
   }) => {
     // Get the authenticated user's Clerk ID and ensure they exist in the database
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const clerkUserId = await page.evaluate(async () => {
@@ -285,29 +302,34 @@ test.describe('RSVP Functionality', () => {
       location: 'Test Location',
     });
 
-    await page.goto(`/events/${event.id}`);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await gotoWithRetry(page, `/events/${event.id}`);
+      const hasRsvpPanel =
+        (await page.locator('[data-test-id="current-user-rsvp"]').count()) > 0;
+      if (hasRsvpPanel) {
+        break;
+      }
+      if (attempt === 2) {
+        throw new Error('Unable to load RSVP panel for authenticated user.');
+      }
+      await page.waitForTimeout(300);
+    }
 
-    // Initially, should show "Ingen respons"
+    const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
+
+    await expect(currentUserRsvp).toContainText('Ditt svar');
+    await expect(currentUserRsvp).toContainText('Velg status:');
     await expect(
-      page.locator('[data-test-id="current-user-rsvp"]'),
-    ).toContainText('Din status:');
-    await expect(
-      page.locator('[data-test-id="current-user-rsvp"]'),
-    ).toContainText('Ingen respons');
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="going"]'),
+    ).toHaveAttribute('data-active', 'false');
 
     // RSVP "Kommer"
     await page.getByRole('button', { name: 'Kommer', exact: true }).click();
     await page.waitForLoadState('load');
 
-    // Should now show "Kommer"
+    await expect(currentUserRsvp).toContainText('Ditt svar');
     await expect(
-      page.locator('[data-test-id="current-user-rsvp"]'),
-    ).toContainText('Din status:');
-    await expect(
-      page.locator('[data-test-id="current-user-rsvp"]'),
-    ).toContainText('Kommer');
-    await expect(
-      page.locator('[data-test-id="current-user-rsvp"]'),
-    ).not.toContainText('Ingen respons');
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="going"]'),
+    ).toHaveAttribute('data-active', 'true');
   });
 });

@@ -1,10 +1,27 @@
 import { test, expect } from './fixtures';
 
+async function gotoWithRetry(
+  page: import('@playwright/test').Page,
+  path: string,
+): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(300);
+    }
+  }
+}
+
 test.describe('theme baseline @unauth', () => {
   test('applies global light-theme tokens and baseline styles', async ({
     page,
   }) => {
-    await page.goto('/access-denied');
+    await gotoWithRetry(page, '/access-denied');
     await expect(
       page.getByRole('heading', { name: 'Dette er en app kun for inviterte' }),
     ).toBeVisible();

@@ -13,6 +13,8 @@
 - Event detail RSVP UX now uses inline feedback (`data-test-id="rsvp-feedback-panel"` + `#rsvp-feedback`) and `aria-busy` button states; avoid toast-based assertions in RSVP tests.
 - For UI migrations, keep behavior coverage in existing specs and add focused `*-ui.spec.ts` shells/mobile tests so visual refactors do not weaken functional assertions.
 - For Norwegian localization stories, update accessible-name assertions and prefer test IDs for badge/count checks when translated labels overlap (for example `kommer` vs `kommer ikke`).
+- In long serial Playwright runs, use a small bounded `page.goto()` retry helper in navigation-heavy specs to reduce intermittent local dev-server detach/abort timeouts.
+- Event-detail RSVP buttons keep stable `aria-label` names while showing temporary loading text, so assert loading/error through feedback panel text plus button state attributes instead of role-name text changes.
 - After shadcn migration, remove unused Astro starter artifacts (`src/components/Welcome.astro`, `src/assets/*`) and stale global CSS selectors to avoid carrying duplicate legacy UI paths.
 - Keep migration documentation synchronized between `README.md` conventions and `docs/shadcn-migration-checklist.md` mapping/status whenever UI primitives or exceptions change.
 - Capture spacing work in `docs/spacing-audit-checklist.md` first and keep follow-up fixes tied to checklist IDs (`SP-###`) so multi-story spacing cleanup stays traceable.
@@ -277,4 +279,15 @@
   - For spacing-only stories, capture an audit first with route-level desktop/mobile notes and explicit fix IDs before implementation work begins.
   - `Layout.astro` nav link literals should use explicit icon literal typing (`'clock' | 'settings'`) to keep Astro prop inference compatible with typed React island props.
   - Keep spacing cleanup scoped to existing tokens/utilities and use checklist IDs in PR notes/tests so cross-route refactors remain reviewable.
+---
+## 2026-02-13 21:35:18 CET - US-005
+- Applied spacing fixes from `docs/spacing-audit-checklist.md` across shared layouts and key views: removed homepage double outer padding, normalized authenticated shell wrappers (`mt-6 sm:mt-10`, zero extra horizontal shell padding inside `Layout` main), aligned auth wrapper top spacing, added missing profile shell wrapper, and standardized key card paddings (`px-6 sm:px-8`) where shells should match.
+- Harmonized header/mobile-menu spacing rhythm while preserving accessibility touch targets (`min-h-11 min-w-11`) by tightening nav/action spacing in `src/layouts/Layout.astro` and `src/components/HeaderMobileSheet.tsx`.
+- Added Playwright spacing coverage in `tests/spacing-consistency-ui.spec.ts` for authenticated and unauthenticated shells (mobile + desktop computed style checks), and stabilized existing flaky specs with bounded `goto` retries and response-synchronized assertions across affected tests.
+- Verified required quality gates: `pnpm lint`, `pnpm astro check`, and `pnpm test --workers=1` (120 passed).
+- Files changed: `src/pages/index.astro`, `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `src/pages/events/[id].astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `src/pages/profile.astro`, `src/pages/sign-in.astro`, `src/pages/sign-up.astro`, `src/pages/access-denied.astro`, `src/layouts/Layout.astro`, `src/components/HeaderMobileSheet.tsx`, `docs/spacing-audit-checklist.md`, `tests/spacing-consistency-ui.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/event-creation.spec.ts`, `tests/events.spec.ts`, `tests/helpers/api-helpers.ts`, `tests/overlay-primitives.spec.ts`, `tests/responsive.spec.ts`, `tests/rsvp.spec.ts`, `tests/theme-baseline.spec.ts`, `tests/AGENTS.md`, `progress.txt`, `prd.json`.
+- **Learnings for future iterations**
+  - Keep page-level spacing regressions deterministic by asserting computed shell spacing (`margin-top` and horizontal padding) via stable `data-test-id` shell hooks at both mobile and desktop breakpoints.
+  - For RSVP error-path tests, synchronize assertions with the `/api/rsvp` response and validate inline feedback panel content; role-name loading assertions are brittle because button `aria-label` values remain constant.
+  - Reusing a local bounded `gotoWithRetry` helper in long serial suites materially improves reliability for intermittent local dev-server navigation failures without increasing global timeouts.
 ---

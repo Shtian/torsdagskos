@@ -107,12 +107,18 @@ function formatEventDate(date: Date): string {
   title="Arrangementer - Torsdagskos"
   description="Se kommende og tidligere Torsdagskos-arrangementer med sted, tidspunkt og svaroversikt."
 >
-  <div class="mx-auto w-full max-w-[75rem] p-4 sm:p-6">
+  <div
+    class="mx-auto mt-6 w-full max-w-[75rem] pb-8 sm:mt-10"
+    data-test-id="homepage-shell"
+  >
     <ShadcnIslandDemo client:load />
 
     <section class="space-y-4" data-test-id="homepage-upcoming">
       <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-        <div data-slot="card-header" class="grid auto-rows-min gap-4 px-6 sm:grid-cols-[1fr_auto] sm:items-start">
+        <div
+          data-slot="card-header"
+          class="grid auto-rows-min gap-4 px-6 sm:grid-cols-[1fr_auto] sm:items-start sm:px-8"
+        >
           <div class="space-y-2">
             <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Kommende arrangementer</h1>
             <p data-slot="card-description" class="m-0 text-sm text-muted-foreground">
@@ -142,7 +148,7 @@ function formatEventDate(date: Date): string {
           </div>
         </div>
 
-        <div data-slot="card-content" class="px-6">
+        <div data-slot="card-content" class="px-6 sm:px-8">
           {upcomingEvents.length === 0 && pastEvents.length === 0 && (
             <div
               data-slot="card"
@@ -176,13 +182,13 @@ function formatEventDate(date: Date): string {
         <div data-slot="separator" class="bg-border my-8 h-px w-full" data-test-id="section-separator" />
         <section class="space-y-4" data-test-id="homepage-past">
           <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-            <div data-slot="card-header" class="px-6">
+            <div data-slot="card-header" class="px-6 sm:px-8">
               <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Tidligere arrangementer</h1>
               <p data-slot="card-description" class="mt-2 mb-0 text-sm text-muted-foreground">
                 Tidligere arrangementer er sortert fra nyeste til eldste.
               </p>
             </div>
-            <div data-slot="card-content" class="px-6">
+            <div data-slot="card-content" class="px-6 sm:px-8">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {pastEvents.map(event => (
                   <EventCard

@@ -1,5 +1,22 @@
 import { test, expect } from './fixtures';
 
+async function gotoWithRetry(
+  page: import('@playwright/test').Page,
+  path: string,
+): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(300);
+    }
+  }
+}
+
 test.describe('Event Creation', () => {
   test('should display event creation form', async ({ page }) => {
     await page.goto('/events/new');
@@ -161,7 +178,7 @@ test.describe('Event Creation', () => {
   test('should have Opprett arrangement button in header on homepage', async ({
     page,
   }) => {
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Check that Opprett arrangement button is visible in header
     await expect(
@@ -172,7 +189,7 @@ test.describe('Event Creation', () => {
   test('should navigate to event creation page from header button', async ({
     page,
   }) => {
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Click Opprett arrangement button
     await page.getByRole('link', { name: /opprett arrangement/i }).click();
@@ -253,7 +270,7 @@ test.describe('Event Creation', () => {
     await page.waitForURL(/\/events\/\d+$/, { timeout: 10000 });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Should see the new event in upcoming events
     await expect(

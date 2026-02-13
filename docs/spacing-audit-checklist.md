@@ -26,21 +26,21 @@ It is intentionally scoped for follow-up implementation in `US-005`.
 
 ## Actionable Fix Checklist (For US-005)
 
-- [ ] **SP-001**: Define one page-shell spacing recipe for authenticated content pages and apply consistently.
+- [x] **SP-001**: Define one page-shell spacing recipe for authenticated content pages and apply consistently.
   - Target: `src/pages/index.astro`, `src/pages/history.astro`, `src/pages/events/[id].astro`, `src/pages/settings.astro`, `src/pages/profile.astro`
-- [ ] **SP-002**: Remove double outer padding on homepage by aligning inner wrapper with `Layout` main container responsibilities.
+- [x] **SP-002**: Remove double outer padding on homepage by aligning inner wrapper with `Layout` main container responsibilities.
   - Target: `src/pages/index.astro`, `src/layouts/Layout.astro`
-- [ ] **SP-003**: Normalize top spacing (`mt-*`) across authenticated pages so route changes do not shift content unexpectedly.
+- [x] **SP-003**: Normalize top spacing (`mt-*`) across authenticated pages so route changes do not shift content unexpectedly.
   - Target: `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `src/pages/events/[id].astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `src/pages/profile.astro`
-- [ ] **SP-004**: Add a consistent outer page wrapper to `profile` route to match spacing rhythm used elsewhere.
+- [x] **SP-004**: Add a consistent outer page wrapper to `profile` route to match spacing rhythm used elsewhere.
   - Target: `src/pages/profile.astro`
-- [ ] **SP-005**: Align `sm` breakpoint horizontal gutters between form pages (`sm:px-0`) and list/detail pages (`sm:px-6`) to one shared convention.
+- [x] **SP-005**: Align `sm` breakpoint horizontal gutters between form pages (`sm:px-0`) and list/detail pages (`sm:px-6`) to one shared convention.
   - Target: `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `src/pages/settings.astro`, `src/pages/events/[id].astro`, `src/pages/history.astro`
-- [ ] **SP-006**: Align auth wrapper vertical spacing policy (keep distinction if intentional, otherwise reduce jump from app routes).
+- [x] **SP-006**: Align auth wrapper vertical spacing policy (keep distinction if intentional, otherwise reduce jump from app routes).
   - Target: `src/pages/sign-in.astro`, `src/pages/sign-up.astro`, `src/pages/access-denied.astro`
-- [ ] **SP-007**: Standardize card section paddings (`px-6 sm:px-8`, `py-*`) across key page shells where visual rhythm is intended to match.
+- [x] **SP-007**: Standardize card section paddings (`px-6 sm:px-8`, `py-*`) across key page shells where visual rhythm is intended to match.
   - Target: `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `src/pages/events/[id].astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `src/pages/profile.astro`
-- [ ] **SP-008**: Harmonize header/mobile-menu spacing rhythm with desktop nav spacing while preserving touch targets and accessibility.
+- [x] **SP-008**: Harmonize header/mobile-menu spacing rhythm with desktop nav spacing while preserving touch targets and accessibility.
   - Target: `src/layouts/Layout.astro`, `src/components/HeaderMobileSheet.tsx`
 
 ## Audit Scope Notes

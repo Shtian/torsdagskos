@@ -23,6 +23,24 @@ function uniqueEmail(base: string): string {
   return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
 }
 
+async function gotoWithRetry(
+  page: import('@playwright/test').Page,
+  path: string,
+): Promise<import('@playwright/test').Response | null> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await page.goto(path, { waitUntil: 'domcontentloaded' });
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(300);
+    }
+  }
+
+  return null;
+}
+
 test.describe('Events List Page', () => {
   // Use authenticated storage state for these tests
   test.use({ storageState: './playwright/.clerk/user.json' });
@@ -79,7 +97,7 @@ test.describe('Events List Page', () => {
     });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Verify page title
     await expect(page).toHaveTitle(/Torsdagskos/);
@@ -120,7 +138,7 @@ test.describe('Events List Page', () => {
     await cleanupTestData();
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Verify empty state message is displayed
     await expect(
@@ -148,7 +166,7 @@ test.describe('Events List Page', () => {
     });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Click on the event card
     await page.getByRole('heading', { name: 'Clickable Event' }).click();
@@ -208,7 +226,7 @@ test.describe('Events List Page', () => {
     });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Verify RSVP counts are displayed correctly
     const eventCard = page
@@ -241,7 +259,7 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify page title
     await expect(page).toHaveTitle(/Complete Arrangementsdetaljer/);
@@ -331,7 +349,7 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify RSVP count boxes
     const rsvpCounts = page.locator('[data-test-id="rsvp-counts"]');
@@ -358,20 +376,31 @@ test.describe('Event Detail Page', () => {
     await expect(
       page.getByRole('heading', { name: /kommer \(2\)/i }),
     ).toBeVisible();
-    await expect(page.getByText('Alice Johnson')).toBeVisible();
-    await expect(page.getByText('Bob Smith')).toBeVisible();
+    const goingSection = page.locator('section').filter({
+      has: page.getByRole('heading', { name: /kommer \(2\)/i }),
+    });
+    await expect(goingSection.getByText('Alice Johnson').first()).toBeVisible();
+    await expect(goingSection.getByText('Bob Smith').first()).toBeVisible();
 
     // Verify "Kanskje" list
     await expect(
       page.getByRole('heading', { name: /kanskje \(1\)/i }),
     ).toBeVisible();
-    await expect(page.getByText('Charlie Brown')).toBeVisible();
+    const maybeSection = page.locator('section').filter({
+      has: page.getByRole('heading', { name: /kanskje \(1\)/i }),
+    });
+    await expect(maybeSection.getByText('Charlie Brown').first()).toBeVisible();
 
     // Verify "Kommer ikke" list
     await expect(
       page.getByRole('heading', { name: /kommer ikke \(1\)/i }),
     ).toBeVisible();
-    await expect(page.getByText('Diana Prince')).toBeVisible();
+    const notGoingSection = page.locator('section').filter({
+      has: page.getByRole('heading', { name: /kommer ikke \(1\)/i }),
+    });
+    await expect(
+      notGoingSection.getByText('Diana Prince').first(),
+    ).toBeVisible();
   });
 
   test('displays no response count correctly', async ({ page }) => {
@@ -408,7 +437,7 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify Ingen respons count is displayed
     // Note: We don't check the specific count because users persist across test runs
@@ -442,7 +471,7 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Click back link
     await page
@@ -458,7 +487,7 @@ test.describe('Event Detail Page', () => {
 
   test('returns 404 for non-existent event ID', async ({ page }) => {
     // Navigate to a non-existent event
-    const response = await page.goto('/events/999999');
+    const response = await gotoWithRetry(page, '/events/999999');
 
     // Verify 404 response
     expect(response?.status()).toBe(404);
@@ -469,7 +498,7 @@ test.describe('Event Detail Page', () => {
     await cleanupTestData();
 
     //  Get the clerk userId from the authenticated session
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const clerkUserId = await page.evaluate(async () => {
@@ -520,13 +549,16 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify current user's RSVP status is displayed prominently
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
-    await expect(currentUserRsvp.getByText('Din status:')).toBeVisible();
-    await expect(currentUserRsvp.getByText('Kommer')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Ditt svar')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Velg status:')).toBeVisible();
+    await expect(
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="going"]'),
+    ).toHaveAttribute('data-active', 'true');
   });
 
   test('displays no response for user without RSVP', async ({ page }) => {
@@ -534,7 +566,7 @@ test.describe('Event Detail Page', () => {
     await cleanupTestData();
 
     // Visit homepage first to ensure authenticated user is synced to database
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const tomorrow = new Date();
@@ -547,12 +579,23 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page (no RSVP created)
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify "Ingen respons" is displayed for current user
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
-    await expect(currentUserRsvp.getByText('Din status:')).toBeVisible();
-    await expect(currentUserRsvp.getByText('Ingen respons')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Ditt svar')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Velg status:')).toBeVisible();
+    await expect(
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="going"]'),
+    ).toHaveAttribute('data-active', 'false');
+    await expect(
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="maybe"]'),
+    ).toHaveAttribute('data-active', 'false');
+    await expect(
+      currentUserRsvp.locator(
+        '[data-rsvp-button="true"][data-status="not_going"]',
+      ),
+    ).toHaveAttribute('data-active', 'false');
   });
 });

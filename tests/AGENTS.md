@@ -26,8 +26,11 @@
 - For React-island interaction tests on `/`, wait for `data-hydrated="true"` on `page.getByTestId('shadcn-island')` before clicking tabs/select/dialog/dropdown triggers to avoid pre-hydration flakiness.
 - For auth-sensitive `page.evaluate()` calls to `/api/test/current-user`, guard for intermittent `401` + non-JSON responses and retry a few times before failing to reduce suite flakes.
 - For occasional dev-server navigation flakes (`net::ERR_ABORTED` / detached frame), wrap critical `page.goto()` calls in a small bounded retry helper inside the spec.
+- For long serial Playwright runs, apply the same bounded `page.goto()` retry helper in setup/navigation-heavy specs (not just one route) to reduce random `ERR_ABORTED`/timeout failures.
 - For localized UI copy, prefer stable `data-test-id` selectors for badges/count pills where translated labels can overlap (for example `1 kommer` vs `1 kommer ikke`) and trigger strict-mode locator collisions.
 - During translation-focused stories, keep assertions for app-owned shell text localized, but keep Clerk widget heading checks regex-tolerant because Clerk-rendered copy can vary by provider locale/configuration.
+- RSVP buttons on event detail keep `aria-label` values (`Kommer`/`Kanskje`/`Kommer ikke`) even when button text temporarily changes to loading labels, so loading/error assertions should target feedback panel text and button state attributes instead of role-name text swaps.
+- Spacing regression checks should use stable page-shell test ids (`*-shell`) plus computed style assertions for `margin-top` and horizontal padding to validate shared shell contracts across breakpoints.
 
 ## Test Helpers (tests/helpers/api-helpers.ts)
 

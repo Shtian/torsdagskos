@@ -63,7 +63,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
   title={`Rediger ${event.title} - Torsdagskos`}
   description={`Oppdater detaljer for ${event.title}, inkludert dato, sted og valgfri kartlenke.`}
 >
-  <section class="mx-auto mt-6 w-full max-w-4xl px-4 pb-8 sm:mt-10 sm:px-0" data-test-id="edit-event-shell">
+  <section class="mx-auto mt-6 w-full max-w-4xl pb-8 sm:mt-10" data-test-id="edit-event-shell">
     <div class="mb-6">
       <a href={`/events/${event.id}`} class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Tilbake til arrangement</a>
     </div>

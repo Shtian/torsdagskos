@@ -104,12 +104,12 @@ const isUpcoming = new Date(event.dateTime) >= now;
   title={`${event.title} - Torsdagskos`}
   description={`Se detaljer og svaralternativer for ${event.title} på ${event.location}.`}
 >
-  <section class="mx-auto mt-6 w-full max-w-5xl px-4 pb-8 sm:mt-10 sm:px-6" data-test-id="event-detail-shell">
+  <section class="mx-auto mt-6 w-full max-w-5xl pb-8 sm:mt-10" data-test-id="event-detail-shell">
     <div class="mb-6">
       <a href="/" class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Tilbake til arrangementer</a>
     </div>
 
-    <div class="mb-6 space-y-4 px-1 py-1 sm:px-2">
+    <div class="mb-6 space-y-4">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="space-y-2">
             <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">{event.title}</h1>
@@ -164,8 +164,8 @@ const isUpcoming = new Date(event.dateTime) >= now;
     </div>
     <Separator className="my-6" />
 
-    <h2 class="mb-3 mt-0 px-1 text-lg text-(--color-accent-dark) sm:px-2 sm:text-xl">RSVP</h2>
-    <section class="space-y-5 px-1 sm:px-2">
+    <h2 class="mb-3 mt-0 text-lg text-(--color-accent-dark) sm:text-xl">RSVP</h2>
+    <section class="space-y-5">
         <section data-test-id="current-user-rsvp" class="space-y-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -277,12 +277,12 @@ const isUpcoming = new Date(event.dateTime) >= now;
     </section>
     <Separator className="my-6" />
 
-    <div class="mb-3 flex items-center justify-between px-1 sm:px-2">
+    <div class="mb-3 flex items-center justify-between">
       <h2 class="m-0 text-lg text-(--color-accent-dark) sm:text-xl">Inviterte</h2>
       <span class="text-xs uppercase tracking-[0.16em] text-muted-foreground">Totalt {totalUsers.length}</span>
     </div>
     <div data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
-      <div data-slot="card-content" class="space-y-5 p-5 sm:p-8">
+      <div data-slot="card-content" class="space-y-5 px-6 py-6 sm:px-8">
         <section>
           <h3 class="m-0 text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">Kommer ({goingRsvps.length})</h3>
           <ul class="mt-2 list-none divide-y p-0">

@@ -119,7 +119,17 @@ export async function createEvent(
   },
 ): Promise<{ eventId: number }> {
   // Navigate to a page first to ensure we have a proper browser context
-  await page.goto('/');
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded' });
+      break;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(300);
+    }
+  }
 
   try {
     const result = await page.evaluate(async (eventData: any) => {

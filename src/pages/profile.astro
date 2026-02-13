@@ -10,29 +10,28 @@ const user = userId ? await clerkClient(Astro).users.getUser(userId) : null;
   title="Profile - Torsdagskos"
   description="View account details for your private Torsdagskos profile."
 >
-  <section
-    data-test-id="profile-page-shell"
-    class="mx-auto max-w-3xl overflow-hidden rounded-xl border bg-card shadow-sm"
-  >
-    <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
-      <p
-        class="inline-flex w-fit items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-[0.08em] text-primary uppercase"
-      >
-        Account
-      </p>
-      <h1 class="m-0 text-2xl sm:text-3xl">Profile</h1>
-      <p class="m-0 text-sm text-muted-foreground">
-        Basic account details from your authenticated session.
-      </p>
-    </div>
-    <div data-slot="card-content" class="grid gap-4 px-6 py-5 sm:px-8">
-      <div class="rounded-md border bg-muted/30 px-4 py-3">
-        <p class="m-0 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">Name</p>
-        <p class="m-0 text-base text-foreground">{user?.fullName || user?.firstName || 'Not provided'}</p>
+  <section data-test-id="profile-page-shell" class="mx-auto mt-6 w-full max-w-3xl pb-8 sm:mt-10">
+    <div data-slot="card" class="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
+        <p
+          class="inline-flex w-fit items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-[0.08em] text-primary uppercase"
+        >
+          Account
+        </p>
+        <h1 class="m-0 text-2xl sm:text-3xl">Profile</h1>
+        <p class="m-0 text-sm text-muted-foreground">
+          Basic account details from your authenticated session.
+        </p>
       </div>
-      <div class="rounded-md border bg-muted/30 px-4 py-3">
-        <p class="m-0 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">Email</p>
-        <p class="m-0 text-base text-foreground">{user?.emailAddresses[0]?.emailAddress || 'Not provided'}</p>
+      <div data-slot="card-content" class="grid gap-4 px-6 py-5 sm:px-8">
+        <div class="rounded-md border bg-muted/30 px-4 py-3">
+          <p class="m-0 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">Name</p>
+          <p class="m-0 text-base text-foreground">{user?.fullName || user?.firstName || 'Not provided'}</p>
+        </div>
+        <div class="rounded-md border bg-muted/30 px-4 py-3">
+          <p class="m-0 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">Email</p>
+          <p class="m-0 text-base text-foreground">{user?.emailAddresses[0]?.emailAddress || 'Not provided'}</p>
+        </div>
       </div>
     </div>
   </section>

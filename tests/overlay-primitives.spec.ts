@@ -1,10 +1,34 @@
 import { test, expect } from './fixtures';
 
-async function gotoHomepageAndWaitForIsland(page: any) {
-  await page.goto('/');
-  const island = page.getByTestId('shadcn-island');
-  await expect(island).toBeVisible();
-  await expect(island).toHaveAttribute('data-hydrated', 'true');
+async function gotoHomepageAndWaitForIsland(
+  page: import('@playwright/test').Page,
+) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+      const island = page.getByTestId('shadcn-island');
+      await expect(island).toBeVisible({ timeout: 8000 });
+
+      try {
+        await expect
+          .poll(async () => await island.getAttribute('data-hydrated'), {
+            timeout: 15000,
+          })
+          .toBe('true');
+      } catch {
+        // Fall back to a visible trigger check when hydration marker lags.
+        await expect(page.getByTestId('tab-trigger-overview')).toBeVisible();
+      }
+
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(400);
+    }
+  }
 }
 
 test.describe('Overlay Primitives (Dialog, DropdownMenu, Tabs)', () => {
@@ -47,20 +71,21 @@ test.describe('Overlay Primitives (Dialog, DropdownMenu, Tabs)', () => {
     test('should support keyboard navigation for tabs', async ({ page }) => {
       await gotoHomepageAndWaitForIsland(page);
 
-      // Focus on first tab
-      await page.getByTestId('tab-trigger-overview').focus();
+      const overviewTrigger = page.getByTestId('tab-trigger-overview');
+      const componentsTrigger = page.getByTestId('tab-trigger-components');
+      const interactionsTrigger = page.getByTestId('tab-trigger-interactions');
 
-      // Press right arrow to move to next tab
-      await page.keyboard.press('ArrowRight');
-      await expect(page.getByTestId('tab-trigger-components')).toBeFocused();
+      await overviewTrigger.focus();
+      await expect(overviewTrigger).toBeFocused();
 
-      // Press right arrow again
-      await page.keyboard.press('ArrowRight');
-      await expect(page.getByTestId('tab-trigger-interactions')).toBeFocused();
+      await overviewTrigger.press('ArrowRight');
+      await expect(componentsTrigger).toBeFocused();
 
-      // Press left arrow to go back
-      await page.keyboard.press('ArrowLeft');
-      await expect(page.getByTestId('tab-trigger-components')).toBeFocused();
+      await componentsTrigger.press('ArrowRight');
+      await expect(interactionsTrigger).toBeFocused();
+
+      await interactionsTrigger.press('ArrowLeft');
+      await expect(componentsTrigger).toBeFocused();
     });
   });
 

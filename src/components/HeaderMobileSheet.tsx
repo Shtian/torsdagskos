@@ -52,7 +52,7 @@ export default function HeaderMobileSheet({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex items-center gap-2 md:hidden">
+    <div className="flex items-center gap-1.5 md:hidden">
       <a href="/events/new" className="no-underline">
         <Button
           size="sm"
@@ -79,7 +79,7 @@ export default function HeaderMobileSheet({
           className="w-72 p-0 [&>button]:hidden"
           showCloseButton={false}
         >
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
             <div className="flex items-center gap-2.5">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                 {userInitial}
@@ -104,7 +104,7 @@ export default function HeaderMobileSheet({
             </Button>
           </div>
 
-          <nav className="flex flex-col px-2 py-2" aria-label="Mobilnavigasjon">
+          <nav className="flex flex-col px-3 py-3" aria-label="Mobilnavigasjon">
             {navLinks.map((link) => {
               const isActive = currentPath === link.href;
               return (
@@ -113,7 +113,7 @@ export default function HeaderMobileSheet({
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    'min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground',
+                    'min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground',
                     isActive && 'bg-secondary font-semibold text-foreground',
                   )}
                 >
@@ -125,18 +125,18 @@ export default function HeaderMobileSheet({
             })}
           </nav>
 
-          <div className="mt-auto border-t border-border px-2 py-2">
+          <div className="mt-auto border-t border-border px-3 py-3">
             <a
               href="/profile"
               onClick={() => setMobileOpen(false)}
-              className="min-h-11 min-w-11 inline-flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground"
+              className="min-h-11 min-w-11 inline-flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground"
             >
               <User className="h-4 w-4" />
               Profil
             </a>
             <button
               type="button"
-              className="min-h-11 min-w-11 inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+              className="min-h-11 min-w-11 inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
               onClick={() => {
                 setMobileOpen(false);
                 runLogout();

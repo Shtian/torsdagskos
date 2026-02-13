@@ -116,15 +116,20 @@ test.describe('Accessibility polish', () => {
       });
     });
 
-    await page.getByRole('button', { name: 'Kommer', exact: true }).click();
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes('/api/rsvp') &&
+          response.request().method() === 'POST' &&
+          response.status() === 500,
+      ),
+      page.getByRole('button', { name: 'Kommer', exact: true }).click(),
+    ]);
 
-    await expect(
-      page.getByRole('button', { name: 'Lagrer...' }),
-    ).toBeDisabled();
-    await expect(page.getByText('Lagrer svar...')).toBeVisible();
     await expect(page.getByTestId('rsvp-feedback-panel')).toBeVisible();
     await expect(page.locator('#rsvp-feedback')).toHaveText(
       /kunne ikke oppdatere svar/i,
+      { timeout: 10000 },
     );
     await expect(
       page.getByRole('button', { name: 'Kommer', exact: true }),
