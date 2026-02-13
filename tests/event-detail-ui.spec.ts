@@ -30,13 +30,10 @@ test.describe('Event Detail UI Migration', () => {
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Arrangementsdetaljer', level: 2 }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Svar', level: 2 }),
+      page.getByRole('heading', { name: 'RSVP', level: 2 }),
     ).toBeVisible();
 
-    await expect(page.locator('[data-slot="card"]')).toHaveCount(3);
+    await expect(page.locator('[data-slot="card"]')).toHaveCount(1);
     await expect(
       page.getByRole('link', { name: /tilbake til arrangementer/i }),
     ).toHaveAttribute('href', '/');
