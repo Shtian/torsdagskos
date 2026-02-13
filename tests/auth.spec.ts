@@ -134,8 +134,8 @@ test.describe('Authentication - Authenticated access', () => {
     // Navigate to homepage
     await page.goto('/');
 
-    // Our layout renders an Account menu trigger when authenticated
-    const accountButton = page.getByRole('button', { name: 'Account' });
+    // Our layout renders a profile menu trigger when authenticated
+    const accountButton = page.getByRole('button', { name: 'Konto meny' });
     await expect(accountButton).toBeVisible({ timeout: 10000 });
   });
 });

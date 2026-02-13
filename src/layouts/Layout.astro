@@ -1,7 +1,6 @@
 ---
 import '../styles/global.css';
 import { clerkClient } from '@clerk/astro/server';
-import { Button } from '@/components/ui/button';
 
 interface Props {
   title?: string;
@@ -15,19 +14,33 @@ const {
 
 // Get authenticated user
 const { userId } = Astro.locals.auth();
-let user = null;
+let user: Awaited<ReturnType<ReturnType<typeof clerkClient>['users']['getUser']>> | null = null;
 const shouldRegisterServiceWorker = !!userId;
 const currentPath = Astro.url.pathname;
+let username = 'Bruker';
 
 const navLinks = [
-  { href: '/events/new', label: '+ Opprett arrangement' },
-  { href: '/history', label: 'Min historikk' },
-  { href: '/settings', label: 'Innstillinger' },
+  {
+    href: '/history',
+    label: 'Min historikk',
+    icon: 'clock',
+  },
+  {
+    href: '/settings',
+    label: 'Innstillinger',
+    icon: 'settings',
+  },
 ];
 
 if (userId) {
   user = await clerkClient(Astro).users.getUser(userId);
+  username =
+    user.firstName?.trim() ||
+    user.username?.trim() ||
+    user.emailAddresses[0]?.emailAddress.split('@')[0] ||
+    'Bruker';
 }
+const userInitial = username.charAt(0).toUpperCase();
 ---
 
 <!doctype html>
@@ -45,103 +58,266 @@ if (userId) {
 		<title>{title}</title>
 	</head>
 	<body>
-		<a href="#main-content" class="skip-link">Hopp til hovedinnhold</a>
+		<a
+			href="#main-content"
+			class="absolute left-4 top-[-10rem] z-[1000] rounded-md bg-(--color-accent-dark) px-3 py-2 text-white no-underline focus-visible:top-4"
+		>
+			Hopp til hovedinnhold
+		</a>
 		<div class="flex min-h-screen flex-col">
-			<header class="sticky top-0 z-50 border-b bg-background shadow-sm">
-				<div class="mx-auto flex w-full max-w-[75rem] flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between lg:px-6 lg:py-5">
-					<a href="/" class="no-underline">
-						<h1 class="m-0 text-2xl text-foreground sm:text-[1.75rem] lg:text-[2rem]">Torsdagskos</h1>
+			<header class="sticky top-0 z-50 w-full bg-background/95 supports-[backdrop-filter]:bg-background/80 backdrop-blur-sm">
+				<div class="mx-auto flex h-14 w-full max-w-6xl items-center px-4 sm:px-6 lg:px-8">
+					<a href="/" class="mr-8 shrink-0 no-underline">
+						<h1 class="m-0 text-lg font-bold tracking-tight text-foreground">Torsdagskos</h1>
 					</a>
 
-					{user && (
-						<div class="w-full md:w-auto">
-							<div class="mb-2 text-right">
-								<span class="hidden text-sm text-muted-foreground sm:inline">
-									{user.firstName || user.emailAddresses[0]?.emailAddress}
-								</span>
-							</div>
-							<div class="flex w-full flex-col gap-3 md:w-auto md:items-end">
-								<nav aria-label="Hovednavigasjon" class="w-full md:w-auto">
-									<ul class="m-0 grid list-none grid-cols-2 gap-x-4 gap-y-2 p-0 sm:grid-cols-3 md:flex md:flex-wrap md:justify-end md:gap-4">
-										{
-											navLinks.map((link) => (
-												<li>
-													<a
-														href={link.href}
-														aria-current={currentPath === link.href ? 'page' : undefined}
-														class:list={[
-															'touch-target inline-flex items-center rounded-sm px-1 py-1 text-sm font-semibold text-foreground no-underline underline-offset-4 transition hover:underline focus-visible:underline',
-															currentPath === link.href
-																? 'underline decoration-2'
-																: 'decoration-1',
-														]}
-													>
-														{link.label}
-													</a>
-												</li>
-											))
-										}
-									</ul>
-								</nav>
-								<div class="relative md:self-end" data-header-profile-menu>
-									<Button
-										id="header-profile-trigger"
-										type="button"
-										size="lg"
-										className="touch-target min-w-[9rem] justify-center"
-										aria-haspopup="menu"
-										aria-expanded="false"
-										aria-controls="header-profile-menu"
-										data-header-profile-trigger
-									>
-										Account
-									</Button>
-									<div
-										id="header-profile-menu"
-										role="menu"
-										aria-labelledby="header-profile-trigger"
-										data-header-profile-content
-										class="absolute right-0 z-50 mt-2 flex min-w-[11rem] flex-col gap-1 rounded-md border bg-popover p-1 shadow-md"
-										hidden
-									>
+					{
+						user && (
+							<nav class="hidden items-center gap-1 md:flex" aria-label="Hovednavigasjon">
+								{
+									navLinks.map((link) => (
 										<a
-											href="/profile"
-											role="menuitem"
-											class="touch-target rounded-sm px-3 py-2 text-sm font-medium text-popover-foreground no-underline transition hover:bg-muted focus-visible:bg-muted"
+											href={link.href}
+											aria-current={currentPath === link.href ? 'page' : undefined}
+											class:list={[
+												'min-h-11 min-w-11 inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground no-underline transition hover:bg-transparent hover:text-foreground',
+												currentPath === link.href ? 'font-semibold text-foreground' : 'font-medium',
+											]}
 										>
-											Profile
+											{
+												link.icon === 'clock' && (
+													<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+														<circle cx="12" cy="12" r="9"></circle>
+														<path d="M12 7v5l3 3"></path>
+													</svg>
+												)
+											}
+											{
+												link.icon === 'settings' && (
+													<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+														<circle cx="12" cy="12" r="3"></circle>
+														<path d="M19.4 15a1.7 1.7 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.05V21a2 2 0 0 1-4 0v-.08a1.7 1.7 0 0 0-.4-1.05 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1-.4H3a2 2 0 0 1 0-4h.08a1.7 1.7 0 0 0 1-.4 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.05V3a2 2 0 0 1 4 0v.08a1.7 1.7 0 0 0 .4 1.05 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1 .4H21a2 2 0 0 1 0 4h-.08a1.7 1.7 0 0 0-1 .4 1.7 1.7 0 0 0-.52.6z"></path>
+													</svg>
+												)
+											}
+											{link.label}
 										</a>
+									))
+								}
+							</nav>
+						)
+					}
+
+					<div class="flex-1"></div>
+
+					{
+						user ? (
+							<>
+									<div class="hidden items-center gap-2 md:flex">
 										<a
-											href="/settings"
-											role="menuitem"
-											class="touch-target rounded-sm px-3 py-2 text-sm font-medium text-popover-foreground no-underline transition hover:bg-muted focus-visible:bg-muted"
+											href="/events/new"
+											class="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-white no-underline transition hover:brightness-95"
 										>
-											Settings
-										</a>
-										<button
-											type="button"
-											role="menuitem"
-											data-header-logout-button
-											class="touch-target w-full cursor-pointer rounded-sm px-3 py-2 text-left text-sm font-medium text-popover-foreground transition hover:bg-muted focus-visible:bg-muted"
+										<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+											<path d="M12 5v14"></path>
+											<path d="M5 12h14"></path>
+										</svg>
+										Opprett arrangement
+									</a>
+
+									<div class="mx-1 h-6 w-px bg-border"></div>
+
+										<div class="relative" data-header-profile-menu>
+											<button
+												type="button"
+												id="header-profile-trigger"
+												class="inline-flex h-9 items-center gap-2 rounded-full py-1 pl-1 pr-2.5 transition-colors hover:bg-secondary"
+											aria-haspopup="menu"
+											aria-expanded="false"
+											aria-label="Konto meny"
+											aria-controls="header-profile-menu"
+											data-header-profile-trigger
 										>
-											Log out
+											<span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{userInitial}</span>
+											<span class="max-w-[8rem] truncate text-sm font-semibold text-foreground">{username}</span>
+											<svg class="h-3.5 w-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+												<path d="m6 9 6 6 6-6"></path>
+											</svg>
 										</button>
+										<div
+											id="header-profile-menu"
+											role="menu"
+											aria-labelledby="header-profile-trigger"
+											data-header-profile-content
+											class="absolute right-0 z-50 mt-2 flex min-w-[13rem] flex-col rounded-xl border bg-popover p-1.5 shadow-md"
+											hidden
+										>
+											<div class="px-2 py-1.5 text-xs text-muted-foreground">
+												Logget inn som <span class="font-semibold text-foreground">{username}</span>
+											</div>
+											<div class="my-1 h-px bg-border"></div>
+											<a
+												href="/profile"
+												role="menuitem"
+												class="min-h-11 min-w-11 inline-flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-medium text-popover-foreground no-underline transition hover:bg-muted"
+											>
+												<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+													<circle cx="12" cy="8" r="4"></circle>
+													<path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path>
+												</svg>
+												Profil
+											</a>
+											<div class="my-1 h-px bg-border"></div>
+											<button
+												type="button"
+												role="menuitem"
+												data-header-logout-button
+												class="min-h-11 min-w-11 inline-flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm font-medium text-destructive transition hover:bg-destructive/10"
+											>
+												<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+													<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+													<path d="m16 17 5-5-5-5"></path>
+													<path d="M21 12H9"></path>
+												</svg>
+												Logg ut
+											</button>
+										</div>
 									</div>
 								</div>
+
+								<div class="flex items-center gap-2 md:hidden" data-header-mobile-root>
+									<a
+										href="/events/new"
+										class="min-h-11 min-w-11 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-semibold text-white no-underline transition hover:brightness-95"
+									>
+										<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+											<path d="M12 5v14"></path>
+											<path d="M5 12h14"></path>
+										</svg>
+										Opprett
+									</a>
+
+									<button
+										type="button"
+										class="min-h-11 min-w-11 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-secondary"
+										aria-label="Meny"
+										aria-expanded="false"
+										aria-controls="header-mobile-menu"
+										data-header-mobile-open
+									>
+										<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+											<path d="M3 6h18"></path>
+											<path d="M3 12h18"></path>
+											<path d="M3 18h18"></path>
+										</svg>
+									</button>
+
+									<div id="header-mobile-menu" class="fixed inset-0 z-[60] hidden" aria-hidden="true" data-header-mobile-panel>
+										<button
+											type="button"
+											class="absolute inset-0 bg-black/45"
+											aria-label="Lukk meny"
+											tabindex="-1"
+											data-header-mobile-backdrop
+										></button>
+										<aside class="absolute right-0 top-0 flex h-full w-72 flex-col bg-background shadow-xl">
+											<div class="flex items-center justify-between border-b border-border px-4 py-3">
+												<div class="flex items-center gap-2.5">
+													<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{userInitial}</span>
+													<div>
+														<p class="m-0 text-sm font-semibold leading-tight text-foreground">{username}</p>
+														<p class="m-0 text-xs leading-tight text-muted-foreground">Konto</p>
+													</div>
+												</div>
+												<button
+													type="button"
+													class="min-h-11 min-w-11 inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-secondary"
+													aria-label="Lukk meny"
+													data-header-mobile-close
+												>
+													<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+														<path d="M18 6 6 18"></path>
+														<path d="m6 6 12 12"></path>
+													</svg>
+												</button>
+											</div>
+
+											<nav class="flex flex-col px-2 py-2" aria-label="Mobilnavigasjon">
+												{
+													navLinks.map((link) => (
+														<a
+															href={link.href}
+															aria-current={currentPath === link.href ? 'page' : undefined}
+															class:list={[
+																'min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground',
+																currentPath === link.href ? 'bg-secondary font-semibold text-foreground' : 'font-medium',
+															]}
+															data-header-mobile-close-link
+														>
+															{
+																link.icon === 'clock' && (
+																	<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+																		<circle cx="12" cy="12" r="9"></circle>
+																		<path d="M12 7v5l3 3"></path>
+																	</svg>
+																)
+															}
+															{
+																link.icon === 'settings' && (
+																	<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+																		<circle cx="12" cy="12" r="3"></circle>
+																		<path d="M19.4 15a1.7 1.7 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.05V21a2 2 0 0 1-4 0v-.08a1.7 1.7 0 0 0-.4-1.05 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1-.4H3a2 2 0 0 1 0-4h.08a1.7 1.7 0 0 0 1-.4 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.05V3a2 2 0 0 1 4 0v.08a1.7 1.7 0 0 0 .4 1.05 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1 .4H21a2 2 0 0 1 0 4h-.08a1.7 1.7 0 0 0-1 .4 1.7 1.7 0 0 0-.52.6z"></path>
+																	</svg>
+																)
+															}
+															{link.label}
+														</a>
+													))
+												}
+											</nav>
+
+											<div class="mt-auto border-t border-border px-2 py-2">
+												<a
+													href="/profile"
+													class="min-h-11 min-w-11 inline-flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground"
+													data-header-mobile-close-link
+												>
+													<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+														<circle cx="12" cy="8" r="4"></circle>
+														<path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path>
+													</svg>
+													Profil
+												</a>
+												<button
+													type="button"
+													class="min-h-11 min-w-11 inline-flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+													data-header-mobile-logout-button
+												>
+													<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+														<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+														<path d="m16 17 5-5-5-5"></path>
+														<path d="M21 12H9"></path>
+													</svg>
+													Logg ut
+												</button>
+											</div>
+										</aside>
+									</div>
+								</div>
+							</>
+						) : (
+							<div class="ml-auto">
+								<a
+									href="/sign-in"
+									class="min-h-11 min-w-11 inline-flex items-center rounded-full px-3 py-2 text-sm font-semibold text-foreground no-underline transition hover:bg-secondary"
+								>
+									Logg inn
+								</a>
 							</div>
-						</div>
-					)}
-					{!user && (
-						<div class="w-full md:w-auto md:self-end">
-							<a
-								href="/sign-in"
-								class="touch-target inline-flex items-center rounded-sm px-1 py-1 text-sm font-semibold text-foreground no-underline underline-offset-4 transition hover:underline focus-visible:underline"
-							>
-								Login
-							</a>
-						</div>
-					)}
+						)
+					}
 				</div>
+				<div class="h-px bg-border"></div>
 			</header>
 
 			<main id="main-content" class="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 lg:p-8">
@@ -189,7 +365,7 @@ if (userId) {
 						});
 
 						trigger.addEventListener('keydown', (event) => {
-							if (event.key === 'ArrowDown') {
+							if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
 								event.preventDefault();
 								openMenu(true);
 							}
@@ -217,6 +393,12 @@ if (userId) {
 							}
 						});
 
+						for (const item of items()) {
+							item.addEventListener('click', () => {
+								closeMenu();
+							});
+						}
+
 						const logoutButton = menu.querySelector('[data-header-logout-button]');
 						if (logoutButton instanceof HTMLButtonElement) {
 							logoutButton.addEventListener('click', () => {
@@ -239,6 +421,95 @@ if (userId) {
 								}
 
 								window.location.assign('/sign-in');
+							});
+						}
+					}
+				}
+
+				const mobileRoot = document.querySelector('[data-header-mobile-root]');
+				if (mobileRoot instanceof HTMLElement) {
+					const openButton = mobileRoot.querySelector('[data-header-mobile-open]');
+					const closeButton = mobileRoot.querySelector('[data-header-mobile-close]');
+					const panel = mobileRoot.querySelector('[data-header-mobile-panel]');
+					const backdrop = mobileRoot.querySelector('[data-header-mobile-backdrop]');
+					const closeLinks = Array.from(
+						mobileRoot.querySelectorAll<HTMLElement>('[data-header-mobile-close-link]'),
+					);
+					const mobileLogoutButton = mobileRoot.querySelector('[data-header-mobile-logout-button]');
+
+					if (
+						openButton instanceof HTMLButtonElement &&
+						closeButton instanceof HTMLButtonElement &&
+						panel instanceof HTMLElement &&
+						backdrop instanceof HTMLButtonElement
+					) {
+						const closePanel = () => {
+							panel.classList.add('hidden');
+							panel.setAttribute('aria-hidden', 'true');
+							openButton.setAttribute('aria-expanded', 'false');
+							document.body.style.removeProperty('overflow');
+							openButton.focus();
+						};
+
+						const openPanel = () => {
+							panel.classList.remove('hidden');
+							panel.setAttribute('aria-hidden', 'false');
+							openButton.setAttribute('aria-expanded', 'true');
+							document.body.style.overflow = 'hidden';
+							closeButton.focus();
+						};
+
+						openButton.addEventListener('click', () => {
+							openPanel();
+						});
+
+						closeButton.addEventListener('click', () => {
+							closePanel();
+						});
+
+						backdrop.addEventListener('click', () => {
+							closePanel();
+						});
+
+						document.addEventListener('keydown', (event) => {
+							if (event.key === 'Escape' && !panel.classList.contains('hidden')) {
+								event.preventDefault();
+								closePanel();
+							}
+						});
+
+						for (const link of closeLinks) {
+							link.addEventListener('click', () => {
+								closePanel();
+							});
+						}
+
+						const runLogout = () => {
+							const cookiePrefixes = [
+								'__session',
+								'__client_uat',
+								'__clerk_db_jwt',
+								'clerk_active_context',
+							];
+
+							const cookieNames = document.cookie
+								.split(';')
+								.map((cookie) => cookie.trim().split('=')[0])
+								.filter((name) => name.length > 0);
+
+							for (const name of cookieNames) {
+								if (cookiePrefixes.some((prefix) => name === prefix || name.startsWith(`${prefix}_`))) {
+									document.cookie = `${name}=; Max-Age=0; path=/`;
+								}
+							}
+
+							window.location.assign('/sign-in');
+						};
+
+						if (mobileLogoutButton instanceof HTMLButtonElement) {
+							mobileLogoutButton.addEventListener('click', () => {
+								closePanel();
+								runLogout();
 							});
 						}
 					}

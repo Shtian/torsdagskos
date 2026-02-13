@@ -24,7 +24,7 @@ test.describe('App Shell Layout', () => {
     await expect(nav).toBeVisible();
 
     const createEventBtn = page.getByRole('link', {
-      name: '+ Opprett arrangement',
+      name: 'Opprett arrangement',
     });
     await expect(createEventBtn).toBeVisible();
     await expect(createEventBtn).toHaveAttribute('href', '/events/new');
@@ -37,7 +37,7 @@ test.describe('App Shell Layout', () => {
     await expect(settingsBtn).toBeVisible();
     await expect(settingsBtn).toHaveAttribute('href', '/settings');
 
-    const accountButton = page.getByRole('button', { name: 'Account' });
+    const accountButton = page.getByRole('button', { name: 'Konto meny' });
     await expect(accountButton).toBeVisible();
   });
 
@@ -49,9 +49,14 @@ test.describe('App Shell Layout', () => {
     const header = page.getByRole('banner');
     await expect(header).toBeVisible();
 
-    // All navigation links should still be accessible
+    const createEventBtn = page.getByRole('link', { name: 'Opprett' });
+    const menuButton = page.getByRole('button', { name: 'Meny' });
+    await expect(createEventBtn).toBeVisible();
+    await expect(menuButton).toBeVisible();
+
+    await menuButton.click();
     await expect(
-      page.getByRole('link', { name: '+ Opprett arrangement' }),
+      page.getByRole('navigation', { name: 'Mobilnavigasjon' }),
     ).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Min historikk' }),
@@ -59,7 +64,7 @@ test.describe('App Shell Layout', () => {
     await expect(
       page.getByRole('link', { name: 'Innstillinger' }),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Account' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Profil' })).toBeVisible();
   });
 
   test('header is responsive at desktop breakpoint', async ({ page }) => {
@@ -70,10 +75,11 @@ test.describe('App Shell Layout', () => {
     const header = page.getByRole('banner');
     await expect(header).toBeVisible();
 
-    // User email should be visible at desktop size
+    // Username text should be visible at desktop size
     const userInfo = page
       .getByRole('banner')
-      .locator('span.text-muted-foreground');
+      .locator('#header-profile-trigger span')
+      .nth(1);
     await expect(userInfo).toBeVisible();
 
     await expect(
@@ -88,10 +94,10 @@ test.describe('App Shell Layout', () => {
 
     const activeLink = page.getByRole('link', { name: 'Min historikk' });
     await expect(activeLink).toHaveAttribute('aria-current', 'page');
-    await expect(activeLink).toHaveClass(/underline/);
+    await expect(activeLink).toHaveClass(/font-semibold/);
 
     const inactiveLink = page.getByRole('link', {
-      name: '+ Opprett arrangement',
+      name: 'Innstillinger',
     });
     await expect(inactiveLink).not.toHaveAttribute('aria-current', 'page');
   });
@@ -102,7 +108,7 @@ test.describe('App Shell Layout', () => {
     await page.goto('/');
 
     const createEventLink = page.getByRole('link', {
-      name: '+ Opprett arrangement',
+      name: 'Opprett arrangement',
     });
 
     let isFocused = await createEventLink.evaluate(

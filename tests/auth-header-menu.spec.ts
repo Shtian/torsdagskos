@@ -6,34 +6,31 @@ test.describe('Header profile menu - authenticated state', () => {
   test('shows profile dropdown items in required order', async ({ page }) => {
     await page.goto('/');
 
-    const accountButton = page.getByRole('button', { name: 'Account' });
+    const accountButton = page.getByRole('button', { name: 'Konto meny' });
     await expect(accountButton).toBeVisible();
     await accountButton.focus();
     await accountButton.press('Enter');
 
     const menuItems = page.getByRole('menuitem');
-    await expect(menuItems).toHaveCount(3);
+    await expect(menuItems).toHaveCount(2);
     await expect(
-      page.getByRole('menuitem', { name: 'Profile' }),
+      page.getByRole('menuitem', { name: 'Profil' }),
     ).toHaveAttribute('href', '/profile');
-    await expect(
-      page.getByRole('menuitem', { name: 'Settings' }),
-    ).toHaveAttribute('href', '/settings');
 
     const itemText = (await menuItems.allTextContents()).map((item) =>
       item.trim(),
     );
-    expect(itemText).toEqual(['Profile', 'Settings', 'Log out']);
+    expect(itemText).toEqual(['Profil', 'Logg ut']);
   });
 
   test('supports Space and Escape keyboard interactions', async ({ page }) => {
     await page.goto('/');
 
-    const accountButton = page.getByRole('button', { name: 'Account' });
+    const accountButton = page.getByRole('button', { name: 'Konto meny' });
     await accountButton.focus();
     await accountButton.press('Space');
 
-    const profileItem = page.getByRole('menuitem', { name: 'Profile' });
+    const profileItem = page.getByRole('menuitem', { name: 'Profil' });
     await expect(profileItem).toBeVisible();
     await profileItem.focus();
     await page.keyboard.press('Escape');
@@ -47,30 +44,29 @@ test.describe('Header profile menu - authenticated state', () => {
   }) => {
     await page.goto('/');
 
-    const accountButton = page.getByRole('button', { name: 'Account' });
+    const accountButton = page.getByRole('button', { name: 'Konto meny' });
     await accountButton.click();
-    const logoutItem = page.getByRole('menuitem', { name: 'Log out' });
+    const logoutItem = page.getByRole('menuitem', { name: 'Logg ut' });
     await expect(logoutItem).toBeVisible();
     await expect(logoutItem).toHaveAttribute('type', 'button');
   });
 });
 
 test.describe('Header profile menu - logged-out state @unauth', () => {
-  test('shows only Login action in header when logged out', async ({
+  test('shows only Logg inn action in header when logged out', async ({
     page,
   }) => {
     await page.goto('/access-denied');
 
     const header = page.getByRole('banner');
-    await expect(header.getByRole('link', { name: 'Login' })).toHaveAttribute(
-      'href',
-      '/sign-in',
-    );
+    await expect(
+      header.getByRole('link', { name: 'Logg inn' }),
+    ).toHaveAttribute('href', '/sign-in');
     await expect(
       header.getByRole('navigation', { name: 'Hovednavigasjon' }),
     ).toHaveCount(0);
-    await expect(header.getByRole('button', { name: 'Account' })).toHaveCount(
-      0,
-    );
+    await expect(
+      header.getByRole('button', { name: 'Konto meny' }),
+    ).toHaveCount(0);
   });
 });
