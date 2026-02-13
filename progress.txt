@@ -20,6 +20,7 @@
 - Capture spacing work in `docs/spacing-audit-checklist.md` first and keep follow-up fixes tied to checklist IDs (`SP-###`) so multi-story spacing cleanup stays traceable.
 - For intermittent Playwright `page.goto()` detach/network abort flakes on local dev server, use a small bounded retry helper in the affected spec instead of increasing global timeouts.
 - In shared authenticated Playwright suites, avoid executing real logout actions with the default storage state; it can invalidate session assumptions for later specs. Prefer verifying menu action presence/order/keyboard behavior instead.
+- Shared Zod validation helpers should return `{ error: 'Validation failed' }` plus normalized `issues` and dot-path `fieldErrors` (using `_form` for root-level errors) so forms and APIs can share one error contract.
 
 ## 2026-02-11 16:34:47 CET - US-001
 - Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
@@ -290,4 +291,15 @@
   - Keep page-level spacing regressions deterministic by asserting computed shell spacing (`margin-top` and horizontal padding) via stable `data-test-id` shell hooks at both mobile and desktop breakpoints.
   - For RSVP error-path tests, synchronize assertions with the `/api/rsvp` response and validate inline feedback panel content; role-name loading assertions are brittle because button `aria-label` values remain constant.
   - Reusing a local bounded `gotoWithRetry` helper in long serial suites materially improves reliability for intermittent local dev-server navigation failures without increasing global timeouts.
+---
+## 2026-02-13 21:41:12 CET - US-006
+- Added shared Zod-based validation primitives in `src/lib/validation.ts`, including a typed `parseWithSchema()` helper and `normalizeValidationError()` for consistent parse and error normalization behavior.
+- Standardized a reusable validation error contract with top-level `error: 'Validation failed'`, dot-path `fieldErrors`, and structured `issues` metadata suitable for form and API boundaries.
+- Added unit coverage in `src/lib/validation.test.ts` for successful parsing, nested field error normalization, and root-level (`_form`) error mapping.
+- Verified required quality gates: `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, and `pnpm test --workers=1` (120 passed).
+- Files changed: `package.json`, `pnpm-lock.yaml`, `src/lib/validation.ts`, `src/lib/validation.test.ts`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations**
+  - Use `parseWithSchema()` instead of direct `safeParse` in new form/API validation to keep success/failure handling and response shaping consistent.
+  - Keep error paths in dot notation (for example `event.title`) and reserve `_form` for payload-wide failures to simplify UI field mapping.
+  - Preserve the top-level `error` string in validation responses to stay aligned with existing API error handling conventions in this codebase.
 ---
