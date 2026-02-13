@@ -1,4 +1,22 @@
 import { test, expect } from './fixtures';
+import type { Page } from '@playwright/test';
+
+async function openMobileMenuAndWait(page: Page) {
+  const mobileNav = page.getByRole('navigation', { name: 'Mobilnavigasjon' });
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.getByRole('button', { name: 'Meny' }).click();
+    try {
+      await expect(mobileNav).toBeVisible({ timeout: 2000 });
+      return mobileNav;
+    } catch {
+      // Retry to handle delayed hydration of the mobile React island.
+    }
+  }
+
+  await expect(mobileNav).toBeVisible();
+  return mobileNav;
+}
 
 test.describe('App Shell Layout', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
@@ -49,20 +67,17 @@ test.describe('App Shell Layout', () => {
     const header = page.getByRole('banner');
     await expect(header).toBeVisible();
 
-    const createEventBtn = page.getByRole('link', { name: 'Opprett' });
+    const createEventBtn = page.getByRole('button', { name: 'Opprett' });
     const menuButton = page.getByRole('button', { name: 'Meny' });
     await expect(createEventBtn).toBeVisible();
     await expect(menuButton).toBeVisible();
 
-    await menuButton.click();
+    const mobileNav = await openMobileMenuAndWait(page);
     await expect(
-      page.getByRole('navigation', { name: 'Mobilnavigasjon' }),
+      mobileNav.getByRole('link', { name: 'Min historikk' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('link', { name: 'Min historikk' }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: 'Innstillinger' }),
+      mobileNav.getByRole('link', { name: 'Innstillinger' }),
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Profil' })).toBeVisible();
   });

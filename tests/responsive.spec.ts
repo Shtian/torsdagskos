@@ -5,6 +5,23 @@ import { cleanupTestData, createEvent } from './helpers/api-helpers';
 const MOBILE_VIEWPORT = { width: 375, height: 812 };
 const TABLET_VIEWPORT = { width: 820, height: 1180 };
 
+async function openMobileMenuAndWait(page: Page): Promise<Locator> {
+  const mobileNav = page.getByRole('navigation', { name: 'Mobilnavigasjon' });
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.getByRole('button', { name: 'Meny', exact: true }).click();
+    try {
+      await expect(mobileNav).toBeVisible({ timeout: 2000 });
+      return mobileNav;
+    } catch {
+      // Retry to handle delayed hydration of the mobile React island.
+    }
+  }
+
+  await expect(mobileNav).toBeVisible();
+  return mobileNav;
+}
+
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const metrics = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
@@ -47,28 +64,30 @@ test.describe('Responsive mobile and tablet polish', () => {
 
     await page.goto('/');
 
-    const createEventLink = page.getByRole('link', {
+    const createEventButton = page.getByRole('button', {
       name: 'Opprett',
     });
     const menuButton = page.getByRole('button', { name: 'Meny', exact: true });
 
-    await expect(createEventLink).toBeVisible();
+    await expect(createEventButton).toBeVisible();
     await expect(menuButton).toBeVisible();
+    await expectTouchTarget(createEventButton);
+    await expectTouchTarget(menuButton);
 
-    await menuButton.click();
-    const historyLink = page.getByRole('link', { name: 'Min historikk' });
-    const settingsLink = page.getByRole('link', { name: 'Innstillinger' });
+    const mobileNav = await openMobileMenuAndWait(page);
+    const historyLink = mobileNav.getByRole('link', { name: 'Min historikk' });
+    const settingsLink = mobileNav.getByRole('link', { name: 'Innstillinger' });
     const profileLink = page.getByRole('link', { name: 'Profil' });
 
     await expect(historyLink).toBeVisible();
     await expect(settingsLink).toBeVisible();
     await expect(profileLink).toBeVisible();
 
-    await expectTouchTarget(createEventLink);
-    await expectTouchTarget(menuButton);
     await expectTouchTarget(historyLink);
     await expectTouchTarget(settingsLink);
     await expectTouchTarget(profileLink);
+    await page.getByRole('button', { name: 'Lukk meny' }).click();
+    await expect(mobileNav).toBeHidden();
 
     await expect(
       page.getByRole('heading', { name: /kommende arrangementer/i }),

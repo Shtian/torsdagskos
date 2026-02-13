@@ -56,7 +56,7 @@ export default function HeaderMobileSheet({
       <a href="/events/new" className="no-underline">
         <Button
           size="sm"
-          className="gap-1.5 rounded-full px-3 text-xs font-medium"
+          className="min-h-11 min-w-11 gap-1.5 rounded-full px-3 text-xs font-medium"
         >
           <Plus className="h-3.5 w-3.5" />
           Opprett
@@ -68,7 +68,7 @@ export default function HeaderMobileSheet({
           <Button
             variant="ghost"
             size="sm"
-            className="h-9 w-9 shrink-0 p-0"
+            className="min-h-11 min-w-11 shrink-0 p-0"
             aria-label="Meny"
           >
             <Menu className="h-5 w-5" />
