@@ -1,0 +1,153 @@
+import { useEffect, useState } from 'react';
+import { Clock3, LogOut, Menu, Plus, Settings, User, X } from 'lucide-react';
+
+import { Button, Sheet, SheetContent, SheetTrigger } from '@/components/ui';
+import { cn } from '@/lib/utils';
+
+interface NavLink {
+  href: string;
+  label: string;
+  icon: 'clock' | 'settings';
+}
+
+interface HeaderMobileSheetProps {
+  username: string;
+  userInitial: string;
+  currentPath: string;
+  navLinks: NavLink[];
+}
+
+const runLogout = () => {
+  const cookiePrefixes = [
+    '__session',
+    '__client_uat',
+    '__clerk_db_jwt',
+    'clerk_active_context',
+  ];
+
+  const cookieNames = document.cookie
+    .split(';')
+    .map((cookie) => cookie.trim().split('=')[0])
+    .filter((name) => name.length > 0);
+
+  for (const name of cookieNames) {
+    if (
+      cookiePrefixes.some(
+        (prefix) => name === prefix || name.startsWith(`${prefix}_`),
+      )
+    ) {
+      document.cookie = `${name}=; Max-Age=0; path=/`;
+    }
+  }
+
+  window.location.assign('/sign-in');
+};
+
+export default function HeaderMobileSheet({
+  username,
+  userInitial,
+  currentPath,
+  navLinks,
+}: HeaderMobileSheetProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <div className="flex items-center gap-2 md:hidden">
+      <a href="/events/new" className="no-underline">
+        <Button
+          size="sm"
+          className="gap-1.5 rounded-full px-3 text-xs font-medium"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Opprett
+        </Button>
+      </a>
+
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 shrink-0 p-0"
+            aria-label="Meny"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="right"
+          className="w-72 p-0 [&>button]:hidden"
+          showCloseButton={false}
+        >
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                {userInitial}
+              </span>
+              <div>
+                <p className="m-0 text-sm leading-tight font-medium text-foreground">
+                  {username}
+                </p>
+                <p className="m-0 text-xs leading-tight text-muted-foreground">
+                  Konto
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Lukk meny"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <nav className="flex flex-col px-2 py-2" aria-label="Mobilnavigasjon">
+            {navLinks.map((link) => {
+              const isActive = currentPath === link.href;
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground',
+                    isActive && 'bg-secondary font-semibold text-foreground',
+                  )}
+                >
+                  {link.icon === 'clock' && <Clock3 className="h-4 w-4" />}
+                  {link.icon === 'settings' && <Settings className="h-4 w-4" />}
+                  {link.label}
+                </a>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto border-t border-border px-2 py-2">
+            <a
+              href="/profile"
+              onClick={() => setMobileOpen(false)}
+              className="min-h-11 min-w-11 inline-flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <User className="h-4 w-4" />
+              Profil
+            </a>
+            <button
+              type="button"
+              className="min-h-11 min-w-11 inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+              onClick={() => {
+                setMobileOpen(false);
+                runLogout();
+              }}
+            >
+              <LogOut className="h-4 w-4" />
+              Logg ut
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
