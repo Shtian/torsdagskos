@@ -1,0 +1,163 @@
+{
+  "project": "Torsdagskos",
+  "branchName": "ralph/biome-header-spacing-zod",
+  "description": "Adopt BiomeJS, refine header navigation UX, normalize spacing, and add scoped Zod validation for forms and API boundaries.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Adopt BiomeJS as the lint and format gate",
+      "description": "As a developer, I want BiomeJS configured as the single lint/format tool so code quality checks are consistent and faster.",
+      "acceptanceCriteria": [
+        "Add and configure BiomeJS for this project",
+        "Expose Biome scripts in package scripts for lint and format checks",
+        "Remove or align conflicting lint/format tooling so only one gate is active",
+        "Update developer docs with Biome commands",
+        "biome check passes",
+        "add workflow file for linting on pull requests that runs 'biome ci .'",
+        "astro check passes",
+        "unit tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Convert header navigation to semantic link affordances",
+      "description": "As a user, I want header navigation to look and behave like links so available navigation actions are immediately clear.",
+      "acceptanceCriteria": [
+        "Header navigation actions render as semantic anchor links",
+        "Navigation links use plain-text styling with underline on hover",
+        "Current route has a persistent active indicator",
+        "Visible keyboard focus styles are present for all header links",
+        "Navigation destinations remain unchanged",
+        "biome check passes",
+        "astro check passes",
+        "unit tests pass",
+        "playwright tests pass for changed header navigation flows",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Add authenticated profile dropdown in the header",
+      "description": "As a logged-in user, I want a header profile dropdown so I can quickly access account actions.",
+      "acceptanceCriteria": [
+        "Authenticated header state shows a profile menu trigger",
+        "Dropdown contains exactly Profile, Settings, and Log out in that order",
+        "Dropdown supports keyboard interaction for Enter, Space, and Escape",
+        "Log out ends the session and updates header state",
+        "Logged-out header state shows only the Login link",
+        "biome check passes",
+        "astro check passes",
+        "unit tests pass",
+        "playwright tests pass for auth header menu flows",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Audit spacing inconsistencies and document actionable fixes",
+      "description": "As a developer, I want an app-wide spacing audit so fixes can be applied consistently without introducing a new spacing scale.",
+      "acceptanceCriteria": [
+        "Review all primary routes and key feature views for spacing inconsistencies",
+        "Produce a tracked checklist of concrete spacing issues with target files/components",
+        "Audit confirms existing spacing/token conventions to preserve",
+        "Include desktop and mobile breakpoint observations in the checklist",
+        "biome check passes",
+        "astro check passes",
+        "unit tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Apply spacing fixes across shared layouts and key views",
+      "description": "As a user, I want consistent spacing across common layouts and high-traffic pages so the interface feels polished and predictable.",
+      "acceptanceCriteria": [
+        "Fix all items from the spacing audit checklist in scoped shared layouts and key views",
+        "Do not introduce a new spacing scale; use existing tokens/conventions only",
+        "Header, forms, lists, and content sections keep layout behavior without regressions",
+        "Responsive checks pass for primary desktop and mobile breakpoints",
+        "biome check passes",
+        "astro check passes",
+        "unit tests pass",
+        "playwright tests pass for affected layout flows",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Create shared Zod validation primitives and error mapping",
+      "description": "As a developer, I want shared Zod schema and error helpers so form and API validation can stay consistent.",
+      "acceptanceCriteria": [
+        "Add reusable validation module(s) for schema parsing and normalized error output",
+        "Define a consistent validation error shape aligned with existing project conventions",
+        "Add unit tests for shared validation helpers",
+        "biome check passes",
+        "astro check passes",
+        "unit tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Add Zod validation to scoped forms",
+      "description": "As a user, I want invalid form input blocked with clear field errors so I can correct issues before submitting.",
+      "acceptanceCriteria": [
+        "Apply explicit Zod schemas to the agreed in-scope forms",
+        "Invalid submissions are blocked before submit logic continues",
+        "Field-level, user-friendly validation messages are displayed",
+        "Valid submissions continue to work without regression",
+        "Validation logic uses shared helpers where applicable",
+        "biome check passes",
+        "astro check passes",
+        "unit tests pass",
+        "playwright tests pass for updated form flows",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Add Zod validation at scoped API boundaries",
+      "description": "As a developer, I want API request and response payloads validated so invalid data is rejected early and consistently.",
+      "acceptanceCriteria": [
+        "Validate in-scope incoming API payloads with Zod before business logic",
+        "Add response or consumed payload validation where applicable in scope",
+        "Validation failures return controlled, consistent error responses",
+        "Schema mismatches do not surface as uncaught exceptions",
+        "Existing in-scope API flows remain green in tests",
+        "biome check passes",
+        "astro check passes",
+        "unit tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}
