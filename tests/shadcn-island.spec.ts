@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
+import type { Page } from '@playwright/test';
 
-async function gotoHomepageAndWaitForIsland(page: any) {
+async function gotoHomepageAndWaitForIsland(page: Page) {
   await page.goto('/');
   const island = page.getByTestId('shadcn-island');
   await expect(island).toBeVisible();
@@ -19,7 +20,9 @@ test.describe('shadcn react island', () => {
     await expect(page.getByTestId('tab-trigger-overview')).toBeVisible();
   });
 
-  test('allows selecting a shadcn select option in the island', async ({ page }) => {
+  test('allows selecting a shadcn select option in the island', async ({
+    page,
+  }) => {
     await gotoHomepageAndWaitForIsland(page);
 
     // The select is now in the bottom section (outside tabs)
@@ -29,11 +32,15 @@ test.describe('shadcn react island', () => {
     // Find and interact with the select
     const selectTrigger = page.getByRole('combobox', { name: 'Shadcn-status' });
     await expect(selectTrigger).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Shadcn Klar' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Shadcn Klar' }),
+    ).toBeVisible();
 
     await selectTrigger.click();
     await page.getByRole('option', { name: 'Pågår' }).first().click();
 
-    await expect(page.getByRole('button', { name: 'Shadcn Konfigurert' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Shadcn Konfigurert' }),
+    ).toBeVisible();
   });
 });

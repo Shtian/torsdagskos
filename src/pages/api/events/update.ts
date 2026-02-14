@@ -1,5 +1,11 @@
 import type { APIRoute } from 'astro';
 import { db, Events, eq } from 'astro:db';
+import {
+  createValidationErrorPayload,
+  emptyNotificationSummary,
+  validateNotificationSummary,
+  validateUpdateEventApiRequest,
+} from '../../../lib/api-validation';
 import { sendEventUpdateNotifications } from '../../../lib/event-notifications';
 
 export const POST: APIRoute = async ({ request, locals }) => {
@@ -12,18 +18,31 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    const body = await request.json();
-    const { eventId, title, description, dateTime, location, mapLink } = body;
-
-    if (!eventId || !title || !dateTime || !location) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: eventId, title, dateTime, location' }),
+        JSON.stringify(
+          createValidationErrorPayload('Request body must be valid JSON.'),
+        ),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
+
+    const parsedBody = validateUpdateEventApiRequest(body);
+    if (!parsedBody.success) {
+      return new Response(JSON.stringify(parsedBody.error), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { dateTime, description, eventId, location, mapLink, title } =
+      parsedBody.data;
 
     const existingEvent = await db
       .select()
@@ -39,10 +58,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     if (new Date(existingEvent.dateTime) < new Date()) {
-      return new Response(JSON.stringify({ error: 'Past events cannot be edited' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Past events cannot be edited' }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const updatedEvent = {
@@ -61,15 +83,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
       })
       .where(eq(Events.id, Number(eventId)));
 
-    let notificationSummary = {
-      totalUsers: 0,
-      sent: 0,
-      failed: 0,
-      skipped: 0,
-    };
+    let notificationSummary = emptyNotificationSummary;
 
     try {
-      notificationSummary = await sendEventUpdateNotifications({
+      const notificationResult = await sendEventUpdateNotifications({
         eventId: Number(eventId),
         previous: {
           title: existingEvent.title,
@@ -80,14 +97,34 @@ export const POST: APIRoute = async ({ request, locals }) => {
         },
         updated: updatedEvent,
       });
+
+      const parsedSummary = validateNotificationSummary(notificationResult);
+      if (parsedSummary.success) {
+        notificationSummary = parsedSummary.data;
+      } else {
+        console.error(
+          'Notification summary shape mismatch in /api/events/update:',
+          parsedSummary.error,
+        );
+      }
     } catch (notificationError) {
-      console.error('Error sending event update notifications:', notificationError);
+      console.error(
+        'Error sending event update notifications:',
+        notificationError,
+      );
     }
 
-    return new Response(JSON.stringify({ success: true, eventId: Number(eventId), notifications: notificationSummary }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        eventId: Number(eventId),
+        notifications: notificationSummary,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   } catch (error) {
     console.error('Error updating event:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

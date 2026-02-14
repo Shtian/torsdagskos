@@ -4,7 +4,9 @@ import { createTestEvent, cleanupTestData } from './helpers/api-helpers';
 test.describe('Event Detail UI Migration', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('renders migrated shadcn shell and actions for upcoming events', async ({ page }) => {
+  test('renders migrated shadcn shell and actions for upcoming events', async ({
+    page,
+  }) => {
     await cleanupTestData();
 
     const tomorrow = new Date();
@@ -21,21 +23,42 @@ test.describe('Event Detail UI Migration', () => {
     await page.goto(`/events/${event.id}`);
 
     await expect(page.getByTestId('event-detail-shell')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Migrated Detail Shell Event', level: 1 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Arrangementsdetaljer', level: 2 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Svar', level: 2 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name: 'Migrated Detail Shell Event',
+        level: 1,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'RSVP', level: 2 }),
+    ).toBeVisible();
 
-    await expect(page.locator('[data-slot="card"]')).toHaveCount(3);
-    await expect(page.getByRole('link', { name: /tilbake til arrangementer/i })).toHaveAttribute('href', '/');
-    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toHaveAttribute('href', `/events/${event.id}/edit`);
-    await expect(page.getByRole('link', { name: /åpne i kart/i })).toHaveAttribute('href', 'https://maps.google.com/?q=Oslo');
+    const shell = page.getByTestId('event-detail-shell');
+    await expect(shell.locator('[data-slot="card"]')).toHaveCount(1);
+    await expect(
+      page.getByRole('link', { name: /tilbake til arrangementer/i }),
+    ).toHaveAttribute('href', '/');
+    await expect(
+      page.getByRole('link', { name: 'Rediger arrangement' }),
+    ).toHaveAttribute('href', `/events/${event.id}/edit`);
+    await expect(
+      page.getByRole('link', { name: /åpne i kart/i }),
+    ).toHaveAttribute('href', 'https://maps.google.com/?q=Oslo');
 
-    await expect(page.getByRole('button', { name: 'Kommer', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Kanskje', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Kommer ikke', exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Kommer', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Kanskje', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Kommer ikke', exact: true }),
+    ).toBeVisible();
   });
 
-  test('hides RSVP actions for past events and keeps migrated notice styling', async ({ page }) => {
+  test('hides RSVP actions for past events and keeps migrated notice styling', async ({
+    page,
+  }) => {
     await cleanupTestData();
 
     const yesterday = new Date();
@@ -50,11 +73,21 @@ test.describe('Event Detail UI Migration', () => {
 
     await page.goto(`/events/${event.id}`);
 
-    await expect(page.getByRole('button', { name: 'Kommer', exact: true })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Kanskje', exact: true })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Kommer ikke', exact: true })).not.toBeVisible();
-    await expect(page.getByTestId('past-event-notice')).toContainText('Dette arrangementet er over');
-    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).not.toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Kommer', exact: true }),
+    ).not.toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Kanskje', exact: true }),
+    ).not.toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Kommer ikke', exact: true }),
+    ).not.toBeVisible();
+    await expect(page.getByTestId('past-event-notice')).toContainText(
+      'Dette arrangementet er over',
+    );
+    await expect(
+      page.getByRole('link', { name: 'Rediger arrangement' }),
+    ).not.toBeVisible();
   });
 
   test('has no horizontal overflow on mobile viewport', async ({ page }) => {
@@ -73,7 +106,9 @@ test.describe('Event Detail UI Migration', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/events/${event.id}`);
 
-    const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    const hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
     expect(hasOverflow).toBe(false);
   });
 });

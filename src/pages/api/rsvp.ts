@@ -1,5 +1,9 @@
 import type { APIRoute } from 'astro';
 import { db, Users, Rsvps, eq, and } from 'astro:db';
+import {
+  createValidationErrorPayload,
+  validateRsvpApiRequest,
+} from '../../lib/api-validation';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const { userId } = locals.auth();
@@ -7,28 +11,35 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
   try {
-    const body = await request.json();
-    const { eventId, status } = body;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(
+        JSON.stringify(
+          createValidationErrorPayload('Request body must be valid JSON.'),
+        ),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
 
-    // Validate input
-    if (!eventId || !status) {
-      return new Response(JSON.stringify({ error: 'Missing eventId or status' }), {
+    const parsedBody = validateRsvpApiRequest(body);
+    if (!parsedBody.success) {
+      return new Response(JSON.stringify(parsedBody.error), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    if (!['going', 'maybe', 'not_going'].includes(status)) {
-      return new Response(JSON.stringify({ error: 'Invalid status' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    const { eventId, status } = parsedBody.data;
 
     // Get current user's local database ID
     const currentUser = await db
@@ -40,7 +51,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!currentUser) {
       return new Response(JSON.stringify({ error: 'User not found' }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -66,19 +77,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
         eventId,
         status,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('RSVP error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 };

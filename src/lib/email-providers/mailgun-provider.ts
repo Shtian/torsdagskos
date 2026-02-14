@@ -1,4 +1,8 @@
-import type { EmailProvider, SendEmailInput, SendEmailResult } from '../email-contract';
+import type {
+  EmailProvider,
+  SendEmailInput,
+  SendEmailResult,
+} from '../email-contract';
 
 const DEFAULT_MAILGUN_API_URL = 'https://api.mailgun.net/v3';
 const DEFAULT_FROM = 'Torsdagskos <onboarding@resend.dev>';

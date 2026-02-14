@@ -3,6 +3,13 @@ import Layout from '../layouts/Layout.astro';
 import ShadcnIslandDemo from '../components/ShadcnIslandDemo';
 import { EventCard } from '../components/EventCard';
 import { buttonVariants } from '@/components/ui/button';
+
+
+
+
+
+
+
 import { db, Users, Events, Rsvps, eq } from 'astro:db';
 import { clerkClient } from '@clerk/astro/server';
 
@@ -26,12 +33,17 @@ if (userId) {
       await db.insert(Users).values({
         clerkUserId: userId,
         email: user.emailAddresses[0]?.emailAddress || '',
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'User',
-        createdAt: new Date()
+        name:
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+          user.emailAddresses[0]?.emailAddress ||
+          'User',
+        createdAt: new Date(),
       });
     } catch (error) {
       // Ignore unique constraint errors - user was already created by concurrent request
-      if (!(error instanceof Error && error.message.includes('UNIQUE constraint'))) {
+      if (
+        !(error instanceof Error && error.message.includes('UNIQUE constraint'))
+      ) {
         throw error;
       }
     }
@@ -42,9 +54,13 @@ if (userId) {
 const allEvents = await db.select().from(Events).all();
 
 // Get most recent event for duplication (sorted by createdAt descending)
-const mostRecentEvent = allEvents.length > 0
-  ? [...allEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
-  : null;
+const mostRecentEvent =
+  allEvents.length > 0
+    ? [...allEvents].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )[0]
+    : null;
 
 // Get RSVP counts for each event
 const eventsWithRsvps = await Promise.all(
@@ -55,26 +71,37 @@ const eventsWithRsvps = await Promise.all(
       .where(eq(Rsvps.eventId, event.id))
       .all();
 
-    const going = rsvps.filter(r => r.status === 'going').length;
-    const maybe = rsvps.filter(r => r.status === 'maybe').length;
-    const notGoing = rsvps.filter(r => r.status === 'not_going').length;
+    const rsvpCounts = { going: 0, maybe: 0, notGoing: 0 };
+    for (const rsvp of rsvps) {
+      if (rsvp.status === 'going') {
+        rsvpCounts.going += 1;
+      } else if (rsvp.status === 'maybe') {
+        rsvpCounts.maybe += 1;
+      } else if (rsvp.status === 'not_going') {
+        rsvpCounts.notGoing += 1;
+      }
+    }
 
     return {
       ...event,
-      rsvpCounts: { going, maybe, notGoing }
+      rsvpCounts,
     };
-  })
+  }),
 );
 
 // Separate into upcoming and past events (Europe/Oslo timezone)
 const now = new Date();
 const upcomingEvents = eventsWithRsvps
-  .filter(event => new Date(event.dateTime) >= now)
-  .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  .filter((event) => new Date(event.dateTime) >= now)
+  .sort(
+    (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime(),
+  );
 
 const pastEvents = eventsWithRsvps
-  .filter(event => new Date(event.dateTime) < now)
-  .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+  .filter((event) => new Date(event.dateTime) < now)
+  .sort(
+    (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
+  );
 
 // Format date in Europe/Oslo timezone
 function formatEventDate(date: Date): string {
@@ -85,7 +112,7 @@ function formatEventDate(date: Date): string {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   }).format(new Date(date));
 }
 ---
@@ -94,12 +121,18 @@ function formatEventDate(date: Date): string {
   title="Arrangementer - Torsdagskos"
   description="Se kommende og tidligere Torsdagskos-arrangementer med sted, tidspunkt og svaroversikt."
 >
-  <div class="mx-auto w-full max-w-[75rem] p-4 sm:p-6">
+  <div
+    class="mx-auto mt-6 w-full max-w-[75rem] pb-8 sm:mt-10"
+    data-test-id="homepage-shell"
+  >
     <ShadcnIslandDemo client:load />
 
     <section class="space-y-4" data-test-id="homepage-upcoming">
       <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-        <div data-slot="card-header" class="grid auto-rows-min gap-4 px-6 sm:grid-cols-[1fr_auto] sm:items-start">
+        <div
+          data-slot="card-header"
+          class="grid auto-rows-min gap-4 px-6 sm:grid-cols-[1fr_auto] sm:items-start sm:px-8"
+        >
           <div class="space-y-2">
             <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Kommende arrangementer</h1>
             <p data-slot="card-description" class="m-0 text-sm text-muted-foreground">
@@ -129,7 +162,7 @@ function formatEventDate(date: Date): string {
           </div>
         </div>
 
-        <div data-slot="card-content" class="px-6">
+        <div data-slot="card-content" class="px-6 sm:px-8">
           {upcomingEvents.length === 0 && pastEvents.length === 0 && (
             <div
               data-slot="card"
@@ -163,13 +196,13 @@ function formatEventDate(date: Date): string {
         <div data-slot="separator" class="bg-border my-8 h-px w-full" data-test-id="section-separator" />
         <section class="space-y-4" data-test-id="homepage-past">
           <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-            <div data-slot="card-header" class="px-6">
+            <div data-slot="card-header" class="px-6 sm:px-8">
               <h1 class="m-0 text-2xl text-(--color-accent-dark) sm:text-[2rem]">Tidligere arrangementer</h1>
               <p data-slot="card-description" class="mt-2 mb-0 text-sm text-muted-foreground">
                 Tidligere arrangementer er sortert fra nyeste til eldste.
               </p>
             </div>
-            <div data-slot="card-content" class="px-6">
+            <div data-slot="card-content" class="px-6 sm:px-8">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {pastEvents.map(event => (
                   <EventCard

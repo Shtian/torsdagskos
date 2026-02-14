@@ -22,6 +22,10 @@ Private meetup coordination website for monthly recurring events among close fri
 - Full migration status and old-to-new mapping checklist: `docs/shadcn-migration-checklist.md`
 - Current state: all planned migration stories are implemented and verified.
 
+## Spacing Audit
+
+- App-wide spacing audit checklist for follow-up fixes: `docs/spacing-audit-checklist.md`
+
 ## Approved Exceptions and Follow-up
 
 - Exception: Clerk auth UIs (`SignIn`/`SignUp`) remain provider-rendered; only local wrapper shells are styled with project shadcn patterns.
@@ -36,7 +40,8 @@ Inside of your Astro project, you'll see the following folders and files:
 ```text
 /
 ├── docs/
-│   └── shadcn-migration-checklist.md
+│   ├── shadcn-migration-checklist.md
+│   └── spacing-audit-checklist.md
 ├── public/
 │   └── favicon.svg
 ├── src
@@ -73,6 +78,11 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm dev` | Starts local dev server at `localhost:4321` |
 | `pnpm build` | Build your production site to `./dist/` |
 | `pnpm preview` | Preview your build locally, before deploying |
+| `pnpm lint` | Run Biome local checks |
+| `pnpm lint:ci` | Run Biome CI checks |
+| `pnpm lint:fix` | Apply Biome safe fixes and formatting |
+| `pnpm format` | Format files with Biome |
+| `pnpm format:check` | Check formatting with Biome |
 | `pnpm astro ...` | Run CLI commands like `astro add`, `astro check` |
 | `pnpm astro -- --help` | Get help using the Astro CLI |
 

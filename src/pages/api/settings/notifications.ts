@@ -23,7 +23,7 @@ export const POST: APIRoute = async (context) => {
       });
     }
 
-    let existingUser = await db
+    const existingUser = await db
       .select()
       .from(Users)
       .where(eq(Users.clerkUserId, userId))
@@ -57,13 +57,16 @@ export const POST: APIRoute = async (context) => {
       {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     );
   } catch (error) {
     console.error('Error updating notification preference:', error);
-    return new Response(JSON.stringify({ error: 'Failed to update notification preference' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: 'Failed to update notification preference' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   }
 };

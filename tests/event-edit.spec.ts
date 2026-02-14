@@ -1,5 +1,9 @@
 import { test, expect } from './fixtures';
-import { cleanupTestData, createEvent, createTestEvent } from './helpers/api-helpers';
+import {
+  cleanupTestData,
+  createEvent,
+  createTestEvent,
+} from './helpers/api-helpers';
 
 function toOsloDateInputValue(date: Date): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -35,7 +39,9 @@ test.describe('Event Edit', () => {
     await cleanupTestData();
   });
 
-  test('shows Rediger arrangement button on upcoming event detail page', async ({ page }) => {
+  test('shows Rediger arrangement button on upcoming event detail page', async ({
+    page,
+  }) => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -49,8 +55,12 @@ test.describe('Event Edit', () => {
 
     await page.goto(`/events/${eventId}`);
 
-    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toHaveAttribute('href', `/events/${eventId}/edit`);
+    await expect(
+      page.getByRole('link', { name: 'Rediger arrangement' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Rediger arrangement' }),
+    ).toHaveAttribute('href', `/events/${eventId}/edit`);
   });
 
   test('prefills edit form with existing event data', async ({ page }) => {
@@ -74,19 +84,78 @@ test.describe('Event Edit', () => {
     await page.goto(`/events/${eventId}/edit`);
 
     await expect(page.getByTestId('edit-event-shell')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /rediger arrangement/i, level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /rediger arrangement/i, level: 1 }),
+    ).toBeVisible();
     await expect(page.locator('#event-form[data-slot="card"]')).toBeVisible();
     await expect(page.locator('[data-slot="card-header"]')).toBeVisible();
     await expect(page.locator('[data-slot="card-content"]')).toBeVisible();
     await expect(page.locator('[data-slot="card-footer"]')).toBeVisible();
     await expect(page.locator('#title[data-slot="input"]')).toBeVisible();
-    await expect(page.locator('#description[data-slot="textarea"]')).toBeVisible();
+    await expect(
+      page.locator('#description[data-slot="textarea"]'),
+    ).toBeVisible();
     await expect(page.locator('#title')).toHaveValue(title);
     await expect(page.locator('#description')).toHaveValue(description);
     await expect(page.locator('#location')).toHaveValue(location);
     await expect(page.locator('#mapLink')).toHaveValue(mapLink);
-    await expect(page.locator('#date')).toHaveValue(toOsloDateInputValue(futureDate));
-    await expect(page.locator('#time')).toHaveValue(toOsloTimeInputValue(futureDate));
+    await expect(page.locator('#date')).toHaveValue(
+      toOsloDateInputValue(futureDate),
+    );
+    await expect(page.locator('#time')).toHaveValue(
+      toOsloTimeInputValue(futureDate),
+    );
+  });
+
+  test('shows field-level validation and blocks submit for invalid edits', async ({
+    page,
+  }) => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 2);
+
+    const { eventId } = await createEvent(page, {
+      title: `Invalid Edit Event ${Date.now()}`,
+      description: 'Original description',
+      dateTime: futureDate.toISOString(),
+      location: 'Valid location',
+      mapLink: 'https://maps.google.com/?q=original',
+    });
+
+    await page.goto(`/events/${eventId}/edit`);
+    let updateRequests = 0;
+
+    await page.route('**/api/events/update', async (route) => {
+      updateRequests += 1;
+      await route.continue();
+    });
+
+    await page.locator('#title').fill('ab');
+    await page.locator('#location').fill('a');
+    await page.locator('#mapLink').fill('invalid-map-link');
+    await page.locator('#date').fill('');
+    await page.locator('#time').fill('');
+
+    await page.getByRole('button', { name: 'Lagre endringer' }).click();
+
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /rett feltene som er markert/i,
+    );
+    await expect(page.getByTestId('field-error-title')).toContainText(
+      /minst 3 tegn/i,
+    );
+    await expect(page.getByTestId('field-error-date')).toContainText(
+      /dato er påkrevd/i,
+    );
+    await expect(page.getByTestId('field-error-time')).toContainText(
+      /tid er påkrevd/i,
+    );
+    await expect(page.getByTestId('field-error-location')).toContainText(
+      /minst 2 tegn/i,
+    );
+    await expect(page.getByTestId('field-error-mapLink')).toContainText(
+      /gyldig url/i,
+    );
+    expect(updateRequests).toBe(0);
   });
 
   test('updates event and redirects to event detail page', async ({ page }) => {
@@ -118,17 +187,27 @@ test.describe('Event Edit', () => {
 
     await page.getByRole('button', { name: 'Lagre endringer' }).click();
 
-    await expect(page.getByTestId('form-feedback-panel')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/arrangement oppdatert/i);
+    await expect(page.getByTestId('form-feedback-panel')).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /arrangement oppdatert/i,
+    );
     await page.waitForURL(`/events/${eventId}`, { timeout: 10000 });
 
-    await expect(page.getByRole('heading', { name: updatedTitle, level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: updatedTitle, level: 1 }),
+    ).toBeVisible();
     await expect(page.getByText(updatedDescription)).toBeVisible();
     await expect(page.getByText(updatedLocation)).toBeVisible();
-    await expect(page.getByRole('link', { name: /åpne i kart/i })).toHaveAttribute('href', updatedMapLink);
+    await expect(
+      page.getByRole('link', { name: /åpne i kart/i }),
+    ).toHaveAttribute('href', updatedMapLink);
   });
 
-  test('shows loading and disabled submit state while saving changes', async ({ page }) => {
+  test('shows loading and disabled submit state while saving changes', async ({
+    page,
+  }) => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 4);
 
@@ -142,8 +221,8 @@ test.describe('Event Edit', () => {
 
     await page.goto(`/events/${eventId}/edit`);
 
-    await page.route('**/api/events/update', async route => {
-      await new Promise(resolve => setTimeout(resolve, 600));
+    await page.route('**/api/events/update', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 600));
       await route.fulfill({
         status: 500,
         contentType: 'application/json',
@@ -151,18 +230,33 @@ test.describe('Event Edit', () => {
       });
     });
 
-    await page.locator('#title').fill(`Loading Rediger arrangement Updated ${Date.now()}`);
+    await page
+      .locator('#title')
+      .fill(`Loading Rediger arrangement Updated ${Date.now()}`);
     await page.getByRole('button', { name: 'Lagre endringer' }).click();
 
-    await expect(page.getByRole('button', { name: /lagrer\.\.\./i, exact: true })).toBeDisabled();
-    await expect(page.getByRole('button', { name: /lagrer\.\.\./i, exact: true })).toHaveAttribute('aria-busy', 'true');
+    await expect(
+      page.getByRole('button', { name: /lagrer\.\.\./i, exact: true }),
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: /lagrer\.\.\./i, exact: true }),
+    ).toHaveAttribute('aria-busy', 'true');
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/lagrer endringer i arrangement/i);
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/internal server error/i, { timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Lagre endringer', exact: true })).toBeEnabled();
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /lagrer endringer i arrangement/i,
+    );
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /internal server error/i,
+      { timeout: 10000 },
+    );
+    await expect(
+      page.getByRole('button', { name: 'Lagre endringer', exact: true }),
+    ).toBeEnabled();
   });
 
-  test('redirects from edit page for past events and hides edit button', async ({ page }) => {
+  test('redirects from edit page for past events and hides edit button', async ({
+    page,
+  }) => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
@@ -175,10 +269,14 @@ test.describe('Event Edit', () => {
     });
 
     await page.goto(`/events/${pastEvent.id}`);
-    await expect(page.getByRole('link', { name: 'Rediger arrangement' })).toHaveCount(0);
+    await expect(
+      page.getByRole('link', { name: 'Rediger arrangement' }),
+    ).toHaveCount(0);
 
     await page.goto(`/events/${pastEvent.id}/edit`);
     await expect(page).toHaveURL(`/events/${pastEvent.id}`);
-    await expect(page.getByRole('heading', { name: pastEvent.title, level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: pastEvent.title, level: 1 }),
+    ).toBeVisible();
   });
 });

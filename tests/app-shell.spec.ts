@@ -1,9 +1,29 @@
 import { test, expect } from './fixtures';
+import type { Page } from '@playwright/test';
+
+async function openMobileMenuAndWait(page: Page) {
+  const mobileNav = page.getByRole('navigation', { name: 'Mobilnavigasjon' });
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.getByRole('button', { name: 'Meny' }).click();
+    try {
+      await expect(mobileNav).toBeVisible({ timeout: 2000 });
+      return mobileNav;
+    } catch {
+      // Retry to handle delayed hydration of the mobile React island.
+    }
+  }
+
+  await expect(mobileNav).toBeVisible();
+  return mobileNav;
+}
 
 test.describe('App Shell Layout', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('renders header with shadcn components on authenticated page', async ({ page }) => {
+  test('renders header with shadcn components on authenticated page', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     // Header should be visible and sticky (use role=banner to avoid dev toolbar headers)
@@ -11,12 +31,20 @@ test.describe('App Shell Layout', () => {
     await expect(header).toBeVisible();
 
     // Logo/title link should be present
-    const logo = page.getByRole('heading', { name: 'Torsdagskos' });
-    await expect(logo).toBeVisible();
-    await expect(logo.locator('..')).toHaveAttribute('href', '/');
+    const logoLink = page
+      .getByRole('banner')
+      .getByRole('link', { name: 'Torsdagskos' });
+    await expect(logoLink).toBeVisible();
+    await expect(logoLink).toHaveAttribute('href', '/');
+    await expect(logoLink.getByRole('heading')).toBeVisible();
 
-    // Navigation buttons should use shadcn Button components
-    const createEventBtn = page.getByRole('link', { name: '+ Opprett arrangement' });
+    // Navigation links should be semantic anchors with unchanged destinations
+    const nav = page.getByRole('navigation', { name: 'Hovednavigasjon' });
+    await expect(nav).toBeVisible();
+
+    const createEventBtn = page.getByRole('link', {
+      name: 'Opprett arrangement',
+    });
     await expect(createEventBtn).toBeVisible();
     await expect(createEventBtn).toHaveAttribute('href', '/events/new');
 
@@ -28,8 +56,8 @@ test.describe('App Shell Layout', () => {
     await expect(settingsBtn).toBeVisible();
     await expect(settingsBtn).toHaveAttribute('href', '/settings');
 
-    const signOutBtn = page.getByRole('button', { name: 'Logg ut' });
-    await expect(signOutBtn).toBeVisible();
+    const accountButton = page.getByRole('button', { name: 'Konto meny' });
+    await expect(accountButton).toBeVisible();
   });
 
   test('header is responsive at mobile breakpoint', async ({ page }) => {
@@ -40,11 +68,19 @@ test.describe('App Shell Layout', () => {
     const header = page.getByRole('banner');
     await expect(header).toBeVisible();
 
-    // All navigation buttons should still be accessible
-    await expect(page.getByRole('link', { name: '+ Opprett arrangement' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Min historikk' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Innstillinger' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Logg ut' })).toBeVisible();
+    const createEventBtn = page.getByRole('button', { name: 'Opprett' });
+    const menuButton = page.getByRole('button', { name: 'Meny' });
+    await expect(createEventBtn).toBeVisible();
+    await expect(menuButton).toBeVisible();
+
+    const mobileNav = await openMobileMenuAndWait(page);
+    await expect(
+      mobileNav.getByRole('link', { name: 'Min historikk' }),
+    ).toBeVisible();
+    await expect(
+      mobileNav.getByRole('link', { name: 'Innstillinger' }),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Profil' })).toBeVisible();
   });
 
   test('header is responsive at desktop breakpoint', async ({ page }) => {
@@ -55,13 +91,55 @@ test.describe('App Shell Layout', () => {
     const header = page.getByRole('banner');
     await expect(header).toBeVisible();
 
-    // User email should be visible at desktop size
-    const userInfo = page.getByRole('banner').locator('span.text-muted-foreground');
+    // Username text should be visible at desktop size
+    const userInfo = page
+      .getByRole('banner')
+      .locator('#header-profile-trigger span')
+      .nth(1);
     await expect(userInfo).toBeVisible();
 
-    // All navigation should be in a single row
-    const navContainer = page.getByRole('banner').locator('> div > div:last-child > div:last-child');
-    await expect(navContainer).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: 'Hovednavigasjon' }),
+    ).toBeVisible();
+  });
+
+  test('current route has persistent active indicator for header links', async ({
+    page,
+  }) => {
+    await page.goto('/history');
+
+    const activeLink = page.getByRole('link', { name: 'Min historikk' });
+    await expect(activeLink).toHaveAttribute('aria-current', 'page');
+    await expect(activeLink).toHaveClass(/font-semibold/);
+
+    const inactiveLink = page.getByRole('link', {
+      name: 'Innstillinger',
+    });
+    await expect(inactiveLink).not.toHaveAttribute('aria-current', 'page');
+  });
+
+  test('header links show visible focus style for keyboard users', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const createEventLink = page.getByRole('link', {
+      name: 'Opprett arrangement',
+    });
+
+    let isFocused = await createEventLink.evaluate(
+      (element) => element === document.activeElement,
+    );
+    for (let index = 0; index < 12 && !isFocused; index += 1) {
+      await page.keyboard.press('Tab');
+      isFocused = await createEventLink.evaluate(
+        (element) => element === document.activeElement,
+      );
+    }
+    expect(isFocused).toBe(true);
+
+    await expect(createEventLink).toHaveCSS('outline-style', 'solid');
+    await expect(createEventLink).toHaveCSS('outline-width', '3px');
   });
 
   test('skip link is present for accessibility', async ({ page }) => {

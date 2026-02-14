@@ -1,7 +1,24 @@
 ---
+
+
+
+
+
+
+
+import { db, Users, Events, Rsvps, eq, inArray } from 'astro:db';
 import Layout from '../../layouts/Layout.astro';
-import { db, Users, Events, Rsvps, eq } from 'astro:db';
 import { buttonVariants } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  CalendarDays,
+  Check,
+  CircleHelp,
+  Clock3,
+  MapPin,
+  Minus,
+  X,
+} from 'lucide-react';
 
 const { id } = Astro.params;
 const { userId } = Astro.locals.auth();
@@ -25,255 +42,331 @@ const rsvps = await db
   .where(eq(Rsvps.eventId, event.id))
   .all();
 
-// Get user details for all RSVPs
-const rsvpsWithUsers = await Promise.all(
-  rsvps.map(async (rsvp) => {
-    const user = await db
-      .select()
-      .from(Users)
-      .where(eq(Users.id, rsvp.userId))
-      .get();
-    return { ...rsvp, user };
-  })
-);
+const rsvpUserIds = [...new Set(rsvps.map((rsvp) => rsvp.userId))];
+const rsvpUsers =
+  rsvpUserIds.length > 0
+    ? await db.select().from(Users).where(inArray(Users.id, rsvpUserIds)).all()
+    : [];
+const userMap = new Map(rsvpUsers.map((user) => [user.id, user]));
+
+const rsvpsWithUsers = rsvps.map((rsvp) => ({
+  ...rsvp,
+  user: userMap.get(rsvp.userId),
+}));
 
 // Get current user's local database ID
-const currentUser = await db
-  .select()
-  .from(Users)
-  .where(eq(Users.clerkUserId, userId!))
-  .get();
+const currentUser = userId
+  ? await db.select().from(Users).where(eq(Users.clerkUserId, userId)).get()
+  : null;
 
 // Find current user's RSVP
-const currentUserRsvp = rsvpsWithUsers.find(r => r.userId === currentUser?.id);
+const _currentUserRsvp = rsvpsWithUsers.find(
+  (r) => r.userId === currentUser?.id,
+);
 
 // Calculate RSVP counts
-const goingRsvps = rsvpsWithUsers.filter(r => r.status === 'going');
-const maybeRsvps = rsvpsWithUsers.filter(r => r.status === 'maybe');
-const notGoingRsvps = rsvpsWithUsers.filter(r => r.status === 'not_going');
+const _goingRsvps = rsvpsWithUsers.filter((r) => r.status === 'going');
+const _maybeRsvps = rsvpsWithUsers.filter((r) => r.status === 'maybe');
+const _notGoingRsvps = rsvpsWithUsers.filter((r) => r.status === 'not_going');
 
-// Calculate no response count (total users - users who RSVPd)
+// Calculate no response users
 const totalUsers = await db.select().from(Users).all();
-const noResponseCount = totalUsers.length - rsvpsWithUsers.length;
+const rsvpedUserIds = new Set(rsvpsWithUsers.map((r) => r.userId));
+const noResponseUsers = totalUsers.filter((user) => !rsvpedUserIds.has(user.id));
+const _noResponseCount = noResponseUsers.length;
 
-// Format date in Europe/Oslo timezone
-function formatEventDate(date: Date): string {
+function _formatEventDate(date: Date): string {
   return new Intl.DateTimeFormat('no-NO', {
     timeZone: 'Europe/Oslo',
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
   }).format(new Date(date));
+}
+
+function _formatEventTime(date: Date): string {
+  return new Intl.DateTimeFormat('no-NO', {
+    timeZone: 'Europe/Oslo',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(date));
+}
+
+function _getInitials(name: string | null | undefined): string {
+  if (!name) return '??';
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((part) => part.charAt(0).toUpperCase()).join('');
 }
 
 // Check if event is upcoming (not past)
 const now = new Date();
-const isUpcoming = new Date(event.dateTime) >= now;
+const _isUpcoming = new Date(event.dateTime) >= now;
 ---
 
 <Layout
   title={`${event.title} - Torsdagskos`}
   description={`Se detaljer og svaralternativer for ${event.title} på ${event.location}.`}
 >
-  <section class="mx-auto mt-6 w-full max-w-6xl px-4 pb-8 sm:mt-10 sm:px-6" data-test-id="event-detail-shell">
+  <section class="mx-auto mt-6 w-full max-w-5xl pb-8 sm:mt-10" data-test-id="event-detail-shell">
     <div class="mb-6">
       <a href="/" class:list={[buttonVariants({ variant: 'ghost' }), 'pl-0 no-underline']}>&larr; Tilbake til arrangementer</a>
     </div>
 
-    <div data-slot="card" class="bg-card text-card-foreground mb-6 rounded-xl border shadow-sm">
-      <div data-slot="card-header" class="space-y-2 border-b px-6 py-5 sm:px-8">
-        <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">{event.title}</h1>
-        <p class="m-0 text-sm text-muted-foreground">{formatEventDate(event.dateTime)}</p>
-      </div>
-      {isUpcoming && (
-        <div data-slot="card-footer" class="flex border-t px-6 py-4 sm:px-8">
-          <a
-            href={`/events/${event.id}/edit`}
-            class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'touch-target no-underline']}
-          >
-            Rediger arrangement
-          </a>
-        </div>
-      )}
-    </div>
-
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
-        <div data-slot="card-header" class="px-6 pt-5 pb-3 sm:px-8">
-          <h2 class="m-0 text-xl text-(--color-accent-dark)">Arrangementsdetaljer</h2>
-        </div>
-        <div data-slot="card-content" class="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
+    <div class="mb-6 space-y-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="space-y-2">
-            <h3 class="m-0 text-base font-semibold text-foreground">Beskrivelse</h3>
-            <p class="m-0 whitespace-pre-wrap leading-relaxed text-foreground">{event.description || 'Ingen beskrivelse oppgitt.'}</p>
+            <h1 class="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">{event.title}</h1>
+            <p class="m-0 max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-foreground sm:text-base">
+              {event.description || 'Ingen beskrivelse oppgitt.'}
+            </p>
           </div>
 
-          <div class="border-t pt-6">
-            <h3 class="mb-2 mt-0 text-base font-semibold text-foreground">Sted</h3>
-            <p class="m-0 text-foreground">{event.location}</p>
+          {_isUpcoming && (
+            <a
+              href={`/events/${event.id}/edit`}
+              class:list={[buttonVariants({ variant: 'outline', size: 'default' }), 'min-h-11 min-w-11 shrink-0 no-underline']}
+            >
+              Rediger arrangement
+            </a>
+          )}
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <article class="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+            <p class="m-0 flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+              Dato
+            </p>
+            <p class="mt-1 mb-0 text-sm font-medium text-foreground">{_formatEventDate(event.dateTime)}</p>
+          </article>
+          <article class="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+            <p class="m-0 flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+              Tid
+            </p>
+            <p class="mt-1 mb-0 text-sm font-medium text-foreground">{_formatEventTime(event.dateTime)}</p>
+          </article>
+          <article class="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+            <p class="m-0 flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              Sted
+            </p>
+            <p class="mt-1 mb-0 text-sm font-medium text-foreground">{event.location}</p>
             {event.mapLink && (
               <a
                 href={event.mapLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                class:list={[buttonVariants({ variant: 'ghost', size: 'sm' }), 'mt-2 -ml-3 no-underline']}
+                class:list={[buttonVariants({ variant: 'ghost', size: 'sm' }), 'mt-1.5 -ml-3 no-underline']}
               >
                 Åpne i kart &rarr;
               </a>
             )}
+          </article>
+        </div>
+    </div>
+    <Separator className="my-6" />
+
+    <h2 class="mb-3 mt-0 text-lg text-(--color-accent-dark) sm:text-xl">RSVP</h2>
+    <section class="space-y-5">
+        <section data-test-id="current-user-rsvp" class="space-y-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="m-0 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Ditt svar</p>
+              <p class="mt-1 mb-0 text-sm font-medium text-foreground">Velg status:</p>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
-        <div data-slot="card-header" class="px-6 pt-5 pb-3 sm:px-8">
-          <h2 class="m-0 text-xl text-(--color-accent-dark)">Svar</h2>
-        </div>
-
-        <div data-slot="card-content" class="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
-          {isUpcoming && (
-            <div class="flex flex-wrap gap-2.5">
+          {_isUpcoming && (
+            <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               <button
                 class:list={[
                   buttonVariants({ variant: 'outline', size: 'default' }),
-                  'touch-target min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
-                  currentUserRsvp?.status === 'going' && 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  'min-h-11 min-w-11 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
+                  _currentUserRsvp?.status === 'going' && 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                 ]}
                 data-slot="button"
                 data-rsvp-button="true"
                 data-status="going"
-                data-active={currentUserRsvp?.status === 'going' ? 'true' : 'false'}
+                data-active={_currentUserRsvp?.status === 'going' ? 'true' : 'false'}
                 data-event-id={event.id}
+                aria-label="Kommer"
               >
+                <Check className="h-4 w-4" aria-hidden="true" />
                 Kommer
               </button>
               <button
                 class:list={[
                   buttonVariants({ variant: 'outline', size: 'default' }),
-                  'touch-target min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
-                  currentUserRsvp?.status === 'maybe' && 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                  'min-h-11 min-w-11 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
+                  _currentUserRsvp?.status === 'maybe' && 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'
                 ]}
                 data-slot="button"
                 data-rsvp-button="true"
                 data-status="maybe"
-                data-active={currentUserRsvp?.status === 'maybe' ? 'true' : 'false'}
+                data-active={_currentUserRsvp?.status === 'maybe' ? 'true' : 'false'}
                 data-event-id={event.id}
+                aria-label="Kanskje"
               >
+                <CircleHelp className="h-4 w-4" aria-hidden="true" />
                 Kanskje
               </button>
               <button
                 class:list={[
                   buttonVariants({ variant: 'outline', size: 'default' }),
-                  'touch-target min-w-30 flex-1 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
-                  currentUserRsvp?.status === 'not_going' && 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                  'min-h-11 min-w-11 cursor-pointer px-3 py-2.5 text-sm sm:text-base',
+                  _currentUserRsvp?.status === 'not_going' && 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
                 ]}
                 data-slot="button"
                 data-rsvp-button="true"
                 data-status="not_going"
-                data-active={currentUserRsvp?.status === 'not_going' ? 'true' : 'false'}
+                data-active={_currentUserRsvp?.status === 'not_going' ? 'true' : 'false'}
                 data-event-id={event.id}
+                aria-label="Kommer ikke"
               >
+                <X className="h-4 w-4" aria-hidden="true" />
                 Kommer ikke
               </button>
             </div>
           )}
+        </section>
 
-          <div
-            id="rsvp-feedback-panel"
-            data-test-id="rsvp-feedback-panel"
-            class="hidden rounded-md border px-4 py-3"
-            role="status"
-            aria-live="polite"
-          >
-            <p id="rsvp-feedback" class="m-0 text-sm text-foreground"></p>
-          </div>
-
-          {!isUpcoming && (
-            <div data-test-id="past-event-notice" class="rounded-md border bg-muted/60 p-4 text-center italic text-muted-foreground">
-              Dette arrangementet er over. Svar er ikke lenger tilgjengelig.
-            </div>
-          )}
-
-          {currentUserRsvp && (
-            <div data-test-id="current-user-rsvp" class="flex flex-wrap items-center gap-3 rounded-md border border-primary/30 bg-primary/5 px-4 py-3">
-              <strong class="text-sm text-foreground">Din status:</strong>
-              <span
-                class:list={[
-                  'inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium sm:text-sm',
-                  currentUserRsvp.status === 'going' && 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                  currentUserRsvp.status === 'maybe' && 'border-amber-200 bg-amber-50 text-amber-700',
-                  currentUserRsvp.status === 'not_going' && 'border-rose-200 bg-rose-50 text-rose-700',
-                ]}
-              >
-                {currentUserRsvp.status === 'going' && 'Kommer'}
-                {currentUserRsvp.status === 'maybe' && 'Kanskje'}
-                {currentUserRsvp.status === 'not_going' && 'Kommer ikke'}
-              </span>
-            </div>
-          )}
-
-          {!currentUserRsvp && (
-            <div data-test-id="current-user-rsvp" class="flex flex-wrap items-center gap-3 rounded-md border px-4 py-3">
-              <strong class="text-sm text-foreground">Din status:</strong>
-              <span class="inline-flex items-center rounded-full border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm">Ingen respons</span>
-            </div>
-          )}
-
-          <div data-test-id="rsvp-counts" class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div data-test-id="rsvp-count-item" data-rsvp-type="going" class="rounded-lg border bg-primary/5 p-3 text-center">
-              <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{goingRsvps.length}</span>
-              <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Kommer</span>
-            </div>
-            <div data-test-id="rsvp-count-item" data-rsvp-type="maybe" class="rounded-lg border bg-primary/5 p-3 text-center">
-              <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{maybeRsvps.length}</span>
-              <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Kanskje</span>
-            </div>
-            <div data-test-id="rsvp-count-item" data-rsvp-type="not_going" class="rounded-lg border bg-primary/5 p-3 text-center">
-              <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{notGoingRsvps.length}</span>
-              <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Kommer ikke</span>
-            </div>
-            <div data-test-id="rsvp-count-item" data-rsvp-type="no_response" class="rounded-lg border bg-primary/5 p-3 text-center">
-              <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{noResponseCount}</span>
-              <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Ingen respons</span>
-            </div>
-          </div>
-
-          {goingRsvps.length > 0 && (
-            <div class="space-y-2">
-              <h3 class="m-0 text-base font-semibold text-foreground">Kommer ({goingRsvps.length})</h3>
-              <ul class="m-0 list-none space-y-2 p-0">
-                {goingRsvps.map(rsvp => (
-                  <li class="rounded-md border bg-primary/5 px-3 py-2 text-sm text-foreground">{rsvp.user?.name}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {maybeRsvps.length > 0 && (
-            <div class="space-y-2">
-              <h3 class="m-0 text-base font-semibold text-foreground">Kanskje ({maybeRsvps.length})</h3>
-              <ul class="m-0 list-none space-y-2 p-0">
-                {maybeRsvps.map(rsvp => (
-                  <li class="rounded-md border bg-primary/5 px-3 py-2 text-sm text-foreground">{rsvp.user?.name}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {notGoingRsvps.length > 0 && (
-            <div class="space-y-2">
-              <h3 class="m-0 text-base font-semibold text-foreground">Kommer ikke ({notGoingRsvps.length})</h3>
-              <ul class="m-0 list-none space-y-2 p-0">
-                {notGoingRsvps.map(rsvp => (
-                  <li class="rounded-md border bg-primary/5 px-3 py-2 text-sm text-foreground">{rsvp.user?.name}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <div
+          id="rsvp-feedback-panel"
+          data-test-id="rsvp-feedback-panel"
+          class="hidden rounded-md border px-4 py-3"
+          role="status"
+          aria-live="polite"
+        >
+          <p id="rsvp-feedback" class="m-0 text-sm text-foreground"></p>
         </div>
+
+        {!_isUpcoming && (
+          <div data-test-id="past-event-notice" class="rounded-md border bg-muted/60 p-4 text-center italic text-muted-foreground">
+            Dette arrangementet er over. Svar er ikke lenger tilgjengelig.
+          </div>
+        )}
+
+        <div data-test-id="rsvp-counts" class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div data-test-id="rsvp-count-item" data-rsvp-type="going" class="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">
+            <span class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
+              <Check className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{_goingRsvps.length}</span>
+            <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Kommer</span>
+          </div>
+          <div data-test-id="rsvp-count-item" data-rsvp-type="maybe" class="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">
+            <span class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700">
+              <CircleHelp className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{_maybeRsvps.length}</span>
+            <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Kanskje</span>
+          </div>
+          <div data-test-id="rsvp-count-item" data-rsvp-type="not_going" class="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">
+            <span class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-700">
+              <X className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{_notGoingRsvps.length}</span>
+            <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Kommer ikke</span>
+          </div>
+          <div data-test-id="rsvp-count-item" data-rsvp-type="no_response" class="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">
+            <span class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-muted text-muted-foreground">
+              <Minus className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span data-test-id="rsvp-count-value" class="mb-1 block text-2xl font-semibold text-(--color-accent-dark)">{_noResponseCount}</span>
+            <span class="block text-[0.72rem] uppercase tracking-wide text-muted-foreground">Ingen respons</span>
+          </div>
+        </div>
+    </section>
+    <Separator className="my-6" />
+
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="m-0 text-lg text-(--color-accent-dark) sm:text-xl">Inviterte</h2>
+      <span class="text-xs uppercase tracking-[0.16em] text-muted-foreground">Totalt {totalUsers.length}</span>
+    </div>
+    <div data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
+      <div data-slot="card-content" class="space-y-5 px-6 py-6 sm:px-8">
+        <section>
+          <h3 class="m-0 text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">Kommer ({_goingRsvps.length})</h3>
+          <ul class="mt-2 list-none divide-y p-0">
+            {_goingRsvps.length === 0 && <li class="px-4 py-3 text-sm text-muted-foreground">Ingen svar i denne gruppen.</li>}
+            {_goingRsvps.map((rsvp) => (
+              <li class="flex items-center justify-between gap-3 px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-primary/5 text-xs font-semibold text-(--color-accent-dark)">
+                    {_getInitials(rsvp.user?.name)}
+                  </span>
+                  <span class="text-sm text-foreground">{rsvp.user?.name || 'Ukjent bruker'}</span>
+                </div>
+                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  Kommer
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="m-0 text-sm font-semibold uppercase tracking-[0.14em] text-amber-700">Kanskje ({_maybeRsvps.length})</h3>
+          <ul class="mt-2 list-none divide-y p-0">
+            {_maybeRsvps.length === 0 && <li class="px-4 py-3 text-sm text-muted-foreground">Ingen svar i denne gruppen.</li>}
+            {_maybeRsvps.map((rsvp) => (
+              <li class="flex items-center justify-between gap-3 px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-primary/5 text-xs font-semibold text-(--color-accent-dark)">
+                    {_getInitials(rsvp.user?.name)}
+                  </span>
+                  <span class="text-sm text-foreground">{rsvp.user?.name || 'Ukjent bruker'}</span>
+                </div>
+                <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                  Kanskje
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="m-0 text-sm font-semibold uppercase tracking-[0.14em] text-rose-700">Kommer ikke ({_notGoingRsvps.length})</h3>
+          <ul class="mt-2 list-none divide-y p-0">
+            {_notGoingRsvps.length === 0 && <li class="px-4 py-3 text-sm text-muted-foreground">Ingen svar i denne gruppen.</li>}
+            {_notGoingRsvps.map((rsvp) => (
+              <li class="flex items-center justify-between gap-3 px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-primary/5 text-xs font-semibold text-(--color-accent-dark)">
+                    {_getInitials(rsvp.user?.name)}
+                  </span>
+                  <span class="text-sm text-foreground">{rsvp.user?.name || 'Ukjent bruker'}</span>
+                </div>
+                <span class="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700">
+                  Kommer ikke
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="m-0 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Ingen respons ({_noResponseCount})</h3>
+          <ul class="mt-2 list-none divide-y p-0">
+            {noResponseUsers.length === 0 && <li class="px-4 py-3 text-sm text-muted-foreground">Alle inviterte har svart.</li>}
+            {noResponseUsers.map((user) => (
+              <li class="flex items-center justify-between gap-3 px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-primary/5 text-xs font-semibold text-(--color-accent-dark)">
+                    {_getInitials(user.name)}
+                  </span>
+                  <span class="text-sm text-foreground">{user.name || 'Ukjent bruker'}</span>
+                </div>
+                <span class="inline-flex items-center rounded-full border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                  Ikke svart
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
   </section>
@@ -338,15 +431,20 @@ const isUpcoming = new Date(event.dateTime) >= now;
         setFeedback('Lagrer svar...', 'loading');
 
         try {
+          const controller = new AbortController();
+          const timeoutId = window.setTimeout(() => controller.abort(), 10000);
           const response = await fetch('/api/rsvp', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              eventId: parseInt(eventId),
+              eventId: parseInt(eventId, 10),
               status,
             }),
+            signal: controller.signal,
+          }).finally(() => {
+            window.clearTimeout(timeoutId);
           });
 
           if (!response.ok) {

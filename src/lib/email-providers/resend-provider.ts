@@ -1,4 +1,8 @@
-import type { EmailProvider, SendEmailInput, SendEmailResult } from '../email-contract';
+import type {
+  EmailProvider,
+  SendEmailInput,
+  SendEmailResult,
+} from '../email-contract';
 
 const DEFAULT_RESEND_API_URL = 'https://api.resend.com/emails';
 const DEFAULT_FROM = 'Torsdagskos <onboarding@resend.dev>';

@@ -5,6 +5,7 @@ import {
   createTestRsvp,
   cleanupTestData,
 } from './helpers/api-helpers';
+import { gotoWithRetry } from './helpers/navigation-helpers';
 
 /**
  * E2E tests for events list and detail pages
@@ -27,7 +28,9 @@ test.describe('Events List Page', () => {
   // Use authenticated storage state for these tests
   test.use({ storageState: './playwright/.clerk/user.json' });
 
-  test('displays upcoming and tidligere arrangementer in separate sections', async ({ page }) => {
+  test('displays upcoming and tidligere arrangementer in separate sections', async ({
+    page,
+  }) => {
     // Setup test data
     await cleanupTestData();
 
@@ -77,16 +80,20 @@ test.describe('Events List Page', () => {
     });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Verify page title
     await expect(page).toHaveTitle(/Torsdagskos/);
 
     // Verify "Kommende arrangementer" section exists
-    await expect(page.getByRole('heading', { name: /kommende arrangementer/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /kommende arrangementer/i }),
+    ).toBeVisible();
 
     // Verify upcoming event is displayed (h2 heading within event card)
-    await expect(page.getByRole('heading', { name: 'Upcoming Event', level: 2 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Upcoming Event', level: 2 }),
+    ).toBeVisible();
 
     // Get the first event card and verify its details
     const upcomingCard = page.getByTestId('event-card').first();
@@ -94,10 +101,14 @@ test.describe('Events List Page', () => {
     await expect(upcomingCard.getByText('1 kommer')).toBeVisible();
 
     // Verify "Tidligere arrangementer" section exists
-    await expect(page.getByRole('heading', { name: /tidligere arrangementer/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /tidligere arrangementer/i }),
+    ).toBeVisible();
 
     // Verify past event is displayed (h2 heading within event card)
-    await expect(page.getByRole('heading', { name: 'Past Event', level: 2 })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Past Event', level: 2 }),
+    ).toBeVisible();
 
     // Get the last event card and verify its details
     const pastCard = page.getByTestId('event-card').last();
@@ -110,17 +121,21 @@ test.describe('Events List Page', () => {
     await cleanupTestData();
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Verify empty state message is displayed
-    await expect(page.getByText('Ingen arrangementer ennå. Kom tilbake snart!')).toBeVisible();
+    await expect(
+      page.getByText('Ingen arrangementer ennå. Kom tilbake snart!'),
+    ).toBeVisible();
 
     // Verify no event cards are displayed
     const eventCards = page.locator('[data-test-id="event-card"]');
     await expect(eventCards).toHaveCount(0);
   });
 
-  test('clicking event card navigates to event detail page', async ({ page }) => {
+  test('clicking event card navigates to event detail page', async ({
+    page,
+  }) => {
     // Setup test data
     await cleanupTestData();
 
@@ -134,7 +149,7 @@ test.describe('Events List Page', () => {
     });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Click on the event card
     await page.getByRole('heading', { name: 'Clickable Event' }).click();
@@ -194,13 +209,17 @@ test.describe('Events List Page', () => {
     });
 
     // Navigate to homepage
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
 
     // Verify RSVP counts are displayed correctly
-    const eventCard = page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'RSVP Test Event' }) });
+    const eventCard = page
+      .getByRole('link')
+      .filter({ has: page.getByRole('heading', { name: 'RSVP Test Event' }) });
     await expect(eventCard.getByTestId('rsvp-going')).toHaveText('1 kommer');
     await expect(eventCard.getByTestId('rsvp-maybe')).toHaveText('1 kanskje');
-    await expect(eventCard.getByTestId('rsvp-not-going')).toHaveText('1 kommer ikke');
+    await expect(eventCard.getByTestId('rsvp-not-going')).toHaveText(
+      '1 kommer ikke',
+    );
   });
 });
 
@@ -223,20 +242,30 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify page title
     await expect(page).toHaveTitle(/Complete Arrangementsdetaljer/);
 
     // Verify all event fields are displayed
-    await expect(page.getByRole('heading', { name: 'Complete Arrangementsdetaljer', level: 1 })).toBeVisible();
-    await expect(page.getByText('This is a detailed description')).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name: 'Complete Arrangementsdetaljer',
+        level: 1,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('This is a detailed description'),
+    ).toBeVisible();
     await expect(page.getByText('Test Venue, Oslo')).toBeVisible();
 
     // Verify map link is present and clickable
     const mapLink = page.getByRole('link', { name: /åpne i kart/i });
     await expect(mapLink).toBeVisible();
-    await expect(mapLink).toHaveAttribute('href', 'https://maps.google.com/?q=Oslo');
+    await expect(mapLink).toHaveAttribute(
+      'href',
+      'https://maps.google.com/?q=Oslo',
+    );
     await expect(mapLink).toHaveAttribute('target', '_blank');
   });
 
@@ -303,26 +332,58 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify RSVP count boxes
     const rsvpCounts = page.locator('[data-test-id="rsvp-counts"]');
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '2' }).filter({ hasText: 'Kommer' })).toBeVisible();
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Kanskje' })).toBeVisible();
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Kommer ikke' })).toBeVisible();
+    await expect(
+      rsvpCounts
+        .locator('[data-test-id="rsvp-count-item"]')
+        .filter({ hasText: '2' })
+        .filter({ hasText: 'Kommer' }),
+    ).toBeVisible();
+    await expect(
+      rsvpCounts
+        .locator('[data-test-id="rsvp-count-item"]')
+        .filter({ hasText: '1' })
+        .filter({ hasText: 'Kanskje' }),
+    ).toBeVisible();
+    await expect(
+      rsvpCounts
+        .locator('[data-test-id="rsvp-count-item"]')
+        .filter({ hasText: '1' })
+        .filter({ hasText: 'Kommer ikke' }),
+    ).toBeVisible();
 
     // Verify "Kommer" list
-    await expect(page.getByRole('heading', { name: /kommer \(2\)/i })).toBeVisible();
-    await expect(page.getByText('Alice Johnson')).toBeVisible();
-    await expect(page.getByText('Bob Smith')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /kommer \(2\)/i }),
+    ).toBeVisible();
+    const goingSection = page.locator('section').filter({
+      has: page.getByRole('heading', { name: /kommer \(2\)/i }),
+    });
+    await expect(goingSection.getByText('Alice Johnson').first()).toBeVisible();
+    await expect(goingSection.getByText('Bob Smith').first()).toBeVisible();
 
     // Verify "Kanskje" list
-    await expect(page.getByRole('heading', { name: /kanskje \(1\)/i })).toBeVisible();
-    await expect(page.getByText('Charlie Brown')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /kanskje \(1\)/i }),
+    ).toBeVisible();
+    const maybeSection = page.locator('section').filter({
+      has: page.getByRole('heading', { name: /kanskje \(1\)/i }),
+    });
+    await expect(maybeSection.getByText('Charlie Brown').first()).toBeVisible();
 
     // Verify "Kommer ikke" list
-    await expect(page.getByRole('heading', { name: /kommer ikke \(1\)/i })).toBeVisible();
-    await expect(page.getByText('Diana Prince')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /kommer ikke \(1\)/i }),
+    ).toBeVisible();
+    const notGoingSection = page.locator('section').filter({
+      has: page.getByRole('heading', { name: /kommer ikke \(1\)/i }),
+    });
+    await expect(
+      notGoingSection.getByText('Diana Prince').first(),
+    ).toBeVisible();
   });
 
   test('displays no response count correctly', async ({ page }) => {
@@ -359,17 +420,24 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify Ingen respons count is displayed
     // Note: We don't check the specific count because users persist across test runs
     // The important thing is that the Ingen respons item is visible and shows a count
     const rsvpCounts = page.locator('[data-test-id="rsvp-counts"]');
-    const noResponseItem = rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: 'Ingen respons' });
+    const noResponseItem = rsvpCounts
+      .locator('[data-test-id="rsvp-count-item"]')
+      .filter({ hasText: 'Ingen respons' });
     await expect(noResponseItem).toBeVisible();
 
     // Verify the "Kommer" count shows 1 (the one RSVP we created)
-    await expect(rsvpCounts.locator('[data-test-id="rsvp-count-item"]').filter({ hasText: '1' }).filter({ hasText: 'Kommer' })).toBeVisible();
+    await expect(
+      rsvpCounts
+        .locator('[data-test-id="rsvp-count-item"]')
+        .filter({ hasText: '1' })
+        .filter({ hasText: 'Kommer' }),
+    ).toBeVisible();
   });
 
   test('back link navigates to events list', async ({ page }) => {
@@ -386,19 +454,23 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Click back link
-    await page.getByRole('link', { name: /tilbake til arrangementer/i }).click();
+    await page
+      .getByRole('link', { name: /tilbake til arrangementer/i })
+      .click();
 
     // Verify navigation to homepage
     await expect(page).toHaveURL('/');
-    await expect(page.getByRole('heading', { name: /kommende arrangementer/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /kommende arrangementer/i }),
+    ).toBeVisible();
   });
 
   test('returns 404 for non-existent event ID', async ({ page }) => {
     // Navigate to a non-existent event
-    const response = await page.goto('/events/999999');
+    const response = await gotoWithRetry(page, '/events/999999');
 
     // Verify 404 response
     expect(response?.status()).toBe(404);
@@ -409,7 +481,7 @@ test.describe('Event Detail Page', () => {
     await cleanupTestData();
 
     //  Get the clerk userId from the authenticated session
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const clerkUserId = await page.evaluate(async () => {
@@ -422,18 +494,20 @@ test.describe('Event Detail Page', () => {
       if (response.ok) {
         return data.clerkUserId;
       }
-      throw new Error(`Unexpected response: ${response.status} - ${JSON.stringify(data)}`);
+      throw new Error(
+        `Unexpected response: ${response.status} - ${JSON.stringify(data)}`,
+      );
     });
 
     // Create the authenticated user explicitly (or get existing)
-    let currentUser;
+    let currentUser: { id: number };
     try {
       currentUser = await createTestUser({
         clerkUserId,
         email: uniqueEmail('authenticated'),
         name: 'Authenticated Test User',
       });
-    } catch (error) {
+    } catch (_error) {
       // User already exists, fetch them via API
       currentUser = await page.evaluate(async () => {
         const response = await fetch('/api/test/current-user');
@@ -458,13 +532,16 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify current user's RSVP status is displayed prominently
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
-    await expect(currentUserRsvp.getByText('Din status:')).toBeVisible();
-    await expect(currentUserRsvp.getByText('Kommer')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Ditt svar')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Velg status:')).toBeVisible();
+    await expect(
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="going"]'),
+    ).toHaveAttribute('data-active', 'true');
   });
 
   test('displays no response for user without RSVP', async ({ page }) => {
@@ -472,7 +549,7 @@ test.describe('Event Detail Page', () => {
     await cleanupTestData();
 
     // Visit homepage first to ensure authenticated user is synced to database
-    await page.goto('/');
+    await gotoWithRetry(page, '/');
     await page.waitForLoadState('networkidle');
 
     const tomorrow = new Date();
@@ -485,12 +562,23 @@ test.describe('Event Detail Page', () => {
     });
 
     // Navigate to event detail page (no RSVP created)
-    await page.goto(`/events/${event.id}`);
+    await gotoWithRetry(page, `/events/${event.id}`);
 
     // Verify "Ingen respons" is displayed for current user
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await expect(currentUserRsvp).toBeVisible();
-    await expect(currentUserRsvp.getByText('Din status:')).toBeVisible();
-    await expect(currentUserRsvp.getByText('Ingen respons')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Ditt svar')).toBeVisible();
+    await expect(currentUserRsvp.getByText('Velg status:')).toBeVisible();
+    await expect(
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="going"]'),
+    ).toHaveAttribute('data-active', 'false');
+    await expect(
+      currentUserRsvp.locator('[data-rsvp-button="true"][data-status="maybe"]'),
+    ).toHaveAttribute('data-active', 'false');
+    await expect(
+      currentUserRsvp.locator(
+        '[data-rsvp-button="true"][data-status="not_going"]',
+      ),
+    ).toHaveAttribute('data-active', 'false');
   });
 });

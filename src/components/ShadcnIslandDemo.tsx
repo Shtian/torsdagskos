@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   Badge,
   Button,
@@ -30,10 +30,10 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components/ui";
+} from '@/components/ui';
 
 export default function ShadcnIslandDemo() {
-  const [selection, setSelection] = useState("ready");
+  const [selection, setSelection] = useState('ready');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -42,7 +42,11 @@ export default function ShadcnIslandDemo() {
   }, []);
 
   return (
-    <Card data-test-id="shadcn-island" data-hydrated={isHydrated ? "true" : "false"} className="mb-6">
+    <Card
+      data-test-id="shadcn-island"
+      data-hydrated={isHydrated ? 'true' : 'false'}
+      className="mb-6"
+    >
       <CardHeader>
         <CardTitle>shadcn interaktive overlay-primitiver</CardTitle>
         <CardDescription>
@@ -57,20 +61,34 @@ export default function ShadcnIslandDemo() {
             <TabsTrigger value="overview" data-test-id="tab-trigger-overview">
               Oversikt
             </TabsTrigger>
-            <TabsTrigger value="components" data-test-id="tab-trigger-components">
+            <TabsTrigger
+              value="components"
+              data-test-id="tab-trigger-components"
+            >
               Komponenter
             </TabsTrigger>
-            <TabsTrigger value="interactions" data-test-id="tab-trigger-interactions">
+            <TabsTrigger
+              value="interactions"
+              data-test-id="tab-trigger-interactions"
+            >
               Interaksjoner
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="overview" data-test-id="tab-content-overview" className="mt-4">
+          <TabsContent
+            value="overview"
+            data-test-id="tab-content-overview"
+            className="mt-4"
+          >
             <p className="m-0 text-sm text-(--color-text-secondary)">
               Denne demoen viser Dialog-, DropdownMenu- og Tabs-primitiver fra
               shadcn, integrert som React-islands i en Astro-applikasjon.
             </p>
           </TabsContent>
-          <TabsContent value="components" data-test-id="tab-content-components" className="mt-4">
+          <TabsContent
+            value="components"
+            data-test-id="tab-content-components"
+            className="mt-4"
+          >
             <div className="flex flex-wrap gap-2">
               <Badge variant="default" data-test-id="badge-default">
                 Standard-merke
@@ -84,7 +102,11 @@ export default function ShadcnIslandDemo() {
               <Badge variant="destructive">Destruktiv</Badge>
             </div>
           </TabsContent>
-          <TabsContent value="interactions" data-test-id="tab-content-interactions" className="mt-4 space-y-3">
+          <TabsContent
+            value="interactions"
+            data-test-id="tab-content-interactions"
+            className="mt-4 space-y-3"
+          >
             {/* Dialog Demo */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
@@ -171,10 +193,9 @@ export default function ShadcnIslandDemo() {
             </SelectContent>
           </Select>
           <Button type="button">
-            Shadcn {selection === "ready" ? "Klar" : "Konfigurert"}
+            Shadcn {selection === 'ready' ? 'Klar' : 'Konfigurert'}
           </Button>
         </div>
-
       </CardContent>
     </Card>
   );

@@ -4,7 +4,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-} from "@/components/ui";
+} from '@/components/ui';
 
 interface EventCardProps {
   id: number;

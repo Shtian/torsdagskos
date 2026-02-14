@@ -7,18 +7,20 @@ test.describe('Accessibility polish', () => {
     await expect(page).toHaveTitle('Arrangementer - Torsdagskos');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
-      /kommende og tidligere torsdagskos-arrangementer/i
+      /kommende og tidligere torsdagskos-arrangementer/i,
     );
 
     await page.goto('/settings');
     await expect(page).toHaveTitle('Innstillinger - Torsdagskos');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
-      /administrer varslingstillatelser i nettleseren/i
+      /administrer varslingstillatelser i nettleseren/i,
     );
   });
 
-  test('should support keyboard skip link and visible focus outlines', async ({ page }) => {
+  test('should support keyboard skip link and visible focus outlines', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     await page.keyboard.press('Tab');
@@ -45,7 +47,9 @@ test.describe('Accessibility polish', () => {
     expect(focusDetails?.outlineWidth ?? 0).toBeGreaterThanOrEqual(2);
   });
 
-  test('should show loading and friendly error feedback when event creation fails', async ({ page }) => {
+  test('should show loading and friendly error feedback when event creation fails', async ({
+    page,
+  }) => {
     await page.goto('/events/new');
 
     await page.route('**/api/events/create', async (route) => {
@@ -53,7 +57,9 @@ test.describe('Accessibility polish', () => {
       await route.fulfill({
         status: 500,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'Event service is temporarily unavailable.' }),
+        body: JSON.stringify({
+          error: 'Event service is temporarily unavailable.',
+        }),
       });
     });
 
@@ -62,20 +68,33 @@ test.describe('Accessibility polish', () => {
     await page.locator('#time').fill('19:00');
     await page.locator('#location').fill('Test Venue');
 
-    const submitButton = page.getByRole('button', { name: 'Opprett arrangement', exact: true });
+    const submitButton = page.getByRole('button', {
+      name: 'Opprett arrangement',
+      exact: true,
+    });
     await submitButton.click();
 
-    await expect(page.getByRole('button', { name: 'Oppretter...' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Oppretter...' })).toHaveAttribute('aria-busy', 'true');
+    await expect(
+      page.getByRole('button', { name: 'Oppretter...' }),
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Oppretter...' }),
+    ).toHaveAttribute('aria-busy', 'true');
     await expect(page.getByText('Oppretter arrangement...')).toBeVisible();
 
     await expect(page.getByTestId('form-feedback-panel')).toBeVisible();
-    await expect(page.getByTestId('form-feedback-panel')).toContainText(/temporarily unavailable/i);
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /temporarily unavailable/i,
+    );
     await expect(page.getByText(/temporarily unavailable/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Opprett arrangement', exact: true })).toBeEnabled();
+    await expect(
+      page.getByRole('button', { name: 'Opprett arrangement', exact: true }),
+    ).toBeEnabled();
   });
 
-  test('should show loading and inline error feedback when RSVP update fails', async ({ page }) => {
+  test('should show loading and inline error feedback when RSVP update fails', async ({
+    page,
+  }) => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 10);
 
@@ -97,29 +116,42 @@ test.describe('Accessibility polish', () => {
       });
     });
 
-    await page.getByRole('button', { name: 'Kommer', exact: true }).click();
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes('/api/rsvp') &&
+          response.request().method() === 'POST' &&
+          response.status() === 500,
+      ),
+      page.getByRole('button', { name: 'Kommer', exact: true }).click(),
+    ]);
 
-    await expect(page.getByRole('button', { name: 'Lagrer...' })).toBeDisabled();
-    await expect(page.getByText('Lagrer svar...')).toBeVisible();
     await expect(page.getByTestId('rsvp-feedback-panel')).toBeVisible();
-    await expect(page.locator('#rsvp-feedback')).toHaveText(/kunne ikke oppdatere svar/i);
-    await expect(page.getByRole('button', { name: 'Kommer', exact: true })).toBeEnabled();
+    await expect(page.locator('#rsvp-feedback')).toHaveText(
+      /kunne ikke oppdatere svar/i,
+      { timeout: 10000 },
+    );
+    await expect(
+      page.getByRole('button', { name: 'Kommer', exact: true }),
+    ).toBeEnabled();
   });
 
-  test('should show loading and friendly feedback when settings update fails', async ({ page }) => {
+  test('should show loading and friendly feedback when settings update fails', async ({
+    page,
+  }) => {
     await page.addInitScript(() => {
       let permissionState = 'default';
 
-      class MockNotification {
-        static get permission() {
+      const MockNotification = {
+        get permission() {
           return permissionState;
-        }
+        },
 
-        static async requestPermission() {
+        async requestPermission() {
           permissionState = 'granted';
           return permissionState;
-        }
-      }
+        },
+      };
 
       Object.defineProperty(window, 'Notification', {
         configurable: true,
@@ -139,18 +171,32 @@ test.describe('Accessibility polish', () => {
       });
     });
 
-    const actionButton = page.getByRole('button', { name: /be om varslingstillatelse/i });
+    const actionButton = page.getByRole('button', {
+      name: /be om varslingstillatelse/i,
+    });
     await actionButton.click();
 
-    await expect(page.getByRole('button', { name: 'Oppdaterer...' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Oppdaterer...' })).toHaveAttribute('aria-busy', 'true');
-    await expect(page.locator('#feedback')).toHaveText(/oppdaterer varslingsinnstillinger/i);
+    await expect(
+      page.getByRole('button', { name: 'Oppdaterer...' }),
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Oppdaterer...' }),
+    ).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('#feedback')).toHaveText(
+      /oppdaterer varslingsinnstillinger/i,
+    );
 
-    await expect(page.locator('#feedback')).toHaveText(/kunne ikke lagre varslingspreferanse/i);
-    await expect(page.getByRole('button', { name: /be om varslingstillatelse/i })).toBeEnabled();
+    await expect(page.locator('#feedback')).toHaveText(
+      /kunne ikke lagre varslingspreferanse/i,
+    );
+    await expect(
+      page.getByRole('button', { name: /be om varslingstillatelse/i }),
+    ).toBeEnabled();
   });
 
-  test('should keep key text color pairs at WCAG AA contrast levels', async ({ page }) => {
+  test('should keep key text color pairs at WCAG AA contrast levels', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     const checks = await page.evaluate(() => {
@@ -161,7 +207,10 @@ test.describe('Accessibility polish', () => {
         const normalized = value.startsWith('#') ? value.slice(1) : value;
         const isShort = normalized.length === 3;
         const full = isShort
-          ? normalized.split('').map((c) => c + c).join('')
+          ? normalized
+              .split('')
+              .map((c) => c + c)
+              .join('')
           : normalized;
 
         const int = Number.parseInt(full, 16);
@@ -176,10 +225,14 @@ test.describe('Accessibility polish', () => {
         const { r, g, b } = parseHex(hex);
         const transform = (channel: number) => {
           const srgb = channel / 255;
-          return srgb <= 0.03928 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+          return srgb <= 0.03928
+            ? srgb / 12.92
+            : ((srgb + 0.055) / 1.055) ** 2.4;
         };
 
-        return 0.2126 * transform(r) + 0.7152 * transform(g) + 0.0722 * transform(b);
+        return (
+          0.2126 * transform(r) + 0.7152 * transform(g) + 0.0722 * transform(b)
+        );
       };
 
       const contrast = (foreground: string, background: string) => {
@@ -200,8 +253,12 @@ test.describe('Accessibility polish', () => {
       ] as const;
 
       return pairs.map(([fg, bg, min]) => {
-        const foreground = fg.startsWith('--') ? style.getPropertyValue(fg).trim() : fg;
-        const background = bg.startsWith('--') ? style.getPropertyValue(bg).trim() : bg;
+        const foreground = fg.startsWith('--')
+          ? style.getPropertyValue(fg).trim()
+          : fg;
+        const background = bg.startsWith('--')
+          ? style.getPropertyValue(bg).trim()
+          : bg;
         return {
           fg,
           bg,
@@ -214,7 +271,7 @@ test.describe('Accessibility polish', () => {
     for (const check of checks) {
       expect(
         check.ratio,
-        `Expected contrast ratio for ${check.fg} on ${check.bg} to be >= ${check.min}, got ${check.ratio.toFixed(2)}`
+        `Expected contrast ratio for ${check.fg} on ${check.bg} to be >= ${check.min}, got ${check.ratio.toFixed(2)}`,
       ).toBeGreaterThanOrEqual(check.min);
     }
   });

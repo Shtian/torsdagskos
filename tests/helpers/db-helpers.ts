@@ -1,4 +1,12 @@
-import { db, Users, Events, Rsvps, Invites, NotificationLog, eq } from 'astro:db';
+import {
+  db,
+  Users,
+  Events,
+  Rsvps,
+  Invites,
+  NotificationLog,
+  eq,
+} from 'astro:db';
 
 /**
  * Database helper utilities for tests
@@ -93,6 +101,9 @@ export async function cleanupTestData() {
  * Gets a user by Clerk user ID
  */
 export async function getUserByClerkId(clerkUserId: string) {
-  const [user] = await db.select().from(Users).where(eq(Users.clerkUserId, clerkUserId));
+  const [user] = await db
+    .select()
+    .from(Users)
+    .where(eq(Users.clerkUserId, clerkUserId));
   return user;
 }
