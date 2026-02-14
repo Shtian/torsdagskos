@@ -302,20 +302,11 @@ test.describe('RSVP Functionality', () => {
       location: 'Test Location',
     });
 
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      await gotoWithRetry(page, `/events/${event.id}`);
-      const hasRsvpPanel =
-        (await page.locator('[data-test-id="current-user-rsvp"]').count()) > 0;
-      if (hasRsvpPanel) {
-        break;
-      }
-      if (attempt === 2) {
-        throw new Error('Unable to load RSVP panel for authenticated user.');
-      }
-      await page.waitForTimeout(300);
-    }
-
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
+    await gotoWithRetry(page, `/events/${event.id}`);
+    if ((await currentUserRsvp.count()) === 0) {
+      throw new Error('Unable to load RSVP panel for authenticated user.');
+    }
 
     await expect(currentUserRsvp).toContainText('Ditt svar');
     await expect(currentUserRsvp).toContainText('Velg status:');

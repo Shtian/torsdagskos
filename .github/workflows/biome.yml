@@ -10,13 +10,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        # Pinned to immutable SHA (upstream tag: v4.2.2)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        # Pinned to immutable SHA (upstream tag: v4.2.0)
+        uses: pnpm/action-setup@41ff7265665bfe429e50d4c1e58b2a95fa4f35b7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        # Pinned to immutable SHA (upstream tag: v4.4.0)
+        uses: actions/setup-node@49933ea5288caeca8642db519a3536f6282783a4
         with:
           node-version: "20"
           cache: "pnpm"

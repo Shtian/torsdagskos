@@ -26,19 +26,24 @@ function uniqueEmail(base: string): string {
 async function gotoWithRetry(
   page: import('@playwright/test').Page,
   path: string,
-): Promise<import('@playwright/test').Response | null> {
+): Promise<import('@playwright/test').Response> {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await page.goto(path, { waitUntil: 'domcontentloaded' });
+      const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
+      if (response) {
+        return response;
+      }
+      if (attempt === 2) {
+        throw new Error(`Navigation to "${path}" returned no response.`);
+      }
     } catch (error) {
       if (attempt === 2) {
         throw error;
       }
-      await page.waitForTimeout(300);
     }
+    await page.waitForTimeout(300);
   }
-
-  return null;
+  throw new Error(`Navigation to "${path}" failed unexpectedly.`);
 }
 
 test.describe('Events List Page', () => {
@@ -490,7 +495,7 @@ test.describe('Event Detail Page', () => {
     const response = await gotoWithRetry(page, '/events/999999');
 
     // Verify 404 response
-    expect(response?.status()).toBe(404);
+    expect(response.status()).toBe(404);
   });
 
   test('displays current user RSVP status prominently', async ({ page }) => {

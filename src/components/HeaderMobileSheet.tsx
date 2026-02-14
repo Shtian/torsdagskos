@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Clock3, LogOut, Menu, Plus, Settings, User, X } from 'lucide-react';
+import { useAuth } from '@clerk/astro/react';
 
 import { Button, Sheet, SheetContent, SheetTrigger } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -17,32 +18,6 @@ interface HeaderMobileSheetProps {
   navLinks: NavLink[];
 }
 
-const runLogout = () => {
-  const cookiePrefixes = [
-    '__session',
-    '__client_uat',
-    '__clerk_db_jwt',
-    'clerk_active_context',
-  ];
-
-  const cookieNames = document.cookie
-    .split(';')
-    .map((cookie) => cookie.trim().split('=')[0])
-    .filter((name) => name.length > 0);
-
-  for (const name of cookieNames) {
-    if (
-      cookiePrefixes.some(
-        (prefix) => name === prefix || name.startsWith(`${prefix}_`),
-      )
-    ) {
-      document.cookie = `${name}=; Max-Age=0; path=/`;
-    }
-  }
-
-  window.location.assign('/sign-in');
-};
-
 export default function HeaderMobileSheet({
   username,
   userInitial,
@@ -50,6 +25,12 @@ export default function HeaderMobileSheet({
   navLinks,
 }: HeaderMobileSheetProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { signOut } = useAuth();
+
+  const runLogout = async () => {
+    await signOut();
+    window.location.assign('/sign-in');
+  };
 
   return (
     <div className="flex items-center gap-1.5 md:hidden">
@@ -137,9 +118,9 @@ export default function HeaderMobileSheet({
             <button
               type="button"
               className="min-h-11 min-w-11 inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
-              onClick={() => {
+              onClick={async () => {
                 setMobileOpen(false);
-                runLogout();
+                await runLogout();
               }}
             >
               <LogOut className="h-4 w-4" />
