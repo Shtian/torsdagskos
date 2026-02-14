@@ -40,16 +40,16 @@ test.describe('Innstillinger UI migration', () => {
     await page.addInitScript(() => {
       let permissionState = 'default';
 
-      class MockNotification {
-        static get permission() {
+      const MockNotification = {
+        get permission() {
           return permissionState;
-        }
+        },
 
-        static async requestPermission() {
+        async requestPermission() {
           permissionState = 'granted';
           return permissionState;
-        }
-      }
+        },
+      };
 
       Object.defineProperty(window, 'Notification', {
         configurable: true,

@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
+import type { Page } from '@playwright/test';
 
-async function gotoHomepageAndWaitForIsland(page: any) {
+async function gotoHomepageAndWaitForIsland(page: Page) {
   await page.goto('/');
   const island = page.getByTestId('shadcn-island');
   await expect(island).toBeVisible();

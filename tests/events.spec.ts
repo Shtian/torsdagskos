@@ -507,7 +507,7 @@ test.describe('Event Detail Page', () => {
         email: uniqueEmail('authenticated'),
         name: 'Authenticated Test User',
       });
-    } catch (error) {
+    } catch (_error) {
       // User already exists, fetch them via API
       currentUser = await page.evaluate(async () => {
         const response = await fetch('/api/test/current-user');

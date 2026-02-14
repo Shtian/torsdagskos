@@ -352,6 +352,11 @@ async function sendPushNotificationsToOptedInUsers(
 
   await Promise.all(
     pushEligibleUsers.map(async (user) => {
+      const pushSubscription = user.pushSubscription;
+      if (!pushSubscription) {
+        return;
+      }
+
       const hasAlreadyReceived = await db
         .select({ id: NotificationLog.id })
         .from(NotificationLog)
@@ -369,7 +374,7 @@ async function sendPushNotificationsToOptedInUsers(
         return;
       }
 
-      const result = await sendPushNotification(user.pushSubscription!, {
+      const result = await sendPushNotification(pushSubscription, {
         title: input.title,
         body: input.body,
         url: input.url,

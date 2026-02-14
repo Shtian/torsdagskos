@@ -1,7 +1,7 @@
 import { clerk, clerkSetup } from '@clerk/testing/playwright';
 import { test as setup } from '@playwright/test';
-import path, { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import path, { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Ensures that Clerk setup is done before any tests run
 setup.describe.configure({
@@ -34,19 +34,30 @@ setup('authenticate', async ({ page }) => {
   await page.goto('/sign-in');
   await clerk.loaded({ page });
   const identifier =
-    process.env.E2E_CLERK_USER_EMAIL || process.env.E2E_CLERK_USER_USERNAME!;
+    process.env.E2E_CLERK_USER_EMAIL || process.env.E2E_CLERK_USER_USERNAME;
+  if (!identifier) {
+    throw new Error(
+      'Please provide E2E_CLERK_USER_EMAIL or E2E_CLERK_USER_USERNAME environment variables.',
+    );
+  }
   if (identifier.includes('@')) {
     await clerk.signIn({
       page,
       emailAddress: identifier,
     });
   } else {
+    const password = process.env.E2E_CLERK_USER_PASSWORD;
+    if (!password) {
+      throw new Error(
+        'Please provide E2E_CLERK_USER_PASSWORD when using a non-email identifier.',
+      );
+    }
     await clerk.signIn({
       page,
       signInParams: {
         strategy: 'password',
         identifier,
-        password: process.env.E2E_CLERK_USER_PASSWORD!,
+        password,
       },
     });
   }

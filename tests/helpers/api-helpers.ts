@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test';
+
 /**
  * API-based test helpers for database operations
  *
@@ -43,7 +45,7 @@ interface Rsvp {
   updatedAt: Date;
 }
 
-async function seedAPI(action: string, data?: any) {
+async function seedAPI<T>(action: string, data?: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}/api/test/seed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -55,7 +57,7 @@ async function seedAPI(action: string, data?: any) {
     throw new Error(`Seed API error: ${error.error}`);
   }
 
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
 export async function createTestUser(data: {
@@ -64,7 +66,7 @@ export async function createTestUser(data: {
   name: string;
 }): Promise<User> {
   try {
-    return await seedAPI('create_user', data);
+    return await seedAPI<User>('create_user', data);
   } catch (error) {
     // If creation failed due to unique constraint, the server-side fix should prevent this
     // But we keep this for backwards compatibility during transition
@@ -85,7 +87,7 @@ export async function createTestEvent(data: {
   location: string;
   mapLink?: string;
 }): Promise<Event> {
-  return seedAPI('create_event', data);
+  return seedAPI<Event>('create_event', data);
 }
 
 export async function createTestRsvp(data: {
@@ -93,7 +95,7 @@ export async function createTestRsvp(data: {
   eventId: number;
   status: 'going' | 'maybe' | 'not_going';
 }): Promise<Rsvp> {
-  return seedAPI('create_rsvp', data);
+  return seedAPI<Rsvp>('create_rsvp', data);
 }
 
 export async function cleanupTestData(): Promise<void> {
@@ -109,7 +111,7 @@ export async function resetAllTestData(): Promise<void> {
  * This simulates a real user creating an event
  */
 export async function createEvent(
-  page: any,
+  page: Page,
   data: {
     title: string;
     description: string;
@@ -132,7 +134,7 @@ export async function createEvent(
   }
 
   try {
-    const result = await page.evaluate(async (eventData: any) => {
+    const result = await page.evaluate(async (eventData: typeof data) => {
       const response = await fetch(
         `${window.location.origin}/api/events/create`,
         {
