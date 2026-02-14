@@ -61,7 +61,7 @@ function escapeHtml(value: string): string {
 }
 
 function formatEventDate(dateTime: Date): string {
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat('nb-NO', {
     timeZone: 'Europe/Oslo',
     weekday: 'long',
     day: 'numeric',
@@ -92,30 +92,30 @@ function buildNewEventEmailContent(input: NewEventNotificationInput): {
 } {
   const formattedDate = formatEventDate(input.dateTime);
   const safeDescription =
-    input.description?.trim() || 'No description provided.';
+    input.description?.trim() || 'Ingen beskrivelse oppgitt.';
   const safeTitle = escapeHtml(input.title);
   const safeLocation = escapeHtml(input.location);
   const safeDescriptionHtml = escapeHtml(safeDescription);
 
   return {
-    subject: `New Torsdagskos event: ${input.title}`,
+    subject: `Nytt Torsdagskos-arrangement: ${input.title}`,
     text: [
-      'A new event has been created.',
+      'Et nytt arrangement er opprettet.',
       '',
-      `Title: ${input.title}`,
-      `Date & time: ${formattedDate} (Europe/Oslo)`,
-      `Location: ${input.location}`,
-      `Description: ${safeDescription}`,
+      `Tittel: ${input.title}`,
+      `Dato og tid: ${formattedDate} (Europe/Oslo)`,
+      `Sted: ${input.location}`,
+      `Beskrivelse: ${safeDescription}`,
     ].join('\n'),
     html: `
-      <h2>New Torsdagskos Event</h2>
-      <p>A new event has been created:</p>
+      <h2>Nytt Torsdagskos-arrangement</h2>
+      <p>Et nytt arrangement er opprettet:</p>
       <ul>
-        <li><strong>Title:</strong> ${safeTitle}</li>
-        <li><strong>Date &amp; time:</strong> ${formattedDate} (Europe/Oslo)</li>
-        <li><strong>Location:</strong> ${safeLocation}</li>
+        <li><strong>Tittel:</strong> ${safeTitle}</li>
+        <li><strong>Dato og tid:</strong> ${formattedDate} (Europe/Oslo)</li>
+        <li><strong>Sted:</strong> ${safeLocation}</li>
       </ul>
-      <p><strong>Description:</strong></p>
+      <p><strong>Beskrivelse:</strong></p>
       <p>${safeDescriptionHtml}</p>
     `,
   };
@@ -136,31 +136,33 @@ function buildReminderEmailContent(event: {
   const safeTitle = escapeHtml(event.title);
   const safeLocation = escapeHtml(event.location);
   const safeDescription =
-    event.description.trim() || 'No description provided.';
+    event.description.trim() || 'Ingen beskrivelse oppgitt.';
   const safeDescriptionHtml = escapeHtml(safeDescription);
   const safeMapLink = event.mapLink ? escapeHtml(event.mapLink) : null;
 
   return {
-    subject: `Reminder: ${event.title} is tomorrow`,
+    subject: `Påminnelse: ${event.title} er i morgen`,
     text: [
-      'Reminder: You have an event tomorrow.',
+      'Påminnelse: Du har et arrangement i morgen.',
       '',
-      `Title: ${event.title}`,
-      `Date & time: ${formattedDate} (Europe/Oslo)`,
-      `Location: ${event.location}`,
-      `Description: ${safeDescription}`,
-      event.mapLink ? `Map link: ${event.mapLink}` : 'Map link: (not provided)',
+      `Tittel: ${event.title}`,
+      `Dato og tid: ${formattedDate} (Europe/Oslo)`,
+      `Sted: ${event.location}`,
+      `Beskrivelse: ${safeDescription}`,
+      event.mapLink
+        ? `Kartlenke: ${event.mapLink}`
+        : 'Kartlenke: (ikke oppgitt)',
     ].join('\n'),
     html: `
-      <h2>Torsdagskos Reminder</h2>
-      <p>Your event is happening tomorrow:</p>
+      <h2>Torsdagskos-påminnelse</h2>
+      <p>Arrangementet ditt skjer i morgen:</p>
       <ul>
-        <li><strong>Title:</strong> ${safeTitle}</li>
-        <li><strong>Date &amp; time:</strong> ${formattedDate} (Europe/Oslo)</li>
-        <li><strong>Location:</strong> ${safeLocation}</li>
-        ${safeMapLink ? `<li><strong>Map link:</strong> <a href="${safeMapLink}">${safeMapLink}</a></li>` : '<li><strong>Map link:</strong> Not provided</li>'}
+        <li><strong>Tittel:</strong> ${safeTitle}</li>
+        <li><strong>Dato og tid:</strong> ${formattedDate} (Europe/Oslo)</li>
+        <li><strong>Sted:</strong> ${safeLocation}</li>
+        ${safeMapLink ? `<li><strong>Kartlenke:</strong> <a href="${safeMapLink}">${safeMapLink}</a></li>` : '<li><strong>Kartlenke:</strong> Ikke oppgitt</li>'}
       </ul>
-      <p><strong>Description:</strong></p>
+      <p><strong>Beskrivelse:</strong></p>
       <p>${safeDescriptionHtml}</p>
     `,
   };
@@ -184,7 +186,7 @@ function getChangedFields(input: EventUpdateNotificationInput): ChangedField[] {
     normalizeText(input.previous.title) !== normalizeText(input.updated.title)
   ) {
     changes.push({
-      label: 'Title',
+      label: 'Tittel',
       previous: input.previous.title,
       updated: input.updated.title,
     });
@@ -192,15 +194,15 @@ function getChangedFields(input: EventUpdateNotificationInput): ChangedField[] {
 
   if (previousDescription !== updatedDescription) {
     changes.push({
-      label: 'Description',
-      previous: previousDescription || '(empty)',
-      updated: updatedDescription || '(empty)',
+      label: 'Beskrivelse',
+      previous: previousDescription || '(tom)',
+      updated: updatedDescription || '(tom)',
     });
   }
 
   if (input.previous.dateTime.getTime() !== input.updated.dateTime.getTime()) {
     changes.push({
-      label: 'Date & time',
+      label: 'Dato og tid',
       previous: `${formatEventDate(input.previous.dateTime)} (Europe/Oslo)`,
       updated: `${formatEventDate(input.updated.dateTime)} (Europe/Oslo)`,
     });
@@ -211,7 +213,7 @@ function getChangedFields(input: EventUpdateNotificationInput): ChangedField[] {
     normalizeText(input.updated.location)
   ) {
     changes.push({
-      label: 'Location',
+      label: 'Sted',
       previous: input.previous.location,
       updated: input.updated.location,
     });
@@ -219,9 +221,9 @@ function getChangedFields(input: EventUpdateNotificationInput): ChangedField[] {
 
   if (previousMapLink !== updatedMapLink) {
     changes.push({
-      label: 'Map link',
-      previous: previousMapLink || '(none)',
-      updated: updatedMapLink || '(none)',
+      label: 'Kartlenke',
+      previous: previousMapLink || '(ingen)',
+      updated: updatedMapLink || '(ingen)',
     });
   }
 
@@ -238,19 +240,19 @@ function buildEventUpdateEmailContent(input: EventUpdateNotificationInput): {
 
   if (changedFields.length === 0) {
     return {
-      subject: `Event updated: ${titleForSubject}`,
+      subject: `Arrangement oppdatert: ${titleForSubject}`,
       text: [
-        `The event "${titleForSubject}" was updated, but no user-visible fields changed.`,
+        `Arrangementet "${titleForSubject}" ble oppdatert, men ingen synlige felt ble endret.`,
         '',
-        `Date & time: ${formatEventDate(input.updated.dateTime)} (Europe/Oslo)`,
-        `Location: ${input.updated.location}`,
+        `Dato og tid: ${formatEventDate(input.updated.dateTime)} (Europe/Oslo)`,
+        `Sted: ${input.updated.location}`,
       ].join('\n'),
       html: `
-        <h2>Torsdagskos Event Updated</h2>
-        <p>The event <strong>${escapeHtml(titleForSubject)}</strong> was updated, but no user-visible fields changed.</p>
+        <h2>Torsdagskos-arrangement oppdatert</h2>
+        <p>Arrangementet <strong>${escapeHtml(titleForSubject)}</strong> ble oppdatert, men ingen synlige felt ble endret.</p>
         <ul>
-          <li><strong>Date &amp; time:</strong> ${formatEventDate(input.updated.dateTime)} (Europe/Oslo)</li>
-          <li><strong>Location:</strong> ${escapeHtml(input.updated.location)}</li>
+          <li><strong>Dato og tid:</strong> ${formatEventDate(input.updated.dateTime)} (Europe/Oslo)</li>
+          <li><strong>Sted:</strong> ${escapeHtml(input.updated.location)}</li>
         </ul>
       `,
     };
@@ -259,7 +261,7 @@ function buildEventUpdateEmailContent(input: EventUpdateNotificationInput): {
   const textChanges = changedFields
     .map(
       (change) =>
-        `${change.label}\n- Before: ${change.previous}\n- After: ${change.updated}`,
+        `${change.label}\n- Før: ${change.previous}\n- Etter: ${change.updated}`,
     )
     .join('\n\n');
 
@@ -268,25 +270,25 @@ function buildEventUpdateEmailContent(input: EventUpdateNotificationInput): {
       (change) => `
         <li>
           <strong>${escapeHtml(change.label)}</strong><br />
-          <span>Before: ${escapeHtml(change.previous)}</span><br />
-          <span>After: ${escapeHtml(change.updated)}</span>
+          <span>Før: ${escapeHtml(change.previous)}</span><br />
+          <span>Etter: ${escapeHtml(change.updated)}</span>
         </li>
       `,
     )
     .join('');
 
   return {
-    subject: `Event updated: ${titleForSubject}`,
+    subject: `Arrangement oppdatert: ${titleForSubject}`,
     text: [
-      `An event has been updated: ${titleForSubject}`,
+      `Et arrangement har blitt oppdatert: ${titleForSubject}`,
       '',
-      'What changed:',
+      'Hva ble endret:',
       textChanges,
     ].join('\n'),
     html: `
-      <h2>Torsdagskos Event Updated</h2>
-      <p>An event has been updated: <strong>${escapeHtml(titleForSubject)}</strong></p>
-      <p><strong>What changed:</strong></p>
+      <h2>Torsdagskos-arrangement oppdatert</h2>
+      <p>Et arrangement har blitt oppdatert: <strong>${escapeHtml(titleForSubject)}</strong></p>
+      <p><strong>Hva ble endret:</strong></p>
       <ul>
         ${htmlChanges}
       </ul>
@@ -446,7 +448,7 @@ export async function sendNewEventNotifications(
     await sendPushNotificationsToOptedInUsers({
       eventId: input.eventId,
       type: 'new_event',
-      title: `New event: ${input.title}`,
+      title: `Nytt arrangement: ${input.title}`,
       body: `${formatEventDate(input.dateTime)} · ${input.location}`,
       url: `/events/${input.eventId}`,
     });
@@ -511,7 +513,7 @@ export async function sendEventUpdateNotifications(
     await sendPushNotificationsToOptedInUsers({
       eventId: input.eventId,
       type: 'event_update',
-      title: `Event updated: ${title}`,
+      title: `Arrangement oppdatert: ${title}`,
       body: `${formatEventDate(input.updated.dateTime)} · ${input.updated.location}`,
       url: `/events/${input.eventId}`,
     });
@@ -631,7 +633,7 @@ export async function sendEventReminderNotifications(
       await sendPushNotificationsToOptedInUsers({
         eventId: event.id,
         type: 'reminder',
-        title: `Reminder: ${event.title} is tomorrow`,
+        title: `Påminnelse: ${event.title} er i morgen`,
         body: `${formatEventDate(new Date(event.dateTime))} · ${event.location}`,
         url: `/events/${event.id}`,
       });

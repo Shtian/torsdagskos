@@ -5,7 +5,7 @@ self.addEventListener('push', (event) => {
 
   let payload = {
     title: 'Torsdagskos',
-    body: 'You have a new notification.',
+    body: 'Du har et nytt varsel.',
     url: '/',
   };
 
