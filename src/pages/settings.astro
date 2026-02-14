@@ -1,9 +1,16 @@
 ---
-import { clerkClient } from '@clerk/astro/server';
-import { db, Users, eq } from 'astro:db';
 import Layout from '../layouts/Layout.astro';
 import { Button } from '@/components/ui';
 import { buttonVariants } from '@/components/ui/button';
+
+
+
+
+
+
+
+import { clerkClient } from '@clerk/astro/server';
+import { db, Users, eq } from 'astro:db';
 
 const { userId } = Astro.locals.auth();
 if (!userId) {

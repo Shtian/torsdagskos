@@ -1,26 +1,28 @@
 ---
+
+
+
+
+
+
+
 import '../styles/global.css';
 import { clerkClient } from '@clerk/astro/server';
 import HeaderMobileSheet from '@/components/HeaderMobileSheet';
 
-interface Props {
-  title?: string;
-  description?: string;
-}
-
 const {
-  title = 'Torsdagskos',
-  description = 'Torsdagskos er en privat møteplanlegger for å koordinere gjentakende arrangementer med venner.',
+  title: _title = 'Torsdagskos',
+  description: _description = 'Torsdagskos er en privat møteplanlegger for å koordinere gjentakende arrangementer med venner.',
 } = Astro.props;
 
 // Get authenticated user
 const { userId } = Astro.locals.auth();
 let user: Awaited<ReturnType<ReturnType<typeof clerkClient>['users']['getUser']>> | null = null;
-const shouldRegisterServiceWorker = !!userId;
-const currentPath = Astro.url.pathname;
+const _shouldRegisterServiceWorker = !!userId;
+const _currentPath = Astro.url.pathname;
 let username = 'Bruker';
 
-const navLinks = [
+const _navLinks = [
   {
     href: '/history',
     label: 'Min historikk',
@@ -45,7 +47,7 @@ if (userId) {
     user.emailAddresses[0]?.emailAddress.split('@')[0] ||
     'Bruker';
 }
-const userInitial = username.charAt(0).toUpperCase();
+const _userInitial = username.charAt(0).toUpperCase();
 ---
 
 <!doctype html>
@@ -59,8 +61,8 @@ const userInitial = username.charAt(0).toUpperCase();
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<meta name="description" content={description} />
-		<title>{title}</title>
+		<meta name="description" content={_description} />
+		<title>{_title}</title>
 	</head>
 	<body>
 		<a
@@ -80,13 +82,13 @@ const userInitial = username.charAt(0).toUpperCase();
 						user && (
 							<nav class="hidden items-center gap-1.5 md:flex" aria-label="Hovednavigasjon">
 								{
-									navLinks.map((link) => (
+										_navLinks.map((link) => (
 										<a
 											href={link.href}
-											aria-current={currentPath === link.href ? 'page' : undefined}
+											aria-current={_currentPath === link.href ? 'page' : undefined}
 											class:list={[
 												'min-h-11 min-w-11 inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground no-underline transition hover:bg-transparent hover:text-foreground',
-												currentPath === link.href ? 'font-semibold text-foreground' : 'font-medium',
+												_currentPath === link.href ? 'font-semibold text-foreground' : 'font-medium',
 											]}
 										>
 											{
@@ -143,7 +145,7 @@ const userInitial = username.charAt(0).toUpperCase();
 											aria-controls="header-profile-menu"
 											data-header-profile-trigger
 										>
-											<span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{userInitial}</span>
+											<span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{_userInitial}</span>
 											<span class="max-w-32 truncate text-sm font-semibold text-foreground">{username}</span>
 											<svg class="h-3.5 w-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 												<path d="m6 9 6 6 6-6"></path>
@@ -193,9 +195,9 @@ const userInitial = username.charAt(0).toUpperCase();
 								<HeaderMobileSheet
 									client:load
 									username={username}
-									userInitial={userInitial}
-									currentPath={currentPath}
-									navLinks={navLinks}
+									userInitial={_userInitial}
+									currentPath={_currentPath}
+									navLinks={_navLinks}
 								/>
 							</>
 						) : (
@@ -217,7 +219,7 @@ const userInitial = username.charAt(0).toUpperCase();
 				<slot />
 			</main>
 		</div>
-		{shouldRegisterServiceWorker && (
+		{_shouldRegisterServiceWorker && (
 			<script>
 				if ('serviceWorker' in navigator) {
 					navigator.serviceWorker.register('/service-worker.js').catch(() => {

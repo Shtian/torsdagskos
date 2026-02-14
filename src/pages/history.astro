@@ -1,15 +1,20 @@
 ---
-import Layout from '../layouts/Layout.astro';
+
+
+
+
+
+
+
 import { clerkClient } from '@clerk/astro/server';
 import { db, Users, Events, Rsvps, eq } from 'astro:db';
+import Layout from '../layouts/Layout.astro';
 
 const { userId } = Astro.locals.auth();
 
-let currentUser = await db
-  .select()
-  .from(Users)
-  .where(eq(Users.clerkUserId, userId!))
-  .get();
+let currentUser = userId
+  ? await db.select().from(Users).where(eq(Users.clerkUserId, userId)).get()
+  : null;
 
 // Keep this page resilient when users navigate here before homepage sync runs.
 if (!currentUser && userId) {
@@ -60,7 +65,7 @@ const historyItems = currentUser
     )
   : [];
 
-const validHistoryItems = historyItems
+const _validHistoryItems = historyItems
   .filter((item): item is NonNullable<typeof item> => item !== null)
   .sort(
     (a, b) =>
@@ -68,7 +73,7 @@ const validHistoryItems = historyItems
       new Date(a.event.dateTime).getTime(),
   );
 
-function formatEventDate(date: Date): string {
+function _formatEventDate(date: Date): string {
   return new Intl.DateTimeFormat('no-NO', {
     timeZone: 'Europe/Oslo',
     weekday: 'short',
@@ -80,13 +85,13 @@ function formatEventDate(date: Date): string {
   }).format(new Date(date));
 }
 
-function formatStatus(status: string): string {
+function _formatStatus(status: string): string {
   if (status === 'going') return 'Kommer';
   if (status === 'maybe') return 'Kanskje';
   return 'Kommer ikke';
 }
 
-function statusClass(status: string): string {
+function _statusClass(status: string): string {
   if (status === 'going')
     return 'border-emerald-200 bg-emerald-50 text-emerald-700';
   if (status === 'maybe') return 'border-amber-200 bg-amber-50 text-amber-700';
@@ -106,7 +111,7 @@ function statusClass(status: string): string {
       </div>
     </div>
 
-    {validHistoryItems.length === 0 && (
+    {_validHistoryItems.length === 0 && (
       <div
         data-test-id="history-empty-state"
         data-slot="card"
@@ -116,9 +121,9 @@ function statusClass(status: string): string {
       </div>
     )}
 
-    {validHistoryItems.length > 0 && (
+    {_validHistoryItems.length > 0 && (
       <ul class="m-0 list-none space-y-4 p-0">
-        {validHistoryItems.map(({ rsvp, event }) => (
+        {_validHistoryItems.map(({ rsvp, event }) => (
           <li data-test-id="history-item" data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
             <a href={`/events/${event.id}`} class="block text-inherit no-underline">
               <div data-slot="card-content" class="space-y-3 px-6 py-5 sm:px-8">
@@ -126,12 +131,12 @@ function statusClass(status: string): string {
                   <h2 class="m-0 text-xl text-(--color-accent-dark)">{event.title}</h2>
                   <span
                     data-test-id="history-status"
-                    class={`inline-flex items-center rounded-full border px-3 py-1 text-[0.78rem] font-medium uppercase tracking-wide ${statusClass(rsvp.status)}`}
+                    class={`inline-flex items-center rounded-full border px-3 py-1 text-[0.78rem] font-medium uppercase tracking-wide ${_statusClass(rsvp.status)}`}
                   >
-                    {formatStatus(rsvp.status)}
+                    {_formatStatus(rsvp.status)}
                   </span>
                 </div>
-                <p class="m-0 text-sm text-muted-foreground">{formatEventDate(event.dateTime)}</p>
+                <p class="m-0 text-sm text-muted-foreground">{_formatEventDate(event.dateTime)}</p>
                 <p class="m-0 text-foreground">{event.location}</p>
               </div>
             </a>

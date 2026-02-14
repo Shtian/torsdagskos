@@ -3,6 +3,13 @@ import Layout from '../layouts/Layout.astro';
 import { SignIn as ClerkSignIn } from '@clerk/astro/components';
 import { buttonVariants } from '@/components/ui/button';
 
+
+
+
+
+
+
+
 // Redirect to home if already signed in
 const { userId } = Astro.locals.auth();
 if (userId) {
