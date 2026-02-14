@@ -10,7 +10,11 @@ import Layout from '../layouts/Layout.astro';
 import { clerkClient } from '@clerk/astro/server';
 
 const { userId } = Astro.locals.auth();
-const user = userId ? await clerkClient(Astro).users.getUser(userId) : null;
+if (!userId) {
+  return Astro.redirect('/sign-in');
+}
+
+const user = await clerkClient(Astro).users.getUser(userId);
 ---
 
 <Layout
