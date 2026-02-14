@@ -18,7 +18,7 @@ jobs:
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
 
       - name: Setup Node.js
-        # Pinned to immutable SHA (upstream tag:v6.2.0)
+        # Pinned to immutable SHA (upstream tag: v6.2.0)
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
         with:
           node-version: "20"
