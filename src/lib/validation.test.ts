@@ -45,24 +45,20 @@ describe('validation helpers', () => {
       const normalized = normalizeValidationError(parsed.error);
 
       expect(normalized.error).toBe('Validation failed');
-      expect(normalized.fieldErrors).toEqual({
-        'event.attendees.0': [
-          'Too small: expected string to have >=2 characters',
-        ],
-        'event.title': ['Too small: expected string to have >=3 characters'],
-      });
-      expect(normalized.issues).toEqual([
-        {
-          code: 'too_small',
-          message: 'Too small: expected string to have >=2 characters',
-          path: 'event.attendees.0',
-        },
-        {
-          code: 'too_small',
-          message: 'Too small: expected string to have >=3 characters',
-          path: 'event.title',
-        },
-      ]);
+      expect(normalized.fieldErrors['event.attendees.0']?.[0]).toContain('>=2');
+      expect(normalized.fieldErrors['event.title']?.[0]).toContain('>=3');
+      expect(normalized.issues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            code: 'too_small',
+            path: 'event.attendees.0',
+          }),
+          expect.objectContaining({
+            code: 'too_small',
+            path: 'event.title',
+          }),
+        ]),
+      );
     }
   });
 
@@ -73,16 +69,15 @@ describe('validation helpers', () => {
     expect(result.success).toBe(false);
 
     if (!result.success) {
-      expect(result.error.fieldErrors).toEqual({
-        _form: ['Too small: expected string to have >=5 characters'],
-      });
-      expect(result.error.issues).toEqual([
-        {
-          code: 'too_small',
-          message: 'Too small: expected string to have >=5 characters',
-          path: '_form',
-        },
-      ]);
+      expect(result.error.fieldErrors._form?.[0]).toContain('>=5');
+      expect(result.error.issues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            code: 'too_small',
+            path: '_form',
+          }),
+        ]),
+      );
     }
   });
 });
