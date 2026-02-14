@@ -63,7 +63,7 @@ For UI-impacting stories, also include:
 - [ ] No regressions in key layouts (header, forms, lists, content sections).
 
 ### US-005: Introduce Zod Validation in Forms
-**Description:** As a user, I want invalid input blocked with clear field errors so I can fix issues before submit.
+**Description:** As a user, I want invalid input blocked with clear field errors so I can fix issues before submitting.
 
 **Acceptance Criteria:**
 - [ ] Scoped forms use explicit Zod schemas.

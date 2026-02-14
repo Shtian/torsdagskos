@@ -5,9 +5,9 @@ It is intentionally scoped for follow-up implementation in `US-005`.
 
 ## Conventions To Preserve
 
-- Keep the existing spacing scale from `src/styles/global.css` (`--space-*`) and equivalent Tailwind spacing utilities.
-- Keep card shell structure consistent with shadcn slot sections (`card-header`, `card-content`, `card-footer`).
-- Keep existing touch-target minimum sizing (`min-h-11 min-w-11`) on interactive controls.
+- Use the existing spacing scale from `src/styles/global.css` (`--space-*`) and equivalent Tailwind spacing utilities.
+- Maintain card shell structure consistency with shadcn slot sections (`card-header`, `card-content`, `card-footer`).
+- Preserve existing touch-target minimum sizing (`min-h-11 min-w-11`) on interactive controls.
 - Do not introduce a new spacing system, custom per-page scales, or one-off wrapper conventions.
 
 ## Route Audit (Desktop + Mobile)
