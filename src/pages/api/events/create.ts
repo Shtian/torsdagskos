@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
-import { db, Events } from 'astro:db';
+import { clerkClient } from '@clerk/astro/server';
+import { db, Events, Users, eq } from 'astro:db';
 import {
   createValidationErrorPayload,
   emptyNotificationSummary,
@@ -8,10 +9,10 @@ import {
 } from '../../../lib/api-validation';
 import { sendNewEventNotifications } from '../../../lib/event-notifications';
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async (context) => {
   try {
     // Ensure user is authenticated
-    const { userId } = locals.auth();
+    const { userId } = context.locals.auth();
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -23,7 +24,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     let body: unknown;
     try {
-      body = await request.json();
+      body = await context.request.json();
     } catch {
       return new Response(
         JSON.stringify(
@@ -56,8 +57,53 @@ export const POST: APIRoute = async ({ request, locals }) => {
       title,
     } = parsedBody.data;
 
+    let owner = await db
+      .select()
+      .from(Users)
+      .where(eq(Users.clerkUserId, userId))
+      .get();
+
+    if (!owner) {
+      const clerkUser = await clerkClient(context).users.getUser(userId);
+
+      try {
+        await db.insert(Users).values({
+          clerkUserId: userId,
+          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          name:
+            `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
+            clerkUser.emailAddresses[0]?.emailAddress ||
+            'User',
+          createdAt: new Date(),
+        });
+      } catch (error) {
+        // Ignore race on unique clerkUserId. Another request may have created the row.
+        if (
+          !(error instanceof Error && error.message.includes('UNIQUE constraint'))
+        ) {
+          throw error;
+        }
+      }
+
+      owner = await db
+        .select()
+        .from(Users)
+        .where(eq(Users.clerkUserId, userId))
+        .get();
+    }
+
+    if (!owner) {
+      return new Response(JSON.stringify({ error: 'User sync failed' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
     // Insert event into database
     const result = await db.insert(Events).values({
+      ownerId: owner.id,
       title,
       description: description || '',
       dateTime: eventDate,
