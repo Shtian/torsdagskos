@@ -44,7 +44,7 @@ if (userId) {
   username =
     user.firstName?.trim() ||
     user.username?.trim() ||
-    user.emailAddresses[0]?.emailAddress.split('@')[0] ||
+    user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
     'Bruker';
 }
 const _userInitial = username.charAt(0).toUpperCase();
