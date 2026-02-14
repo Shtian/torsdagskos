@@ -278,14 +278,6 @@ const userInitial = username.charAt(0).toUpperCase();
 							}
 						});
 
-						menu.addEventListener('keydown', (event) => {
-							if (event.key === 'Escape') {
-								event.preventDefault();
-								closeMenu();
-								trigger.focus();
-							}
-						});
-
 						for (const item of items()) {
 							item.addEventListener('click', () => {
 								closeMenu();

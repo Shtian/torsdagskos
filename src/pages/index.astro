@@ -64,13 +64,20 @@ const eventsWithRsvps = await Promise.all(
       .where(eq(Rsvps.eventId, event.id))
       .all();
 
-    const going = rsvps.filter((r) => r.status === 'going').length;
-    const maybe = rsvps.filter((r) => r.status === 'maybe').length;
-    const notGoing = rsvps.filter((r) => r.status === 'not_going').length;
+    const rsvpCounts = { going: 0, maybe: 0, notGoing: 0 };
+    for (const rsvp of rsvps) {
+      if (rsvp.status === 'going') {
+        rsvpCounts.going += 1;
+      } else if (rsvp.status === 'maybe') {
+        rsvpCounts.maybe += 1;
+      } else if (rsvp.status === 'not_going') {
+        rsvpCounts.notGoing += 1;
+      }
+    }
 
     return {
       ...event,
-      rsvpCounts: { going, maybe, notGoing },
+      rsvpCounts,
     };
   }),
 );

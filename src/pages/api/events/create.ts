@@ -103,7 +103,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         notifications: notificationSummary,
       }),
       {
-        status: 200,
+        status: 201,
         headers: {
           'Content-Type': 'application/json',
         },

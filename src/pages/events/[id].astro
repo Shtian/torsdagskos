@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { db, Users, Events, Rsvps, eq } from 'astro:db';
+import { db, Users, Events, Rsvps, eq, inArray } from 'astro:db';
 import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -35,17 +35,17 @@ const rsvps = await db
   .where(eq(Rsvps.eventId, event.id))
   .all();
 
-// Get user details for all RSVPs
-const rsvpsWithUsers = await Promise.all(
-  rsvps.map(async (rsvp) => {
-    const user = await db
-      .select()
-      .from(Users)
-      .where(eq(Users.id, rsvp.userId))
-      .get();
-    return { ...rsvp, user };
-  }),
-);
+const rsvpUserIds = [...new Set(rsvps.map((rsvp) => rsvp.userId))];
+const rsvpUsers =
+  rsvpUserIds.length > 0
+    ? await db.select().from(Users).where(inArray(Users.id, rsvpUserIds)).all()
+    : [];
+const userMap = new Map(rsvpUsers.map((user) => [user.id, user]));
+
+const rsvpsWithUsers = rsvps.map((rsvp) => ({
+  ...rsvp,
+  user: userMap.get(rsvp.userId),
+}));
 
 // Get current user's local database ID
 const currentUser = await db
@@ -426,6 +426,8 @@ const isUpcoming = new Date(event.dateTime) >= now;
         setFeedback('Lagrer svar...', 'loading');
 
         try {
+          const controller = new AbortController();
+          const timeoutId = window.setTimeout(() => controller.abort(), 10000);
           const response = await fetch('/api/rsvp', {
             method: 'POST',
             headers: {
@@ -435,6 +437,9 @@ const isUpcoming = new Date(event.dateTime) >= now;
               eventId: parseInt(eventId),
               status,
             }),
+            signal: controller.signal,
+          }).finally(() => {
+            window.clearTimeout(timeoutId);
           });
 
           if (!response.ok) {
