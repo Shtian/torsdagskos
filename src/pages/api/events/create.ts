@@ -1,5 +1,11 @@
 import type { APIRoute } from 'astro';
 import { db, Events } from 'astro:db';
+import {
+  createValidationErrorPayload,
+  emptyNotificationSummary,
+  validateCreateEventApiRequest,
+  validateNotificationSummary,
+} from '../../../lib/api-validation';
 import { sendNewEventNotifications } from '../../../lib/event-notifications';
 
 export const POST: APIRoute = async ({ request, locals }) => {
@@ -15,15 +21,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    const body = await request.json();
-    const { title, description, dateTime, location, mapLink } = body;
-
-    // Validate required fields
-    if (!title || !dateTime || !location) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
       return new Response(
-        JSON.stringify({
-          error: 'Missing required fields: title, dateTime, location',
-        }),
+        JSON.stringify(
+          createValidationErrorPayload('Request body must be valid JSON.'),
+        ),
         {
           status: 400,
           headers: {
@@ -33,7 +38,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const eventDate = new Date(dateTime);
+    const parsedBody = validateCreateEventApiRequest(body);
+    if (!parsedBody.success) {
+      return new Response(JSON.stringify(parsedBody.error), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    const {
+      dateTime: eventDate,
+      description,
+      location,
+      mapLink,
+      title,
+    } = parsedBody.data;
 
     // Insert event into database
     const result = await db.insert(Events).values({
@@ -48,21 +69,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Get the inserted event ID (convert BigInt to Number for JSON serialization)
     const eventId = Number(result.lastInsertRowid);
-    let notificationSummary = {
-      totalUsers: 0,
-      sent: 0,
-      failed: 0,
-      skipped: 0,
-    };
+    let notificationSummary = emptyNotificationSummary;
 
     try {
-      notificationSummary = await sendNewEventNotifications({
+      const notificationResult = await sendNewEventNotifications({
         eventId,
         title,
         description: description || '',
         dateTime: eventDate,
         location,
       });
+
+      const parsedSummary = validateNotificationSummary(notificationResult);
+      if (parsedSummary.success) {
+        notificationSummary = parsedSummary.data;
+      } else {
+        console.error(
+          'Notification summary shape mismatch in /api/events/create:',
+          parsedSummary.error,
+        );
+      }
     } catch (notificationError) {
       console.error(
         'Error sending new event notifications:',

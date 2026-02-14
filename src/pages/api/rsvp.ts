@@ -1,5 +1,9 @@
 import type { APIRoute } from 'astro';
 import { db, Users, Rsvps, eq, and } from 'astro:db';
+import {
+  createValidationErrorPayload,
+  validateRsvpApiRequest,
+} from '../../lib/api-validation';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const { userId } = locals.auth();
@@ -12,13 +16,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   try {
-    const body = await request.json();
-    const { eventId, status } = body;
-
-    // Validate input
-    if (!eventId || !status) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
       return new Response(
-        JSON.stringify({ error: 'Missing eventId or status' }),
+        JSON.stringify(
+          createValidationErrorPayload('Request body must be valid JSON.'),
+        ),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
@@ -26,12 +31,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    if (!['going', 'maybe', 'not_going'].includes(status)) {
-      return new Response(JSON.stringify({ error: 'Invalid status' }), {
+    const parsedBody = validateRsvpApiRequest(body);
+    if (!parsedBody.success) {
+      return new Response(JSON.stringify(parsedBody.error), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    const { eventId, status } = parsedBody.data;
 
     // Get current user's local database ID
     const currentUser = await db
