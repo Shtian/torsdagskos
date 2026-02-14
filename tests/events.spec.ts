@@ -500,7 +500,7 @@ test.describe('Event Detail Page', () => {
     });
 
     // Create the authenticated user explicitly (or get existing)
-    let currentUser;
+    let currentUser: { id: number };
     try {
       currentUser = await createTestUser({
         clerkUserId,
