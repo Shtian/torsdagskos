@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures';
 import { createTestUser, createTestEvent } from './helpers/api-helpers';
+import { gotoWithRetry } from './helpers/navigation-helpers';
 
 /**
  * E2E tests for RSVP functionality
@@ -17,23 +18,6 @@ import { createTestUser, createTestEvent } from './helpers/api-helpers';
 // Helper to generate unique email addresses for test isolation
 function uniqueEmail(base: string): string {
   return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
-}
-
-async function gotoWithRetry(
-  page: import('@playwright/test').Page,
-  path: string,
-): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
-      return;
-    } catch (error) {
-      if (attempt === 2) {
-        throw error;
-      }
-      await page.waitForTimeout(300);
-    }
-  }
 }
 
 test.describe('RSVP Functionality', () => {

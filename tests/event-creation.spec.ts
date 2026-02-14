@@ -1,21 +1,5 @@
 import { test, expect } from './fixtures';
-
-async function gotoWithRetry(
-  page: import('@playwright/test').Page,
-  path: string,
-): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
-      return;
-    } catch (error) {
-      if (attempt === 2) {
-        throw error;
-      }
-      await page.waitForTimeout(300);
-    }
-  }
-}
+import { gotoWithRetry } from './helpers/navigation-helpers';
 
 test.describe('Event Creation', () => {
   test('should display event creation form', async ({ page }) => {

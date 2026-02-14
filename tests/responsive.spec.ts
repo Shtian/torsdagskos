@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import type { Locator, Page } from '@playwright/test';
 import { cleanupTestData, createEvent } from './helpers/api-helpers';
+import { gotoWithRetry } from './helpers/navigation-helpers';
 
 const MOBILE_VIEWPORT = { width: 375, height: 812 };
 const TABLET_VIEWPORT = { width: 820, height: 1180 };
@@ -20,20 +21,6 @@ async function openMobileMenuAndWait(page: Page): Promise<Locator> {
 
   await expect(mobileNav).toBeVisible();
   return mobileNav;
-}
-
-async function gotoWithRetry(page: Page, path: string): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
-      return;
-    } catch (error) {
-      if (attempt === 2) {
-        throw error;
-      }
-      await page.waitForTimeout(300);
-    }
-  }
 }
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {

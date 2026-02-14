@@ -5,6 +5,7 @@ import {
   createTestRsvp,
   cleanupTestData,
 } from './helpers/api-helpers';
+import { gotoWithRetry } from './helpers/navigation-helpers';
 
 /**
  * E2E tests for events list and detail pages
@@ -21,29 +22,6 @@ import {
 // Helper to generate unique email addresses for test isolation
 function uniqueEmail(base: string): string {
   return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
-}
-
-async function gotoWithRetry(
-  page: import('@playwright/test').Page,
-  path: string,
-): Promise<import('@playwright/test').Response> {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
-      if (response) {
-        return response;
-      }
-      if (attempt === 2) {
-        throw new Error(`Navigation to "${path}" returned no response.`);
-      }
-    } catch (error) {
-      if (attempt === 2) {
-        throw error;
-      }
-    }
-    await page.waitForTimeout(300);
-  }
-  throw new Error(`Navigation to "${path}" failed unexpectedly.`);
 }
 
 test.describe('Events List Page', () => {
@@ -495,7 +473,7 @@ test.describe('Event Detail Page', () => {
     const response = await gotoWithRetry(page, '/events/999999');
 
     // Verify 404 response
-    expect(response.status()).toBe(404);
+    expect(response?.status()).toBe(404);
   });
 
   test('displays current user RSVP status prominently', async ({ page }) => {

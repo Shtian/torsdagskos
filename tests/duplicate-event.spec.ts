@@ -1,20 +1,6 @@
 import { test, expect } from './fixtures';
-import type { Page } from '@playwright/test';
 import { createEvent } from './helpers/api-helpers';
-
-async function gotoWithRetry(page: Page, path: string): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
-      return;
-    } catch (error) {
-      if (attempt === 2) {
-        throw error;
-      }
-      await page.waitForTimeout(300);
-    }
-  }
-}
+import { gotoWithRetry } from './helpers/navigation-helpers';
 
 test.describe('Duplicate Event Functionality', () => {
   test('duplicate button is disabled when no events exist', async ({
@@ -230,7 +216,7 @@ test.describe('Duplicate Event Functionality', () => {
     page,
   }) => {
     // Navigate directly to /events/new without query parameters
-    await page.goto('/events/new');
+    await gotoWithRetry(page, '/events/new');
 
     // Banner should not be visible
     const banner = page.locator('[data-test-id="duplicate-banner"]');

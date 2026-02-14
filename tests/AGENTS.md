@@ -17,7 +17,7 @@
 - Unauthenticated route assertions should target local `/access-denied` first; validate the invite-only message and sign-in link instead of expecting direct middleware redirects to Clerk-hosted domains.
 - For Clerk wrapper page migrations (`/sign-in`, `/sign-up`), add stable `data-test-id` hooks on the local shell and assert both wrapper content and Clerk heading presence to ensure visual migration without breaking auth UI.
 - For event create/edit form migrations, use the shared inline feedback contract (`data-test-id="form-feedback-panel"`) and assert panel text plus submit `aria-busy`/disabled transitions instead of toast-style selectors.
-- For Zod-backed client-side form validation on event create/edit, keep `novalidate` on the form, expose per-field error hooks (`data-test-id="field-error-<field>"`), and assert invalid submits do not call the API route.
+- Zod-backed client-side validation for event create/edit should keep `novalidate` on the form, expose per-field error hooks (`data-test-id="field-error-<field>"`), and assert invalid submits do not call the API route.
 - For event detail RSVP flows, use the inline feedback panel (`data-test-id="rsvp-feedback-panel"`) and assert the `#rsvp-feedback` message instead of ephemeral toast selectors.
 - For settings page UI refactors, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` selectors stable because both page scripts and settings specs rely on them.
 - For page UI migrations, keep existing behavior-focused specs intact and add a dedicated `*-ui.spec.ts` file for shell/list surface and mobile overflow assertions.
@@ -26,9 +26,9 @@
 - Keep the invite-only title on `/access-denied` as a semantic heading element; typography and theme unauth specs use that route for heading style assertions.
 - For React-island interaction tests on `/`, wait for `data-hydrated="true"` on `page.getByTestId('shadcn-island')` before clicking tabs/select/dialog/dropdown triggers to avoid pre-hydration flakiness.
 - For auth-sensitive `page.evaluate()` calls to `/api/test/current-user`, guard for intermittent `401` + non-JSON responses and retry a few times before failing to reduce suite flakes.
-- For occasional dev-server navigation flakes (`net::ERR_ABORTED` / detached frame), wrap critical `page.goto()` calls in a small bounded retry helper inside the spec.
-- For long serial Playwright runs, apply the same bounded `page.goto()` retry helper in setup/navigation-heavy specs (not just one route) to reduce random `ERR_ABORTED`/timeout failures.
-- For localized UI copy, prefer stable `data-test-id` selectors for badges/count pills where translated labels can overlap (for example `1 kommer` vs `1 kommer ikke`) and trigger strict-mode locator collisions.
+- When occasional dev-server navigation flakes (`net::ERR_ABORTED` / detached frame) occur, wrap critical `page.goto()` calls in a small bounded retry helper inside the spec.
+- In long serial Playwright runs, apply the same bounded `page.goto()` retry helper in setup/navigation-heavy specs (not just one route) to reduce random `ERR_ABORTED`/timeout failures.
+- With localized UI copy, prefer stable `data-test-id` selectors for badges/count pills where translated labels can overlap (for example `1 kommer` vs `1 kommer ikke`) and trigger strict-mode locator collisions.
 - During translation-focused stories, keep assertions for app-owned shell text localized, but keep Clerk widget heading checks regex-tolerant because Clerk-rendered copy can vary by provider locale/configuration.
 - RSVP buttons on event detail keep `aria-label` values (`Kommer`/`Kanskje`/`Kommer ikke`) even when button text temporarily changes to loading labels, so loading/error assertions should target feedback panel text and button state attributes instead of role-name text swaps.
 - Spacing regression checks should use stable page-shell test ids (`*-shell`) plus computed style assertions for `margin-top` and horizontal padding to validate shared shell contracts across breakpoints.

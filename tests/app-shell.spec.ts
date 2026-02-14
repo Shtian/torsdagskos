@@ -31,11 +31,12 @@ test.describe('App Shell Layout', () => {
     await expect(header).toBeVisible();
 
     // Logo/title link should be present
-    const logo = page
+    const logoLink = page
       .getByRole('banner')
-      .getByRole('heading', { name: 'Torsdagskos', exact: true });
-    await expect(logo).toBeVisible();
-    await expect(logo.locator('..')).toHaveAttribute('href', '/');
+      .getByRole('link', { name: 'Torsdagskos' });
+    await expect(logoLink).toBeVisible();
+    await expect(logoLink).toHaveAttribute('href', '/');
+    await expect(logoLink.getByRole('heading')).toBeVisible();
 
     // Navigation links should be semantic anchors with unchanged destinations
     const nav = page.getByRole('navigation', { name: 'Hovednavigasjon' });
