@@ -156,10 +156,10 @@ test.describe('Duplicate Event Functionality', () => {
       page.getByRole('heading', { name: originalEventData.title, level: 1 }),
     ).toBeVisible();
     await expect(
-      page.locator('text=' + originalEventData.description),
+      page.locator(`text=${originalEventData.description}`),
     ).toBeVisible();
     await expect(
-      page.locator('text=' + originalEventData.location),
+      page.locator(`text=${originalEventData.location}`),
     ).toBeVisible();
   });
 

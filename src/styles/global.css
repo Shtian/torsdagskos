@@ -172,7 +172,7 @@
       [role="button"],
       [tabindex]
     ):focus-visible {
-    outline: 3px solid var(--color-accent-dark) !important;
+    outline: 3px solid var(--color-accent-dark);
     outline-offset: 2px;
   }
 }

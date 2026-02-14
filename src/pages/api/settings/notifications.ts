@@ -23,7 +23,7 @@ export const POST: APIRoute = async (context) => {
       });
     }
 
-    let existingUser = await db
+    const existingUser = await db
       .select()
       .from(Users)
       .where(eq(Users.clerkUserId, userId))

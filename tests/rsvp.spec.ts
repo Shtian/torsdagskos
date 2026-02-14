@@ -51,7 +51,7 @@ test.describe('RSVP Functionality', () => {
         email: uniqueEmail('authenticated'),
         name: 'Authenticated Test User',
       });
-    } catch (error) {
+    } catch (_error) {
       // User already exists, that's fine
     }
 
@@ -141,7 +141,7 @@ test.describe('RSVP Functionality', () => {
         email: uniqueEmail('authenticated'),
         name: 'Authenticated Test User',
       });
-    } catch (error) {
+    } catch (_error) {
       // User already exists, that's fine
     }
 
@@ -201,7 +201,7 @@ test.describe('RSVP Functionality', () => {
         email: uniqueEmail('authenticated'),
         name: 'Authenticated Test User',
       });
-    } catch (error) {
+    } catch (_error) {
       // User already exists, that's fine
     }
 
@@ -272,7 +272,7 @@ test.describe('RSVP Functionality', () => {
         email: uniqueEmail('authenticated'),
         name: 'Authenticated Test User',
       });
-    } catch (error) {
+    } catch (_error) {
       // User already exists, that's fine
     }
 
