@@ -288,8 +288,12 @@ test.describe('RSVP Functionality', () => {
 
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await gotoWithRetry(page, `/events/${event.id}`);
-    if ((await currentUserRsvp.count()) === 0) {
-      throw new Error('Unable to load RSVP panel for authenticated user.');
+    try {
+      await currentUserRsvp.waitFor({ state: 'visible', timeout: 10_000 });
+    } catch (error) {
+      throw new Error(
+        `Timed out waiting for RSVP panel to become visible for authenticated user. Original error: ${String(error)}`,
+      );
     }
 
     await expect(currentUserRsvp).toContainText('Ditt svar');
