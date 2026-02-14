@@ -9,6 +9,7 @@
 import '../styles/global.css';
 import { clerkClient } from '@clerk/astro/server';
 import HeaderMobileSheet from '@/components/HeaderMobileSheet';
+import HeaderLogoutButton from '@/components/HeaderLogoutButton';
 
 const {
   title: _title = 'Torsdagskos',
@@ -175,19 +176,10 @@ const _userInitial = username.charAt(0).toUpperCase();
 												Profil
 											</a>
 											<div class="my-1 h-px bg-border"></div>
-											<button
-												type="button"
-												role="menuitem"
-												data-header-logout-button
-												class="min-h-11 min-w-11 inline-flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm font-medium text-destructive transition hover:bg-destructive/10"
-											>
-												<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-													<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-													<path d="m16 17 5-5-5-5"></path>
-													<path d="M21 12H9"></path>
-												</svg>
-												Logg ut
-											</button>
+											<HeaderLogoutButton
+												client:load
+												className="min-h-11 min-w-11 inline-flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm font-medium text-destructive transition hover:bg-destructive/10"
+											/>
 										</div>
 									</div>
 								</div>
@@ -286,30 +278,6 @@ const _userInitial = username.charAt(0).toUpperCase();
 							});
 						}
 
-						const logoutButton = menu.querySelector('[data-header-logout-button]');
-						if (logoutButton instanceof HTMLButtonElement) {
-							logoutButton.addEventListener('click', () => {
-								const cookiePrefixes = [
-									'__session',
-									'__client_uat',
-									'__clerk_db_jwt',
-									'clerk_active_context',
-								];
-
-								const cookieNames = document.cookie
-									.split(';')
-									.map((cookie) => cookie.trim().split('=')[0])
-									.filter((name) => name.length > 0);
-
-								for (const name of cookieNames) {
-									if (cookiePrefixes.some((prefix) => name === prefix || name.startsWith(`${prefix}_`))) {
-										document.cookie = `${name}=; Max-Age=0; path=/`;
-									}
-								}
-
-								window.location.assign('/sign-in');
-							});
-						}
 					}
 				}
 
