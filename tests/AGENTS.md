@@ -42,6 +42,7 @@
 - Always call `await page.goto('/')` before using `createEvent()` to ensure proper browser context
 - This pattern simulates real user actions and includes authentication cookies automatically
 - `createTestEvent({...})` accepts optional `ownerId`; use it to validate owner-restricted behaviors (for example edit authorization) without relying on UI creation flows.
+- `createEvent(page, ...)` expects optional fields (for example `mapLink`) to be omitted when absent; pass `undefined`/omit instead of `null` to satisfy the helper's typed payload.
 
 ### Flexible Selectors
 - For elements that may be rendered as different types (button vs link), use:

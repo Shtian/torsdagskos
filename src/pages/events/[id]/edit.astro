@@ -204,6 +204,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
 
 <script>
   import { validateUpdateEventForm } from '@/lib/event-form-validation';
+  import { parseOsloDateTimeInput } from '@/lib/oslo-datetime';
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('event-form') as HTMLFormElement;
@@ -312,8 +313,7 @@ const prefillTime = getOsloTimeInputValue(event.dateTime);
       }
 
       const { eventId, title, description, date, time, location, mapLink } = parsedForm.data;
-      const dateTimeString = `${date}T${time}:00`;
-      const dateTime = new Date(dateTimeString);
+      const dateTime = parseOsloDateTimeInput(date, time);
 
       submitButton.disabled = true;
       submitButton.textContent = loadingSubmitLabel;

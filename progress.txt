@@ -58,3 +58,16 @@
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/event-creation.spec.ts` now contains an API payload assertion pattern for timezone-sensitive form submissions.
 ---
+## [2026-02-15 15:59:55 CET] - US-006
+- Updated edit-event submit handling to parse `date` + `time` with the shared Europe/Oslo helper before sending `/api/events/update`.
+- Added Playwright coverage that intercepts `/api/events/update` and asserts the outbound `dateTime` ISO payload uses Oslo semantics.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (126 passed).
+- Files changed: `src/pages/events/[id]/edit.astro`, `tests/event-edit.spec.ts`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Timezone-sensitive regression coverage is most reliable by intercepting API requests and asserting payload timestamps directly, not rendered UI times.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `createEvent(...)` test helper expects optional fields to be omitted rather than explicitly passed as `null` to satisfy its TypeScript shape.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/event-edit.spec.ts` now includes parity timezone payload validation for the edit flow (`/api/events/update`), mirroring the create-flow test strategy.
+---
