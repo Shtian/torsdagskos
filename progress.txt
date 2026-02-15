@@ -1,6 +1,7 @@
 # Codebase Patterns
 - When introducing foreign-keyed ownership fields tied to Clerk identity, resolve `Users` by `clerkUserId` inside API routes and create the local user row on demand with unique-constraint race protection before writing the dependent record.
 - For owner-restricted writes, resolve the authenticated local user before authorization and gate on `Events.ownerId`; Clerk metadata (`role=admin` or `isAdmin=true`) is the admin bypass.
+- RSVP write routes should validate `Events` existence and time-window before touching `Rsvps`, and return structured 4xx payloads (`code`/`error`/`message`/`eventId`) for deterministic client and E2E handling.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -29,4 +30,17 @@
     - Authenticated Clerk sessions can exist before local `Users` rows; sync local users before ownership checks.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/event-edit.spec.ts` now contains a direct non-owner forbidden-path assertion for `/api/events/update`.
+---
+## [2026-02-15 15:41:31 CET] - US-003
+- Implemented server-side RSVP target validation in `/api/rsvp` by checking event existence and rejecting past-event submissions before any RSVP insert/update.
+- Added structured error responses for invalid RSVP targets: `EVENT_NOT_FOUND` (404) and `EVENT_CLOSED` (409), each including `eventId`.
+- Added Playwright API tests covering unknown-event and past-event RSVP rejection paths for authenticated users.
+- Files changed: `src/pages/api/rsvp.ts`, `tests/rsvp-api.spec.ts`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - RSVP APIs should return machine-readable 4xx payloads so both UI scripts and Playwright API assertions can reliably branch on error type.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Authenticated E2E calls to `/api/rsvp` still depend on a local `Users` row; ensure the test user is synced before asserting downstream event-state validation.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/rsvp-api.spec.ts` is now the primary coverage for RSVP invalid-target behavior at the API layer.
 ---
