@@ -5,6 +5,7 @@
 - Convert event form date/time inputs with an explicit Europe/Oslo wall-time helper before `toISOString()`; `new Date(\`\${date}T\${time}\`)` leaks browser locale and shifts stored event time.
 - For React-island interaction tests, wait for explicit hydration markers (`data-hydrated="true"`) before keyboard/click assertions to avoid pre-hydration flakes.
 - For form-controller island migrations, expose a stable root selector plus hydration state (for example `[data-new-event-form="true"][data-hydrated="true"]`) so Playwright can synchronize before submits/assertions.
+- For create/edit form islands, centralize shared field-error state shape and feedback-panel class mapping in `src/components/event-form-controller.ts` to keep behavior parity across both routes.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -100,4 +101,18 @@
     - In React islands, form `novalidate` must be expressed as `noValidate`; the lowercase HTML form fails TS checks in `.tsx`.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `src/components/NewEventForm.tsx` is now the single source of truth for create-event client validation/feedback/submission behavior.
+---
+## [2026-02-15 18:57:24 CET] - US-009
+- Migrated edit-event form interactions from inline `DOMContentLoaded` script to a typed React island (`EditEventForm`) mounted with `client:load` in `src/pages/events/[id]/edit.astro`.
+- Reused shared form-controller logic between new/edit flows by extracting common field-error initialization and feedback-panel class mapping into `src/components/event-form-controller.ts`.
+- Added hydration-aware Playwright synchronization for the edit form island (`[data-edit-event-form="true"][data-hydrated="true"]`) and updated test guidance.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/EditEventForm.tsx`, `src/components/NewEventForm.tsx`, `src/components/event-form-controller.ts`, `src/pages/events/[id]/edit.astro`, `tests/event-edit.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Create/edit form controllers should share utility state helpers so validation feedback behavior stays identical across routes.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - String-wide replacements in specs can accidentally touch helper implementations; verify helper bodies after bulk edits.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/components/EditEventForm.tsx` is now the single source of truth for edit-event client validation/feedback/submission behavior.
 ---

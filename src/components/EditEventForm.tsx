@@ -1,36 +1,44 @@
 import type { ComponentPropsWithoutRef } from 'react';
 import { useEffect, useState } from 'react';
-import { validateCreateEventForm } from '@/lib/event-form-validation';
-import { parseOsloDateTimeInput } from '@/lib/oslo-datetime';
-import { Button, Input, Label, Textarea } from '@/components/ui';
-import { buttonVariants } from '@/components/ui/button';
 import {
   createEmptyEventFormErrors,
   getEventFormFeedbackClassName,
   type EventFormFeedbackType,
   type EventFormFieldName,
 } from '@/components/event-form-controller';
-
-type NewEventFormProps = {
-  prefillDescription: string;
-  prefillLocation: string;
-  prefillMapLink: string;
-  prefillTitle: string;
-};
+import { Button, Input, Label, Textarea } from '@/components/ui';
+import { buttonVariants } from '@/components/ui/button';
+import { validateUpdateEventForm } from '@/lib/event-form-validation';
+import { parseOsloDateTimeInput } from '@/lib/oslo-datetime';
 
 type FormSubmitEvent = Parameters<
   NonNullable<ComponentPropsWithoutRef<'form'>['onSubmit']>
 >[0];
 
-const defaultSubmitLabel = 'Opprett arrangement';
-const loadingSubmitLabel = 'Oppretter...';
+type EditEventFormProps = {
+  cancelHref: string;
+  eventId: number;
+  prefillDate: string;
+  prefillDescription: string;
+  prefillLocation: string;
+  prefillMapLink: string;
+  prefillTime: string;
+  prefillTitle: string;
+};
 
-export default function NewEventForm({
+const defaultSubmitLabel = 'Lagre endringer';
+const loadingSubmitLabel = 'Lagrer...';
+
+export default function EditEventForm({
+  cancelHref,
+  eventId,
+  prefillDate,
   prefillDescription,
   prefillLocation,
   prefillMapLink,
+  prefillTime,
   prefillTitle,
-}: NewEventFormProps) {
+}: EditEventFormProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
@@ -58,9 +66,10 @@ export default function NewEventForm({
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    const parsedForm = validateCreateEventForm({
+    const parsedForm = validateUpdateEventForm({
       date: formData.get('date'),
       description: formData.get('description'),
+      eventId: formData.get('eventId'),
       location: formData.get('location'),
       mapLink: formData.get('mapLink'),
       time: formData.get('time'),
@@ -82,20 +91,20 @@ export default function NewEventForm({
       return;
     }
 
-    const { title, description, date, time, location, mapLink } = parsedForm.data;
-
+    const { eventId, title, description, date, time, location, mapLink } = parsedForm.data;
     const dateTime = parseOsloDateTimeInput(date, time);
 
     setIsSubmitting(true);
-    setFeedback('Oppretter arrangement...', 'loading');
+    setFeedback('Lagrer endringer i arrangement...', 'loading');
 
     try {
-      const response = await fetch('/api/events/create', {
+      const response = await fetch('/api/events/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          eventId,
           title,
           description: description || '',
           dateTime: dateTime.toISOString(),
@@ -106,24 +115,24 @@ export default function NewEventForm({
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => null);
-        throw new Error(errorPayload?.error || 'Kunne ikke opprette arrangement');
+        throw new Error(errorPayload?.error || 'Kunne ikke oppdatere arrangement');
       }
 
       const result = (await response.json()) as { eventId?: number | string };
 
-      setFeedback('Arrangement opprettet. Videresender til detaljer...', 'success');
+      setFeedback('Arrangement oppdatert. Videresender til detaljer...', 'success');
 
-      const eventId = result.eventId;
-      if (eventId) {
+      const updatedEventId = result.eventId;
+      if (updatedEventId) {
         setTimeout(() => {
-          window.location.href = `/events/${eventId}`;
+          window.location.href = `/events/${updatedEventId}`;
         }, 1000);
       }
     } catch (error) {
       setFeedback(
         error instanceof Error
           ? error.message
-          : 'Kunne ikke opprette arrangement. Prøv igjen.',
+          : 'Kunne ikke oppdatere arrangement. Prøv igjen.',
         'error',
       );
       setIsSubmitting(false);
@@ -139,13 +148,15 @@ export default function NewEventForm({
       className="bg-card text-card-foreground rounded-xl border shadow-sm"
       noValidate
       onSubmit={onSubmit}
-      data-new-event-form="true"
+      data-edit-event-form="true"
       data-hydrated={isHydrated ? 'true' : 'false'}
     >
+      <input type="hidden" id="eventId" name="eventId" value={eventId} />
+
       <div data-slot="card-header" className="space-y-2 border-b px-6 py-5 sm:px-8">
-        <h1 className="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Opprett nytt arrangement</h1>
+        <h1 className="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Rediger arrangement</h1>
         <p className="m-0 text-sm text-muted-foreground">
-          Fyll ut arrangementsdetaljene nedenfor. Felt merket med * er påkrevd.
+          Oppdater arrangementsdetaljene nedenfor. Felt merket med * er påkrevd.
         </p>
       </div>
 
@@ -159,7 +170,6 @@ export default function NewEventForm({
             id="title"
             name="title"
             className="h-auto px-3 py-3"
-            placeholder="f.eks. Torsdagskos hos Ola"
             defaultValue={prefillTitle}
             aria-invalid={fieldErrors.title ? 'true' : undefined}
             aria-describedby={fieldErrors.title ? 'title-error' : undefined}
@@ -181,7 +191,6 @@ export default function NewEventForm({
             name="description"
             className="min-h-[120px] resize-y px-3 py-3"
             rows={5}
-            placeholder="Hva er planen? Noen spesielle detaljer?"
             defaultValue={prefillDescription}
             aria-invalid={fieldErrors.description ? 'true' : undefined}
             aria-describedby={fieldErrors.description ? 'description-error' : undefined}
@@ -210,6 +219,7 @@ export default function NewEventForm({
               id="date"
               name="date"
               className="h-auto px-3 py-3"
+              defaultValue={prefillDate}
               aria-invalid={fieldErrors.date ? 'true' : undefined}
               aria-describedby={fieldErrors.date ? 'date-error' : undefined}
             />
@@ -232,6 +242,7 @@ export default function NewEventForm({
               id="time"
               name="time"
               className="h-auto px-3 py-3"
+              defaultValue={prefillTime}
               aria-invalid={fieldErrors.time ? 'true' : undefined}
               aria-describedby={fieldErrors.time ? 'time-error' : undefined}
             />
@@ -255,7 +266,6 @@ export default function NewEventForm({
             id="location"
             name="location"
             className="h-auto px-3 py-3"
-            placeholder="f.eks. Olas leilighet, Oslo sentrum"
             defaultValue={prefillLocation}
             aria-invalid={fieldErrors.location ? 'true' : undefined}
             aria-describedby={fieldErrors.location ? 'location-error' : undefined}
@@ -311,7 +321,7 @@ export default function NewEventForm({
         <Button
           type="submit"
           id="submit-button"
-          data-test-id="submit-event-button"
+          data-test-id="submit-edit-event-button"
           className="min-h-11 min-w-11 h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
           disabled={isSubmitting}
           aria-busy={isSubmitting ? 'true' : undefined}
@@ -319,7 +329,7 @@ export default function NewEventForm({
           {isSubmitting ? loadingSubmitLabel : defaultSubmitLabel}
         </Button>
         <a
-          href="/"
+          href={cancelHref}
           className={`${buttonVariants({ variant: 'outline', size: 'default' })} min-h-11 min-w-11 px-6 py-3 text-base no-underline sm:w-auto`}
         >
           Avbryt

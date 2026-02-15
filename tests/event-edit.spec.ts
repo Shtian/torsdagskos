@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import {
   cleanupTestData,
@@ -37,6 +38,13 @@ function toOsloTimeInputValue(date: Date): string {
 
 function uniqueEmail(base: string): string {
   return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
+}
+
+async function gotoEditEventPage(page: Page, eventId: number) {
+  await page.goto(`/events/${eventId}/edit`);
+  await expect(
+    page.locator('[data-edit-event-form="true"][data-hydrated="true"]'),
+  ).toBeVisible();
 }
 
 test.describe('Event Edit', () => {
@@ -86,7 +94,7 @@ test.describe('Event Edit', () => {
       mapLink,
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
 
     await expect(page.getByTestId('edit-event-shell')).toBeVisible();
     await expect(
@@ -126,7 +134,7 @@ test.describe('Event Edit', () => {
       mapLink: 'https://maps.google.com/?q=original',
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
     let updateRequests = 0;
 
     await page.route('**/api/events/update', async (route) => {
@@ -181,7 +189,7 @@ test.describe('Event Edit', () => {
     const updatedLocation = 'Updated location';
     const updatedMapLink = 'https://maps.google.com/?q=updated';
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
 
     await page.locator('#title').fill(updatedTitle);
     await page.locator('#description').fill(updatedDescription);
@@ -224,7 +232,7 @@ test.describe('Event Edit', () => {
       location: 'Oslo',
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
 
     let submittedDateTime: string | null = null;
 
@@ -327,7 +335,7 @@ test.describe('Event Edit', () => {
       mapLink: 'https://maps.google.com/?q=loading-edit',
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
 
     await page.route('**/api/events/update', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 600));
