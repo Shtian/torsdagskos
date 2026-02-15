@@ -11,6 +11,7 @@
 - Keep homepage `EventCard` rendering server-only (no `client:*` hydration); in Playwright, verify cards are not wrapped by `astro-island` to guard performance regressions.
 - On homepage event listings, aggregate RSVP counts in one `groupBy(eventId, status)` query and map results per event; avoid per-event RSVP lookups in render paths.
 - On event detail pages, fetch RSVP + user display data with a single `leftJoin(Rsvps, Users)` query (or equivalent batched query) to avoid per-RSVP user lookups while preserving grouped RSVP rendering.
+- On history pages, load RSVP cards via one joined `Rsvps` + `Events` query scoped by `Rsvps.userId`, then filter null joined events before sorting/rendering.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -188,4 +189,17 @@
     - Playwright strict mode can collide on substring name matches (for example `Going User` within `Not Going User`); use `getByText(value, { exact: true })` for person-name assertions.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/event-detail-ui.spec.ts` now includes a dedicated RSVP grouping regression (`renders RSVP groups with correct users and counts`) tied to the event-detail data-loading path.
+---
+## [2026-02-15 22:28:04 CET] - US-015
+- Replaced history page RSVP event loading N+1 pattern with a single joined query (`leftJoin` between `Rsvps` and `Events`) scoped to the current user.
+- Preserved rendering behavior by filtering rows where joined `event` is `null`, then sorting history entries by event datetime descending before display.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/pages/history.astro`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - History-route RSVP cards should be sourced from one joined RSVP+event query to avoid query fan-out and keep list rendering scalable.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `leftJoin` keeps orphaned RSVP rows; explicitly filter out `event === null` before reading event fields to keep type safety and avoid runtime null access.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/pages/history.astro` now owns the canonical joined RSVP+event history loading path and downstream descending date sort.
 ---
