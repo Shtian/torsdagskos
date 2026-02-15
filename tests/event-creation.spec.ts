@@ -5,6 +5,8 @@ test.describe('Event Creation', () => {
   test('should display event creation form', async ({ page }) => {
     await page.goto('/events/new');
 
+    await expect(page.locator('[data-new-event-form="true"][data-hydrated="true"]')).toBeVisible();
+
     // Check that form elements are visible
     await expect(page.getByTestId('new-event-shell')).toBeVisible();
     await expect(

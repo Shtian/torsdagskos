@@ -4,6 +4,7 @@
 - RSVP write routes should validate `Events` existence and time-window before touching `Rsvps`, and return structured 4xx payloads (`code`/`error`/`message`/`eventId`) for deterministic client and E2E handling.
 - Convert event form date/time inputs with an explicit Europe/Oslo wall-time helper before `toISOString()`; `new Date(\`\${date}T\${time}\`)` leaks browser locale and shifts stored event time.
 - For React-island interaction tests, wait for explicit hydration markers (`data-hydrated="true"`) before keyboard/click assertions to avoid pre-hydration flakes.
+- For form-controller island migrations, expose a stable root selector plus hydration state (for example `[data-new-event-form="true"][data-hydrated="true"]`) so Playwright can synchronize before submits/assertions.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -85,4 +86,18 @@
     - Keyboard-open assertions can race island hydration unless tests wait for a hydration-ready selector before pressing Enter/Space.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/auth-header-menu.spec.ts` now centralizes profile-menu opening in a hydration-aware helper and covers outside-click close behavior.
+---
+## [2026-02-15 18:42:13 CET] - US-008
+- Migrated the new-event form controller from inline `DOMContentLoaded` script to a typed React island (`NewEventForm`) mounted with `client:load`.
+- Preserved existing validation, inline feedback states, and submit behavior (including Europe/Oslo conversion and redirect-on-success) while removing imperative DOM querying/listeners from `src/pages/events/new.astro`.
+- Added hydration-aware Playwright coverage for the new island root before form assertions.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/NewEventForm.tsx`, `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Form controller migrations are more stable when the island root exposes both a semantic marker (`data-new-event-form`) and `data-hydrated` for synchronization.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - In React islands, form `novalidate` must be expressed as `noValidate`; the lowercase HTML form fails TS checks in `.tsx`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/components/NewEventForm.tsx` is now the single source of truth for create-event client validation/feedback/submission behavior.
 ---
