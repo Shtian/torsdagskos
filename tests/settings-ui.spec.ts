@@ -1,5 +1,13 @@
 import { test, expect } from './fixtures';
 
+async function waitForSettingsNotificationsHydration(
+  page: import('@playwright/test').Page,
+) {
+  await expect(
+    page.locator('[data-settings-notifications="true"][data-hydrated="true"]'),
+  ).toBeVisible();
+}
+
 test.describe('Innstillinger UI migration', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
@@ -19,6 +27,7 @@ test.describe('Innstillinger UI migration', () => {
     await expect(page.locator('[data-slot="card"]')).toHaveCount(1);
     await expect(page.getByTestId('settings-permission-card')).toBeVisible();
     await expect(page.getByTestId('settings-preference-card')).toBeVisible();
+    await waitForSettingsNotificationsHydration(page);
 
     await expect(page.locator('#permission-status')).toHaveText(
       /sjekker|standard|tillatt|avvist|ikke støttet/i,
@@ -59,6 +68,7 @@ test.describe('Innstillinger UI migration', () => {
     });
 
     await page.goto('/settings');
+    await waitForSettingsNotificationsHydration(page);
 
     await Promise.all([
       page.waitForResponse(

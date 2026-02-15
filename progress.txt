@@ -4,6 +4,7 @@
 - RSVP write routes should validate `Events` existence and time-window before touching `Rsvps`, and return structured 4xx payloads (`code`/`error`/`message`/`eventId`) for deterministic client and E2E handling.
 - Convert event form date/time inputs with an explicit Europe/Oslo wall-time helper before `toISOString()`; `new Date(\`\${date}T\${time}\`)` leaks browser locale and shifts stored event time.
 - For React-island interaction tests, wait for explicit hydration markers (`data-hydrated="true"`) before keyboard/click assertions to avoid pre-hydration flakes.
+- For settings notification island migrations, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` selectors stable and expose `[data-settings-notifications="true"][data-hydrated="true"]` for hydration-safe Playwright interactions.
 - For form-controller island migrations, expose a stable root selector plus hydration state (for example `[data-new-event-form="true"][data-hydrated="true"]`) so Playwright can synchronize before submits/assertions.
 - For create/edit form islands, centralize shared field-error state shape and feedback-panel class mapping in `src/components/event-form-controller.ts` to keep behavior parity across both routes.
 - For event-detail RSVP island flows, keep RSVP button data attributes (`data-rsvp-button`, `data-status`, `data-active`) stable and wait for `[data-event-rsvp="true"][data-hydrated="true"]` in Playwright before interaction assertions.
@@ -130,4 +131,19 @@
     - Full-suite Playwright runs can hit intermittent infra/network flakes (`ERR_NETWORK_IO_SUSPENDED`/detached frame timeouts); validate changed RSVP flows with focused spec reruns when diagnosing unrelated failures.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `src/components/EventRsvpControls.tsx` now owns detail-page RSVP client behavior, and `src/pages/events/[id].astro` only passes initial status/count props.
+---
+## [2026-02-15 20:50:33 CET] - US-011
+- Migrated settings notification interactions from inline `@ts-nocheck` script to a typed React island (`SettingsNotifications`) mounted with `client:load` in `src/pages/settings.astro`.
+- Preserved existing notification selectors and feedback contract while keeping permission checks, preference persistence, and push subscription sync behavior in typed component logic.
+- Added hydration-aware Playwright synchronization for settings notification interactions and documented the pattern in test guidance.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/SettingsNotifications.tsx`, `src/pages/settings.astro`, `tests/settings.spec.ts`, `tests/settings-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Settings notification UI should be implemented in `src/components/SettingsNotifications.tsx` and mounted from `src/pages/settings.astro` with `client:load`.
+    - Hydration markers on settings island roots (`[data-settings-notifications="true"][data-hydrated="true"]`) make notification permission/submission assertions deterministic in Playwright.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `PushManager.subscribe` type checks can require a `BufferSource` cast for the VAPID key `Uint8Array` under current TS lib types.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/settings.spec.ts` and `tests/settings-ui.spec.ts` now wait for settings-island hydration before click/feedback assertions.
 ---
