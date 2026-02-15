@@ -3,6 +3,7 @@
 - For owner-restricted writes, resolve the authenticated local user before authorization and gate on `Events.ownerId`; Clerk metadata (`role=admin` or `isAdmin=true`) is the admin bypass.
 - RSVP write routes should validate `Events` existence and time-window before touching `Rsvps`, and return structured 4xx payloads (`code`/`error`/`message`/`eventId`) for deterministic client and E2E handling.
 - Convert event form date/time inputs with an explicit Europe/Oslo wall-time helper before `toISOString()`; `new Date(\`\${date}T\${time}\`)` leaks browser locale and shifts stored event time.
+- For React-island interaction tests, wait for explicit hydration markers (`data-hydrated="true"`) before keyboard/click assertions to avoid pre-hydration flakes.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -70,4 +71,18 @@
     - `createEvent(...)` test helper expects optional fields to be omitted rather than explicitly passed as `null` to satisfy its TypeScript shape.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/event-edit.spec.ts` now includes parity timezone payload validation for the edit flow (`/api/events/update`), mirroring the create-flow test strategy.
+---
+## [2026-02-15 16:18:27 CET] - US-007
+- Migrated the desktop header profile dropdown from inline DOM scripting in `Layout.astro` to a typed React island component with keyboard/pointer accessibility behavior.
+- Added hydration-aware robustness to the new island (`data-hydrated` flag) and updated Playwright coverage for header profile menu interactions, including outside-click dismissal.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/HeaderProfileMenu.tsx`, `src/layouts/Layout.astro`, `tests/auth-header-menu.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Desktop header account-menu behavior now lives in `src/components/HeaderProfileMenu.tsx`; layout should mount this island instead of adding inline event listeners.
+    - Hydration markers (`data-hydrated`) are useful for stable Playwright interactions with keyboard-first menu tests.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Keyboard-open assertions can race island hydration unless tests wait for a hydration-ready selector before pressing Enter/Space.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/auth-header-menu.spec.ts` now centralizes profile-menu opening in a hydration-aware helper and covers outside-click close behavior.
 ---

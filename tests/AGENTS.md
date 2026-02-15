@@ -26,6 +26,7 @@
 - For typography assertions, validate computed `fontFamily` with `toContain('<Font Name>')` instead of exact string equality because browser/platform fallback stacks can vary.
 - Keep the invite-only title on `/access-denied` as a semantic heading element; typography and theme unauth specs use that route for heading style assertions.
 - For React-island interaction tests on `/`, wait for `data-hydrated="true"` on `page.getByTestId('shadcn-island')` before clicking tabs/select/dialog/dropdown triggers to avoid pre-hydration flakiness.
+- For header profile-menu island interactions, wait for `[data-header-profile-menu][data-hydrated="true"]` before keyboard/click actions so assertions don't race pre-hydration DOM.
 - For auth-sensitive `page.evaluate()` calls to `/api/test/current-user`, guard for intermittent `401` + non-JSON responses and retry a few times before failing to reduce suite flakes.
 - When occasional dev-server navigation flakes (`net::ERR_ABORTED` / detached frame) occur, wrap critical `page.goto()` calls in a small bounded retry helper inside the spec.
 - In long serial Playwright runs, apply the same bounded `page.goto()` retry helper in setup/navigation-heavy specs (not just one route) to reduce random `ERR_ABORTED`/timeout failures.
