@@ -2,6 +2,7 @@
 - When introducing foreign-keyed ownership fields tied to Clerk identity, resolve `Users` by `clerkUserId` inside API routes and create the local user row on demand with unique-constraint race protection before writing the dependent record.
 - For owner-restricted writes, resolve the authenticated local user before authorization and gate on `Events.ownerId`; Clerk metadata (`role=admin` or `isAdmin=true`) is the admin bypass.
 - RSVP write routes should validate `Events` existence and time-window before touching `Rsvps`, and return structured 4xx payloads (`code`/`error`/`message`/`eventId`) for deterministic client and E2E handling.
+- Convert event form date/time inputs with an explicit Europe/Oslo wall-time helper before `toISOString()`; `new Date(\`\${date}T\${time}\`)` leaks browser locale and shifts stored event time.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -43,4 +44,17 @@
     - Authenticated E2E calls to `/api/rsvp` still depend on a local `Users` row; ensure the test user is synced before asserting downstream event-state validation.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/rsvp-api.spec.ts` is now the primary coverage for RSVP invalid-target behavior at the API layer.
+---
+## [2026-02-15 15:49:56 CET] - US-005
+- Fixed create-event submit conversion to parse `date` + `time` as Europe/Oslo wall time before sending the API payload.
+- Added a reusable timezone helper for Oslo conversion and replaced the fragile `new Date(\`\${date}T\${time}\`)` path.
+- Added Playwright coverage that captures `/api/events/create` payload and asserts the submitted ISO datetime matches Oslo semantics.
+- Files changed: `src/lib/oslo-datetime.ts`, `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Event create/edit flows should share an explicit timezone parser so UI submission is deterministic across browser locales.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Browser-local `Date` parsing of `YYYY-MM-DDTHH:mm` is environment-dependent and can silently shift persisted event times.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/event-creation.spec.ts` now contains an API payload assertion pattern for timezone-sensitive form submissions.
 ---

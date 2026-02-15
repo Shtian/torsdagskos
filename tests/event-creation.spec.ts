@@ -186,6 +186,37 @@ test.describe('Event Creation', () => {
     ).not.toBeVisible();
   });
 
+  test('submits date/time using Europe/Oslo semantics', async ({ page }) => {
+    await page.goto('/events/new');
+
+    let submittedDateTime: string | null = null;
+
+    await page.route('**/api/events/create', async (route) => {
+      const payload = route.request().postDataJSON() as { dateTime?: string };
+      submittedDateTime = payload.dateTime ?? null;
+
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'timezone payload captured' }),
+      });
+    });
+
+    await page.locator('#title').fill(`Timezone Event ${Date.now()}`);
+    await page.locator('#date').fill('2026-01-15');
+    await page.locator('#time').fill('19:00');
+    await page.locator('#location').fill('Oslo');
+
+    await page
+      .getByRole('button', { name: /opprett arrangement/i, exact: true })
+      .click();
+
+    await expect.poll(() => submittedDateTime).toBe('2026-01-15T18:00:00.000Z');
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /timezone payload captured/i,
+    );
+  });
+
   test('should have Opprett arrangement button in header on homepage', async ({
     page,
   }) => {

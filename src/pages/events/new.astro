@@ -179,6 +179,7 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
 <script>
   import { validateCreateEventForm } from '@/lib/event-form-validation';
+  import { parseOsloDateTimeInput } from '@/lib/oslo-datetime';
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('event-form') as HTMLFormElement;
@@ -282,10 +283,8 @@ const prefillMapLink = Astro.url.searchParams.get('mapLink') || '';
 
       const { title, description, date, time, location, mapLink } = parsedForm.data;
 
-      // Combine date and time into ISO string (Europe/Oslo timezone)
-      // The date/time input values are in local timezone, so we need to interpret them as Europe/Oslo
-      const dateTimeString = `${date}T${time}:00`;
-      const dateTime = new Date(dateTimeString);
+      // Interpret submitted date/time as Europe/Oslo wall time.
+      const dateTime = parseOsloDateTimeInput(date, time);
 
       // Disable submit button during submission
       submitButton.disabled = true;
