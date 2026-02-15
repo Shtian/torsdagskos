@@ -36,6 +36,7 @@
 - When occasional dev-server navigation flakes (`net::ERR_ABORTED` / detached frame) occur, wrap critical `page.goto()` calls in a small bounded retry helper inside the spec.
 - In long serial Playwright runs, apply the same bounded `page.goto()` retry helper in setup/navigation-heavy specs (not just one route) to reduce random `ERR_ABORTED`/timeout failures.
 - With localized UI copy, prefer stable `data-test-id` selectors for badges/count pills where translated labels can overlap (for example `1 kommer` vs `1 kommer ikke`) and trigger strict-mode locator collisions.
+- When asserting person names or labels where one value is a substring of another (for example `Going User` and `Not Going User`), use `getByText(value, { exact: true })` to avoid strict-mode locator collisions.
 - During translation-focused stories, keep assertions for app-owned shell text localized, but keep Clerk widget heading checks regex-tolerant because Clerk-rendered copy can vary by provider locale/configuration.
 - RSVP buttons on event detail keep `aria-label` values (`Kommer`/`Kanskje`/`Kommer ikke`) even when button text temporarily changes to loading labels, so loading/error assertions should target feedback panel text and button state attributes instead of role-name text swaps.
 - Spacing regression checks should use stable page-shell test ids (`*-shell`) plus computed style assertions for `margin-top` and horizontal padding to validate shared shell contracts across breakpoints.

@@ -1,5 +1,5 @@
 ---
-import { db, Users, Events, Rsvps, eq, inArray } from 'astro:db';
+import { db, Users, Events, Rsvps, eq } from 'astro:db';
 import Layout from '../../layouts/Layout.astro';
 import EventRsvpControls from '@/components/EventRsvpControls';
 import { buttonVariants } from '@/components/ui/button';
@@ -21,24 +21,27 @@ if (!event) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-// Fetch all RSVPs with user information
-const rsvps = await db
-  .select()
+// Fetch all RSVPs with user data in one joined query
+const rsvpsWithUsers = await db
+  .select({
+    id: Rsvps.id,
+    userId: Rsvps.userId,
+    eventId: Rsvps.eventId,
+    status: Rsvps.status,
+    createdAt: Rsvps.createdAt,
+    updatedAt: Rsvps.updatedAt,
+    user: {
+      id: Users.id,
+      clerkUserId: Users.clerkUserId,
+      email: Users.email,
+      name: Users.name,
+      createdAt: Users.createdAt,
+    },
+  })
   .from(Rsvps)
+  .leftJoin(Users, eq(Rsvps.userId, Users.id))
   .where(eq(Rsvps.eventId, event.id))
   .all();
-
-const rsvpUserIds = [...new Set(rsvps.map((rsvp) => rsvp.userId))];
-const rsvpUsers =
-  rsvpUserIds.length > 0
-    ? await db.select().from(Users).where(inArray(Users.id, rsvpUserIds)).all()
-    : [];
-const userMap = new Map(rsvpUsers.map((user) => [user.id, user]));
-
-const rsvpsWithUsers = rsvps.map((rsvp) => ({
-  ...rsvp,
-  user: userMap.get(rsvp.userId),
-}));
 
 // Get current user's local database ID
 const currentUser = userId
