@@ -6,6 +6,7 @@
 - For React-island interaction tests, wait for explicit hydration markers (`data-hydrated="true"`) before keyboard/click assertions to avoid pre-hydration flakes.
 - For form-controller island migrations, expose a stable root selector plus hydration state (for example `[data-new-event-form="true"][data-hydrated="true"]`) so Playwright can synchronize before submits/assertions.
 - For create/edit form islands, centralize shared field-error state shape and feedback-panel class mapping in `src/components/event-form-controller.ts` to keep behavior parity across both routes.
+- For event-detail RSVP island flows, keep RSVP button data attributes (`data-rsvp-button`, `data-status`, `data-active`) stable and wait for `[data-event-rsvp="true"][data-hydrated="true"]` in Playwright before interaction assertions.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -115,4 +116,18 @@
     - String-wide replacements in specs can accidentally touch helper implementations; verify helper bodies after bulk edits.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `src/components/EditEventForm.tsx` is now the single source of truth for edit-event client validation/feedback/submission behavior.
+---
+## [2026-02-15 20:34:31 CET] - US-010
+- Migrated event-detail RSVP interactions from inline `DOMContentLoaded` scripting to a typed React island (`EventRsvpControls`) mounted with `client:load` in `src/pages/events/[id].astro`.
+- Replaced full-page reload behavior with optimistic/local RSVP state updates for active button state and RSVP counts, while keeping inline busy/error/success feedback accessible via the existing feedback panel contract.
+- Added hydration-aware RSVP coverage and no-navigation assertions in Playwright for event detail interactions.
+- Files changed: `src/components/EventRsvpControls.tsx`, `src/pages/events/[id].astro`, `tests/rsvp.spec.ts`, `tests/event-detail-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Event-detail RSVP interactions should be implemented via `EventRsvpControls` with `[data-event-rsvp="true"][data-hydrated="true"]` synchronization in tests before clicking RSVP buttons.
+    - Prefer optimistic/local count updates over reloads for RSVP state changes; keep `data-rsvp-button` and `data-active` attributes stable to preserve existing spec selectors.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full-suite Playwright runs can hit intermittent infra/network flakes (`ERR_NETWORK_IO_SUSPENDED`/detached frame timeouts); validate changed RSVP flows with focused spec reruns when diagnosing unrelated failures.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/components/EventRsvpControls.tsx` now owns detail-page RSVP client behavior, and `src/pages/events/[id].astro` only passes initial status/count props.
 ---

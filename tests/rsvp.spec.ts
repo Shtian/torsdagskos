@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import type { Page } from '@playwright/test';
 import { createTestUser, createTestEvent } from './helpers/api-helpers';
 import { gotoWithRetry } from './helpers/navigation-helpers';
 
@@ -18,6 +19,24 @@ import { gotoWithRetry } from './helpers/navigation-helpers';
 // Helper to generate unique email addresses for test isolation
 function uniqueEmail(base: string): string {
   return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
+}
+
+async function waitForRsvpIslandHydration(page: Page) {
+  await expect(
+    page.locator('[data-event-rsvp="true"][data-hydrated="true"]'),
+  ).toBeVisible();
+}
+
+async function submitRsvp(page: Page, label: 'Kommer' | 'Kanskje' | 'Kommer ikke') {
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/rsvp') &&
+        response.request().method() === 'POST' &&
+        response.status() === 200,
+    ),
+    page.getByRole('button', { name: label, exact: true }).click(),
+  ]);
 }
 
 test.describe('RSVP Functionality', () => {
@@ -66,17 +85,17 @@ test.describe('RSVP Functionality', () => {
     });
 
     await gotoWithRetry(page, `/events/${event.id}`);
+    await waitForRsvpIslandHydration(page);
 
     // First, RSVP "Kommer"
     const goingButton = page.getByRole('button', {
       name: 'Kommer',
       exact: true,
     });
-    await goingButton.click();
+    await submitRsvp(page, 'Kommer');
     await expect(page.getByTestId('rsvp-feedback-panel')).toContainText(
       'Svar oppdatert',
     );
-    await page.waitForLoadState('load');
 
     // Verify "Kommer" is active
     await expect(goingButton).toBeVisible();
@@ -87,11 +106,10 @@ test.describe('RSVP Functionality', () => {
       name: 'Kanskje',
       exact: true,
     });
-    await maybeButton.click();
+    await submitRsvp(page, 'Kanskje');
     await expect(page.getByTestId('rsvp-feedback-panel')).toContainText(
       'Svar oppdatert',
     );
-    await page.waitForLoadState('load');
 
     // Verify "Kanskje" is now active
     await expect(maybeButton).toBeVisible();
@@ -103,11 +121,10 @@ test.describe('RSVP Functionality', () => {
       name: 'Kommer ikke',
       exact: true,
     });
-    await notGoingButton.click();
+    await submitRsvp(page, 'Kommer ikke');
     await expect(page.getByTestId('rsvp-feedback-panel')).toContainText(
       'Svar oppdatert',
     );
-    await page.waitForLoadState('load');
 
     // Verify "Kommer ikke" is now active
     await expect(notGoingButton).toBeVisible();
@@ -216,6 +233,8 @@ test.describe('RSVP Functionality', () => {
     });
 
     await gotoWithRetry(page, `/events/${event.id}`);
+    await waitForRsvpIslandHydration(page);
+    const beforeInteractionUrl = page.url();
 
     // Initially, Kommer count should be 0
     const goingCount = page
@@ -226,15 +245,19 @@ test.describe('RSVP Functionality', () => {
     await expect(goingCount).toHaveText('0');
 
     // Click "Kommer"
-    await page.getByRole('button', { name: 'Kommer', exact: true }).click();
-    await page.waitForLoadState('load');
+    const navigationPromise = page
+      .waitForEvent('framenavigated', { timeout: 1200 })
+      .then(() => true)
+      .catch(() => false);
+    await submitRsvp(page, 'Kommer');
+    expect(await navigationPromise).toBe(false);
+    expect(page.url()).toBe(beforeInteractionUrl);
 
     // Kommer count should now be 1
     await expect(goingCount).toHaveText('1');
 
     // Change to "Kanskje"
-    await page.getByRole('button', { name: 'Kanskje', exact: true }).click();
-    await page.waitForLoadState('load');
+    await submitRsvp(page, 'Kanskje');
 
     // Kommer count should be back to 0, Kanskje count should be 1
     await expect(goingCount).toHaveText('0');
@@ -288,6 +311,7 @@ test.describe('RSVP Functionality', () => {
 
     const currentUserRsvp = page.locator('[data-test-id="current-user-rsvp"]');
     await gotoWithRetry(page, `/events/${event.id}`);
+    await waitForRsvpIslandHydration(page);
     try {
       await currentUserRsvp.waitFor({ state: 'visible', timeout: 10_000 });
     } catch (error) {
@@ -303,8 +327,7 @@ test.describe('RSVP Functionality', () => {
     ).toHaveAttribute('data-active', 'false');
 
     // RSVP "Kommer"
-    await page.getByRole('button', { name: 'Kommer', exact: true }).click();
-    await page.waitForLoadState('load');
+    await submitRsvp(page, 'Kommer');
 
     await expect(currentUserRsvp).toContainText('Ditt svar');
     await expect(

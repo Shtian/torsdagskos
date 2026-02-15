@@ -21,6 +21,9 @@ test.describe('Event Detail UI Migration', () => {
     });
 
     await page.goto(`/events/${event.id}`);
+    await expect(
+      page.locator('[data-event-rsvp="true"][data-hydrated="true"]'),
+    ).toBeVisible();
 
     await expect(page.getByTestId('event-detail-shell')).toBeVisible();
     await expect(

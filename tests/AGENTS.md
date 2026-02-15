@@ -29,6 +29,7 @@
 - For header profile-menu island interactions, wait for `[data-header-profile-menu][data-hydrated="true"]` before keyboard/click actions so assertions don't race pre-hydration DOM.
 - For new-event form island interactions, wait for `[data-new-event-form="true"][data-hydrated="true"]` before assertions/submission steps so tests do not race pre-hydration handlers.
 - For edit-event form island interactions, wait for `[data-edit-event-form="true"][data-hydrated="true"]` before assertions/submission steps so tests do not race pre-hydration handlers.
+- For event-detail RSVP island interactions, wait for `[data-event-rsvp="true"][data-hydrated="true"]` before clicking RSVP actions so optimistic state assertions do not race pre-hydration handlers.
 - For auth-sensitive `page.evaluate()` calls to `/api/test/current-user`, guard for intermittent `401` + non-JSON responses and retry a few times before failing to reduce suite flakes.
 - When occasional dev-server navigation flakes (`net::ERR_ABORTED` / detached frame) occur, wrap critical `page.goto()` calls in a small bounded retry helper inside the spec.
 - In long serial Playwright runs, apply the same bounded `page.goto()` retry helper in setup/navigation-heavy specs (not just one route) to reduce random `ERR_ABORTED`/timeout failures.
