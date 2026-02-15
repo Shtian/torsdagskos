@@ -48,6 +48,10 @@ test.describe('Homepage shadcn migration', () => {
       'data-slot',
       'separator',
     );
+    await expect(page.getByTestId('event-card')).toHaveCount(2);
+    await expect(
+      page.locator('astro-island [data-test-id="event-card"]'),
+    ).toHaveCount(0);
     await expect(page.getByTestId('empty-state')).toHaveCount(0);
   });
 

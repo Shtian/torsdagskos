@@ -177,7 +177,6 @@ function formatEventDate(date: Date): string {
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {upcomingEvents.map(event => (
                 <EventCard
-                  client:load
                   id={event.id}
                   title={event.title}
                   dateTime={formatEventDate(event.dateTime)}
@@ -206,7 +205,6 @@ function formatEventDate(date: Date): string {
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {pastEvents.map(event => (
                   <EventCard
-                    client:load
                     id={event.id}
                     title={event.title}
                     dateTime={formatEventDate(event.dateTime)}

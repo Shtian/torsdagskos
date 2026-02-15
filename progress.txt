@@ -8,6 +8,7 @@
 - For form-controller island migrations, expose a stable root selector plus hydration state (for example `[data-new-event-form="true"][data-hydrated="true"]`) so Playwright can synchronize before submits/assertions.
 - For create/edit form islands, centralize shared field-error state shape and feedback-panel class mapping in `src/components/event-form-controller.ts` to keep behavior parity across both routes.
 - For event-detail RSVP island flows, keep RSVP button data attributes (`data-rsvp-button`, `data-status`, `data-active`) stable and wait for `[data-event-rsvp="true"][data-hydrated="true"]` in Playwright before interaction assertions.
+- Keep homepage `EventCard` rendering server-only (no `client:*` hydration); in Playwright, verify cards are not wrapped by `astro-island` to guard performance regressions.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -146,4 +147,17 @@
     - `PushManager.subscribe` type checks can require a `BufferSource` cast for the VAPID key `Uint8Array` under current TS lib types.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/settings.spec.ts` and `tests/settings-ui.spec.ts` now wait for settings-island hydration before click/feedback assertions.
+---
+## [2026-02-15 21:32:24 CET] - US-012
+- Removed unnecessary homepage hydration for `EventCard` by dropping `client:load` from upcoming and past event lists in `src/pages/index.astro`.
+- Added Playwright coverage to assert populated homepage cards remain rendered and are not nested inside `astro-island`, protecting against accidental re-hydration.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/pages/index.astro`, `tests/homepage-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Static homepage event cards should remain server-rendered to avoid unnecessary client bundle and hydration overhead.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - React components in Astro hydrate only when `client:*` is present; accidental directive reintroduction can silently regress performance.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/homepage-ui.spec.ts` now contains a regression assertion (`astro-island [data-test-id="event-card"]` count `0`) for hydration-free event cards.
 ---

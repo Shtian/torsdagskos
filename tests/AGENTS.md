@@ -26,6 +26,7 @@
 - For typography assertions, validate computed `fontFamily` with `toContain('<Font Name>')` instead of exact string equality because browser/platform fallback stacks can vary.
 - Keep the invite-only title on `/access-denied` as a semantic heading element; typography and theme unauth specs use that route for heading style assertions.
 - For React-island interaction tests on `/`, wait for `data-hydrated="true"` on `page.getByTestId('shadcn-island')` before clicking tabs/select/dialog/dropdown triggers to avoid pre-hydration flakiness.
+- Homepage `EventCard` instances are intentionally server-rendered (no `client:*` directive); keep UI assertions hydration-free by checking cards are not nested under `astro-island`.
 - For header profile-menu island interactions, wait for `[data-header-profile-menu][data-hydrated="true"]` before keyboard/click actions so assertions don't race pre-hydration DOM.
 - For new-event form island interactions, wait for `[data-new-event-form="true"][data-hydrated="true"]` before assertions/submission steps so tests do not race pre-hydration handlers.
 - For edit-event form island interactions, wait for `[data-edit-event-form="true"][data-hydrated="true"]` before assertions/submission steps so tests do not race pre-hydration handlers.
