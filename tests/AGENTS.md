@@ -40,6 +40,7 @@
 - Helper uses `page.evaluate()` with `window.location.origin` to call `/api/events/create`
 - Always call `await page.goto('/')` before using `createEvent()` to ensure proper browser context
 - This pattern simulates real user actions and includes authentication cookies automatically
+- `createTestEvent({...})` accepts optional `ownerId`; use it to validate owner-restricted behaviors (for example edit authorization) without relying on UI creation flows.
 
 ### Flexible Selectors
 - For elements that may be rendered as different types (button vs link), use:

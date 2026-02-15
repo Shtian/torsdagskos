@@ -1,5 +1,6 @@
 # Codebase Patterns
 - When introducing foreign-keyed ownership fields tied to Clerk identity, resolve `Users` by `clerkUserId` inside API routes and create the local user row on demand with unique-constraint race protection before writing the dependent record.
+- For owner-restricted writes, resolve the authenticated local user before authorization and gate on `Events.ownerId`; Clerk metadata (`role=admin` or `isAdmin=true`) is the admin bypass.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -14,4 +15,18 @@
     - Clerk-authenticated routes can race on first-time local user creation; guard inserts by tolerating `UNIQUE constraint` errors and re-querying.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `src/pages/api/events/create.ts` now owns event ownership assignment and is the reference path for future edit-authorization checks.
+---
+## [2026-02-15 14:50:51 CET] - US-002
+- Enforced owner/admin authorization in `/api/events/update` by syncing the authenticated local user, checking Clerk admin metadata, and rejecting unauthorized edits with `403`.
+- Added Playwright coverage for non-owner edit rejection by creating an event with a different `ownerId` and asserting `/api/events/update` returns forbidden.
+- Extended test seeding helpers to support explicit event ownership (`ownerId`) for auth-sensitive scenarios.
+- Files changed: `src/pages/api/events/update.ts`, `src/pages/api/test/seed.ts`, `tests/helpers/api-helpers.ts`, `tests/event-edit.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Ownership authorization must be enforced in API routes even when UI hides edit actions.
+    - Seed helpers that expose ownership fields make auth edge-case E2E tests deterministic.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Authenticated Clerk sessions can exist before local `Users` rows; sync local users before ownership checks.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/event-edit.spec.ts` now contains a direct non-owner forbidden-path assertion for `/api/events/update`.
 ---

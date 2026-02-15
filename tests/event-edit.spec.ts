@@ -2,6 +2,7 @@ import { test, expect } from './fixtures';
 import {
   cleanupTestData,
   createEvent,
+  createTestUser,
   createTestEvent,
 } from './helpers/api-helpers';
 
@@ -32,6 +33,10 @@ function toOsloTimeInputValue(date: Date): string {
   const minute = parts.find((part) => part.type === 'minute')?.value;
 
   return `${hour}:${minute}`;
+}
+
+function uniqueEmail(base: string): string {
+  return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
 }
 
 test.describe('Event Edit', () => {
@@ -203,6 +208,70 @@ test.describe('Event Edit', () => {
     await expect(
       page.getByRole('link', { name: /åpne i kart/i }),
     ).toHaveAttribute('href', updatedMapLink);
+  });
+
+  test('rejects update API requests when authenticated user is not owner', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const clerkUserId = await page.evaluate(async () => {
+      const response = await fetch('/api/test/current-user');
+      const data = await response.json();
+      if (response.status === 404 && data.userId) {
+        return data.userId as string;
+      }
+      if (response.ok) {
+        return data.clerkUserId as string;
+      }
+      throw new Error(`Unexpected response: ${response.status}`);
+    });
+
+    await createTestUser({
+      clerkUserId,
+      email: uniqueEmail('authenticated-editor'),
+      name: 'Authenticated Editor',
+    });
+
+    const owner = await createTestUser({
+      clerkUserId: `event_owner_${Date.now()}`,
+      email: uniqueEmail('event-owner'),
+      name: 'Event Owner',
+    });
+
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7);
+
+    const event = await createTestEvent({
+      ownerId: owner.id,
+      title: `Owner Locked Event ${Date.now()}`,
+      description: 'Only owner should be able to edit this event',
+      dateTime: futureDate,
+      location: 'Oslo',
+      mapLink: 'https://maps.google.com/?q=oslo',
+    });
+
+    const updateResponse = await page.evaluate(async (payload) => {
+      const response = await fetch('/api/events/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const body = await response.json();
+      return { status: response.status, body };
+    }, {
+      eventId: event.id.toString(),
+      title: 'Unauthorized update attempt',
+      description: 'Should fail',
+      dateTime: futureDate.toISOString(),
+      location: 'Unauthorized location',
+      mapLink: null,
+    });
+
+    expect(updateResponse.status).toBe(403);
+    expect(updateResponse.body).toMatchObject({ error: 'Forbidden' });
   });
 
   test('shows loading and disabled submit state while saving changes', async ({
