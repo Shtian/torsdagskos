@@ -9,6 +9,7 @@
 - For create/edit form islands, centralize shared field-error state shape and feedback-panel class mapping in `src/components/event-form-controller.ts` to keep behavior parity across both routes.
 - For event-detail RSVP island flows, keep RSVP button data attributes (`data-rsvp-button`, `data-status`, `data-active`) stable and wait for `[data-event-rsvp="true"][data-hydrated="true"]` in Playwright before interaction assertions.
 - Keep homepage `EventCard` rendering server-only (no `client:*` hydration); in Playwright, verify cards are not wrapped by `astro-island` to guard performance regressions.
+- On homepage event listings, aggregate RSVP counts in one `groupBy(eventId, status)` query and map results per event; avoid per-event RSVP lookups in render paths.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -160,4 +161,17 @@
     - React components in Astro hydrate only when `client:*` is present; accidental directive reintroduction can silently regress performance.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `tests/homepage-ui.spec.ts` now contains a regression assertion (`astro-island [data-test-id="event-card"]` count `0`) for hydration-free event cards.
+---
+## [2026-02-15 21:37:20 CET] - US-013
+- Replaced homepage RSVP count N+1 queries with a single grouped aggregation query (`groupBy` on `eventId` + `status`) and a per-event count map.
+- Preserved `EventCard` RSVP count output contract (`going`, `maybe`, `notGoing`) while removing per-event database round trips.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/pages/index.astro`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Astro DB supports efficient grouped count aggregation for RSVP summaries, which should be preferred over per-entity fetch loops in list routes.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - RSVP status values are stored as `going`/`maybe`/`not_going`; homepage view-model mapping still needs `notGoing` key for `EventCard` props.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/pages/index.astro` now centralizes homepage RSVP aggregation logic before upcoming/past event partitioning.
 ---
