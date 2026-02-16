@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 import type { Page } from '@playwright/test';
 
 async function gotoHomepageAndWaitForIsland(page: Page) {
-  await page.goto('/');
+  await page.goto('/demo/shadcn-island');
   const island = page.getByTestId('shadcn-island');
   await expect(island).toBeVisible();
   await expect(island).toHaveAttribute('data-hydrated', 'true');

@@ -2,14 +2,16 @@ import { test, expect } from './fixtures';
 import type { Page } from '@playwright/test';
 
 async function gotoHomepageAndWaitForIsland(page: Page) {
-  await page.goto('/');
+  await page.goto('/demo/shadcn-island');
   const island = page.getByTestId('shadcn-island');
   await expect(island).toBeVisible();
   await expect(island).toHaveAttribute('data-hydrated', 'true');
 }
 
 test.describe('shadcn react island', () => {
-  test('renders the shadcn demo island on the homepage', async ({ page }) => {
+  test('renders the shadcn demo island on the dedicated demo route', async ({
+    page,
+  }) => {
     await gotoHomepageAndWaitForIsland(page);
 
     const island = page.getByTestId('shadcn-island');

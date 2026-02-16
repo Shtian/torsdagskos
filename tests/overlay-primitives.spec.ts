@@ -5,7 +5,7 @@ async function gotoHomepageAndWaitForIsland(
 ) {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      await page.goto('/', { waitUntil: 'domcontentloaded' });
+      await page.goto('/demo/shadcn-island', { waitUntil: 'domcontentloaded' });
 
       const island = page.getByTestId('shadcn-island');
       await expect(island).toBeVisible({ timeout: 8000 });

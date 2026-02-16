@@ -52,6 +52,7 @@ test.describe('Homepage shadcn migration', () => {
     await expect(
       page.locator('astro-island [data-test-id="event-card"]'),
     ).toHaveCount(0);
+    await expect(page.getByTestId('shadcn-island')).toHaveCount(0);
     await expect(page.getByTestId('empty-state')).toHaveCount(0);
   });
 

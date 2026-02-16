@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ShadcnIslandDemo from '../components/ShadcnIslandDemo';
 import { EventCard } from '../components/EventCard';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -130,8 +129,6 @@ function formatEventDate(date: Date): string {
     class="mx-auto mt-6 w-full max-w-[75rem] pb-8 sm:mt-10"
     data-test-id="homepage-shell"
   >
-    <ShadcnIslandDemo client:load />
-
     <section class="space-y-4" data-test-id="homepage-upcoming">
       <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
         <div
