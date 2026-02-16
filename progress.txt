@@ -14,6 +14,7 @@
 - On event detail pages, fetch RSVP + user display data with a single `leftJoin(Rsvps, Users)` query (or equivalent batched query) to avoid per-RSVP user lookups while preserving grouped RSVP rendering.
 - On history pages, load RSVP cards via one joined `Rsvps` + `Events` query scoped by `Rsvps.userId`, then filter null joined events before sorting/rendering.
 - For notification deduplication, prefetch `NotificationLog` user IDs once per `(eventId, type, channel)` before fan-out loops; avoid issuing log existence queries inside per-user send iterations.
+- Use `ensureLocalUser(contextOrAstro, userId)` from `src/lib/local-user-sync.ts` for create-on-read local user sync in both API routes and `.astro` pages; do not duplicate inline Clerk-to-Users insert/retry blocks.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -231,4 +232,17 @@
     - Moving a hydrated island off a primary page requires updating all helper navigations in related Playwright specs, not just one test file.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `src/pages/demo/shadcn-island.astro` is now the canonical route for shadcn primitive and island-interaction tests.
+---
+## [2026-02-16 08:58:55 CET] - US-018
+- Centralized local user create-on-read behavior into a shared helper (`ensureLocalUser` / `getLocalUserByClerkId`) in `src/lib/local-user-sync.ts`.
+- Replaced duplicated Clerk-to-`Users` sync blocks across event APIs, settings APIs, sync-user API, and page routes (`index`, `history`, `settings`) with the shared helper while preserving race-safe unique-constraint handling.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/lib/local-user-sync.ts`, `src/pages/api/events/create.ts`, `src/pages/api/events/update.ts`, `src/pages/api/settings/notifications.ts`, `src/pages/api/settings/push-subscription.ts`, `src/pages/api/sync-user.ts`, `src/pages/index.astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Local user sync is now a shared service concern in `src/lib/local-user-sync.ts`; feature code should call the helper instead of re-implementing sync logic.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Settings APIs should call `ensureLocalUser(...)` first, then perform explicit `update(Users)` writes for notification/subscription fields so behavior is consistent for both first-time and existing users.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Event create/update ownership paths now rely on the same local-user sync helper, making auth and ownership behavior consistent across route types.
 ---

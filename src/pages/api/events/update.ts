@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { clerkClient } from '@clerk/astro/server';
-import { db, Events, Users, eq } from 'astro:db';
+import { db, Events, eq } from 'astro:db';
 import {
   createValidationErrorPayload,
   emptyNotificationSummary,
@@ -8,6 +8,7 @@ import {
   validateUpdateEventApiRequest,
 } from '../../../lib/api-validation';
 import { sendEventUpdateNotifications } from '../../../lib/event-notifications';
+import { ensureLocalUser } from '../../../lib/local-user-sync';
 
 export const POST: APIRoute = async (context) => {
   try {
@@ -78,44 +79,7 @@ export const POST: APIRoute = async (context) => {
       clerkUser.privateMetadata?.isAdmin === true ||
       clerkUser.unsafeMetadata?.isAdmin === true;
 
-    let currentUser = await db
-      .select()
-      .from(Users)
-      .where(eq(Users.clerkUserId, userId))
-      .get();
-
-    if (!currentUser) {
-      try {
-        await db.insert(Users).values({
-          clerkUserId: userId,
-          email: clerkUser.emailAddresses[0]?.emailAddress || '',
-          name:
-            `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
-            clerkUser.emailAddresses[0]?.emailAddress ||
-            'User',
-          createdAt: new Date(),
-        });
-      } catch (error) {
-        if (
-          !(error instanceof Error && error.message.includes('UNIQUE constraint'))
-        ) {
-          throw error;
-        }
-      }
-
-      currentUser = await db
-        .select()
-        .from(Users)
-        .where(eq(Users.clerkUserId, userId))
-        .get();
-    }
-
-    if (!currentUser) {
-      return new Response(JSON.stringify({ error: 'User sync failed' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    const currentUser = await ensureLocalUser(context, userId, { clerkUser });
 
     const isOwner = existingEvent.ownerId === currentUser.id;
     if (!isOwner && !isAdmin) {
