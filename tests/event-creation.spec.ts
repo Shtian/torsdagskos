@@ -1,7 +1,8 @@
 import { test, expect } from './fixtures';
 import { gotoWithRetry } from './helpers/navigation-helpers';
 
-const hydratedNewEventForm = '[data-new-event-form="true"][data-hydrated="true"]';
+const hydratedNewEventForm =
+  '[data-new-event-form="true"][data-hydrated="true"]';
 
 test.describe('Event Creation', () => {
   async function waitForNewEventFormHydration(
