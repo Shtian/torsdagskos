@@ -350,6 +350,18 @@ async function sendPushNotificationsToOptedInUsers(
     return;
   }
 
+  const sentPushLogs = await db
+    .select({ userId: NotificationLog.userId })
+    .from(NotificationLog)
+    .where(
+      and(
+        eq(NotificationLog.eventId, input.eventId),
+        eq(NotificationLog.type, input.type),
+        eq(NotificationLog.channel, 'push'),
+      ),
+    );
+  const userIdsWithSentPush = new Set(sentPushLogs.map((log) => log.userId));
+
   await Promise.all(
     pushEligibleUsers.map(async (user) => {
       const pushSubscription = user.pushSubscription;
@@ -357,20 +369,7 @@ async function sendPushNotificationsToOptedInUsers(
         return;
       }
 
-      const hasAlreadyReceived = await db
-        .select({ id: NotificationLog.id })
-        .from(NotificationLog)
-        .where(
-          and(
-            eq(NotificationLog.userId, user.id),
-            eq(NotificationLog.eventId, input.eventId),
-            eq(NotificationLog.type, input.type),
-            eq(NotificationLog.channel, 'push'),
-          ),
-        )
-        .get();
-
-      if (hasAlreadyReceived) {
+      if (userIdsWithSentPush.has(user.id)) {
         return;
       }
 
@@ -584,23 +583,23 @@ export async function sendEventReminderNotifications(
       location: event.location,
       mapLink: event.mapLink || null,
     });
+    const sentEmailLogs = await db
+      .select({ userId: NotificationLog.userId })
+      .from(NotificationLog)
+      .where(
+        and(
+          eq(NotificationLog.eventId, event.id),
+          eq(NotificationLog.type, 'reminder'),
+          eq(NotificationLog.channel, 'email'),
+        ),
+      );
+    const userIdsWithReminderEmail = new Set(
+      sentEmailLogs.map((log) => log.userId),
+    );
 
     const results = await Promise.all(
       users.map(async (user) => {
-        const alreadySent = await db
-          .select({ id: NotificationLog.id })
-          .from(NotificationLog)
-          .where(
-            and(
-              eq(NotificationLog.userId, user.id),
-              eq(NotificationLog.eventId, event.id),
-              eq(NotificationLog.type, 'reminder'),
-              eq(NotificationLog.channel, 'email'),
-            ),
-          )
-          .get();
-
-        if (alreadySent) {
+        if (userIdsWithReminderEmail.has(user.id)) {
           return {
             success: false,
             skipped: true,

@@ -12,6 +12,7 @@
 - On homepage event listings, aggregate RSVP counts in one `groupBy(eventId, status)` query and map results per event; avoid per-event RSVP lookups in render paths.
 - On event detail pages, fetch RSVP + user display data with a single `leftJoin(Rsvps, Users)` query (or equivalent batched query) to avoid per-RSVP user lookups while preserving grouped RSVP rendering.
 - On history pages, load RSVP cards via one joined `Rsvps` + `Events` query scoped by `Rsvps.userId`, then filter null joined events before sorting/rendering.
+- For notification deduplication, prefetch `NotificationLog` user IDs once per `(eventId, type, channel)` before fan-out loops; avoid issuing log existence queries inside per-user send iterations.
 
 ## Iteration Notes
 ## [2026-02-14 21:28:30 CET] - US-001
@@ -202,4 +203,17 @@
     - `leftJoin` keeps orphaned RSVP rows; explicitly filter out `event === null` before reading event fields to keep type safety and avoid runtime null access.
   - Useful context (e.g., "the evaluation panel is in component X")
     - `src/pages/history.astro` now owns the canonical joined RSVP+event history loading path and downstream descending date sort.
+---
+## [2026-02-16 08:42:53 CET] - US-016
+- Refactored notification deduplication to preload `NotificationLog` state before send fan-out loops for both push and reminder-email delivery paths.
+- Removed per-user log-existence queries inside notification loops by using precomputed user-id sets keyed by event/type/channel.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/lib/event-notifications.ts`, `prd.json`, `progress.txt`
+- **Learnings for future iterations**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Notification send paths should query dedup log state once per event/type/channel and perform in-memory membership checks during user fan-out.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Keep dedup prefetch outside `users.map(...)`; moving it inside silently reintroduces N+1 queries even if logic remains functionally correct.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/lib/event-notifications.ts` now owns batched dedup logic for both `sendPushNotificationsToOptedInUsers` and `sendEventReminderNotifications`.
 ---
