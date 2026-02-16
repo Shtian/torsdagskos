@@ -2,6 +2,10 @@
 
 
 
+
+
+
+
 import Layout from '../layouts/Layout.astro';
 import { EventCard } from '../components/EventCard';
 import { buttonVariants } from '@/components/ui/button';
@@ -18,9 +22,11 @@ import { db, Events, Rsvps, count } from 'astro:db';
 // Get authenticated user
 const { userId } = Astro.locals.auth();
 
-if (userId) {
-  await ensureLocalUser(Astro, userId);
+if (!userId) {
+  return Astro.redirect('/sign-in');
 }
+
+await ensureLocalUser(Astro, userId);
 
 // Fetch all events
 const allEvents = await db.select().from(Events).all();
