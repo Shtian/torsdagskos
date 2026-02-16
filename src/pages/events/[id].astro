@@ -16,6 +16,11 @@ import { CalendarDays, Clock3, MapPin } from 'lucide-react';
 const { id } = Astro.params;
 const { userId } = Astro.locals.auth();
 
+// Ensure user is authenticated
+if (!userId) {
+  return Astro.redirect('/sign-in');
+}
+
 // Fetch event
 const event = await db
   .select()
@@ -51,9 +56,11 @@ const rsvpsWithUsers = await db
   .all();
 
 // Get current user's local database ID
-const currentUser = userId
-  ? await db.select().from(Users).where(eq(Users.clerkUserId, userId)).get()
-  : null;
+const currentUser = await db
+  .select()
+  .from(Users)
+  .where(eq(Users.clerkUserId, userId))
+  .get();
 
 // Find current user's RSVP
 const _currentUserRsvp = rsvpsWithUsers.find(

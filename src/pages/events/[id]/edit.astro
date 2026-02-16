@@ -12,7 +12,13 @@ import { buttonVariants } from '@/components/ui/button';
 import Layout from '../../../layouts/Layout.astro';
 
 const { id } = Astro.params;
+const { userId } = Astro.locals.auth();
 const eventId = Number(id);
+
+// Ensure user is authenticated
+if (!userId) {
+  return Astro.redirect('/sign-in');
+}
 
 if (!Number.isFinite(eventId)) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
