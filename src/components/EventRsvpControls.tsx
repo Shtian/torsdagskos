@@ -78,11 +78,15 @@ export default function EventRsvpControls({
   isUpcoming,
 }: EventRsvpControlsProps) {
   const [isHydrated, setIsHydrated] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<RsvpStatus | null>(initialStatus);
+  const [currentStatus, setCurrentStatus] = useState<RsvpStatus | null>(
+    initialStatus,
+  );
   const [counts, setCounts] = useState<RsvpCounts>(initialCounts);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('idle');
-  const [submittingStatus, setSubmittingStatus] = useState<RsvpStatus | null>(null);
+  const [submittingStatus, setSubmittingStatus] = useState<RsvpStatus | null>(
+    null,
+  );
 
   useEffect(() => {
     setIsHydrated(true);
@@ -97,7 +101,11 @@ export default function EventRsvpControls({
 
     const previousStatus = currentStatus;
     const previousCounts = counts;
-    const optimisticCounts = getNextCounts(previousCounts, previousStatus, nextStatus);
+    const optimisticCounts = getNextCounts(
+      previousCounts,
+      previousStatus,
+      nextStatus,
+    );
 
     setCurrentStatus(nextStatus);
     setCounts(optimisticCounts);
@@ -148,7 +156,11 @@ export default function EventRsvpControls({
   };
 
   return (
-    <div data-event-rsvp="true" data-hydrated={isHydrated ? 'true' : 'false'} className="space-y-5">
+    <div
+      data-event-rsvp="true"
+      data-hydrated={isHydrated ? 'true' : 'false'}
+      className="space-y-5"
+    >
       <section
         data-test-id="current-user-rsvp"
         className="space-y-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-4"
@@ -158,7 +170,9 @@ export default function EventRsvpControls({
             <p className="m-0 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Ditt svar
             </p>
-            <p className="mt-1 mb-0 text-sm font-medium text-foreground">Velg status:</p>
+            <p className="mt-1 mb-0 text-sm font-medium text-foreground">
+              Velg status:
+            </p>
           </div>
         </div>
 
@@ -182,7 +196,9 @@ export default function EventRsvpControls({
               onClick={() => handleSubmit('going')}
             >
               <Check className="h-4 w-4" aria-hidden="true" />
-              {submittingStatus === 'going' ? 'Lagrer...' : statusLabelMap.going}
+              {submittingStatus === 'going'
+                ? 'Lagrer...'
+                : statusLabelMap.going}
             </button>
             <button
               type="button"
@@ -202,7 +218,9 @@ export default function EventRsvpControls({
               onClick={() => handleSubmit('maybe')}
             >
               <CircleHelp className="h-4 w-4" aria-hidden="true" />
-              {submittingStatus === 'maybe' ? 'Lagrer...' : statusLabelMap.maybe}
+              {submittingStatus === 'maybe'
+                ? 'Lagrer...'
+                : statusLabelMap.maybe}
             </button>
             <button
               type="button"
@@ -242,7 +260,10 @@ export default function EventRsvpControls({
         </p>
       </div>
 
-      <div data-test-id="rsvp-counts" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div
+        data-test-id="rsvp-counts"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+      >
         <div
           data-test-id="rsvp-count-item"
           data-rsvp-type="going"

@@ -27,7 +27,10 @@ async function waitForRsvpIslandHydration(page: Page) {
   ).toBeVisible();
 }
 
-async function submitRsvp(page: Page, label: 'Kommer' | 'Kanskje' | 'Kommer ikke') {
+async function submitRsvp(
+  page: Page,
+  label: 'Kommer' | 'Kanskje' | 'Kommer ikke',
+) {
   await Promise.all([
     page.waitForResponse(
       (response) =>

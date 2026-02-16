@@ -34,10 +34,11 @@ export default function NewEventForm({
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [feedbackType, setFeedbackType] = useState<EventFormFeedbackType>('idle');
-  const [fieldErrors, setFieldErrors] = useState<Record<EventFormFieldName, string>>(
-    createEmptyEventFormErrors(),
-  );
+  const [feedbackType, setFeedbackType] =
+    useState<EventFormFeedbackType>('idle');
+  const [fieldErrors, setFieldErrors] = useState<
+    Record<EventFormFieldName, string>
+  >(createEmptyEventFormErrors());
 
   useEffect(() => {
     setIsHydrated(true);
@@ -74,7 +75,8 @@ export default function NewEventForm({
       const nextErrors = createEmptyEventFormErrors();
 
       (Object.keys(nextErrors) as EventFormFieldName[]).forEach((fieldName) => {
-        nextErrors[fieldName] = parsedForm.error.fieldErrors[fieldName]?.[0] ?? '';
+        nextErrors[fieldName] =
+          parsedForm.error.fieldErrors[fieldName]?.[0] ?? '';
       });
 
       setFieldErrors(nextErrors);
@@ -82,7 +84,8 @@ export default function NewEventForm({
       return;
     }
 
-    const { title, description, date, time, location, mapLink } = parsedForm.data;
+    const { title, description, date, time, location, mapLink } =
+      parsedForm.data;
 
     const dateTime = parseOsloDateTimeInput(date, time);
 
@@ -106,12 +109,17 @@ export default function NewEventForm({
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => null);
-        throw new Error(errorPayload?.error || 'Kunne ikke opprette arrangement');
+        throw new Error(
+          errorPayload?.error || 'Kunne ikke opprette arrangement',
+        );
       }
 
       const result = (await response.json()) as { eventId?: number | string };
 
-      setFeedback('Arrangement opprettet. Videresender til detaljer...', 'success');
+      setFeedback(
+        'Arrangement opprettet. Videresender til detaljer...',
+        'success',
+      );
 
       const eventId = result.eventId;
       if (eventId) {
@@ -142,8 +150,13 @@ export default function NewEventForm({
       data-new-event-form="true"
       data-hydrated={isHydrated ? 'true' : 'false'}
     >
-      <div data-slot="card-header" className="space-y-2 border-b px-6 py-5 sm:px-8">
-        <h1 className="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">Opprett nytt arrangement</h1>
+      <div
+        data-slot="card-header"
+        className="space-y-2 border-b px-6 py-5 sm:px-8"
+      >
+        <h1 className="m-0 text-3xl text-(--color-accent-dark) sm:text-4xl">
+          Opprett nytt arrangement
+        </h1>
         <p className="m-0 text-sm text-muted-foreground">
           Fyll ut arrangementsdetaljene nedenfor. Felt merket med * er påkrevd.
         </p>
@@ -167,7 +180,11 @@ export default function NewEventForm({
           <p
             id="title-error"
             data-test-id="field-error-title"
-            className={fieldErrors.title ? 'block text-sm text-destructive' : 'hidden text-sm text-destructive'}
+            className={
+              fieldErrors.title
+                ? 'block text-sm text-destructive'
+                : 'hidden text-sm text-destructive'
+            }
             role="alert"
           >
             {fieldErrors.title}
@@ -184,7 +201,9 @@ export default function NewEventForm({
             placeholder="Hva er planen? Noen spesielle detaljer?"
             defaultValue={prefillDescription}
             aria-invalid={fieldErrors.description ? 'true' : undefined}
-            aria-describedby={fieldErrors.description ? 'description-error' : undefined}
+            aria-describedby={
+              fieldErrors.description ? 'description-error' : undefined
+            }
           />
           <p
             id="description-error"
@@ -216,7 +235,11 @@ export default function NewEventForm({
             <p
               id="date-error"
               data-test-id="field-error-date"
-              className={fieldErrors.date ? 'block text-sm text-destructive' : 'hidden text-sm text-destructive'}
+              className={
+                fieldErrors.date
+                  ? 'block text-sm text-destructive'
+                  : 'hidden text-sm text-destructive'
+              }
               role="alert"
             >
               {fieldErrors.date}
@@ -238,7 +261,11 @@ export default function NewEventForm({
             <p
               id="time-error"
               data-test-id="field-error-time"
-              className={fieldErrors.time ? 'block text-sm text-destructive' : 'hidden text-sm text-destructive'}
+              className={
+                fieldErrors.time
+                  ? 'block text-sm text-destructive'
+                  : 'hidden text-sm text-destructive'
+              }
               role="alert"
             >
               {fieldErrors.time}
@@ -258,12 +285,18 @@ export default function NewEventForm({
             placeholder="f.eks. Olas leilighet, Oslo sentrum"
             defaultValue={prefillLocation}
             aria-invalid={fieldErrors.location ? 'true' : undefined}
-            aria-describedby={fieldErrors.location ? 'location-error' : undefined}
+            aria-describedby={
+              fieldErrors.location ? 'location-error' : undefined
+            }
           />
           <p
             id="location-error"
             data-test-id="field-error-location"
-            className={fieldErrors.location ? 'block text-sm text-destructive' : 'hidden text-sm text-destructive'}
+            className={
+              fieldErrors.location
+                ? 'block text-sm text-destructive'
+                : 'hidden text-sm text-destructive'
+            }
             role="alert"
           >
             {fieldErrors.location}
@@ -272,7 +305,10 @@ export default function NewEventForm({
 
         <div className="space-y-2">
           <Label htmlFor="mapLink">
-            Kartlenke <span className="text-sm font-normal text-muted-foreground">(valgfritt)</span>
+            Kartlenke{' '}
+            <span className="text-sm font-normal text-muted-foreground">
+              (valgfritt)
+            </span>
           </Label>
           <Input
             type="url"
@@ -287,7 +323,11 @@ export default function NewEventForm({
           <p
             id="mapLink-error"
             data-test-id="field-error-mapLink"
-            className={fieldErrors.mapLink ? 'block text-sm text-destructive' : 'hidden text-sm text-destructive'}
+            className={
+              fieldErrors.mapLink
+                ? 'block text-sm text-destructive'
+                : 'hidden text-sm text-destructive'
+            }
             role="alert"
           >
             {fieldErrors.mapLink}
@@ -307,7 +347,10 @@ export default function NewEventForm({
         </div>
       </div>
 
-      <div data-slot="card-footer" className="flex flex-col gap-3 border-t px-6 py-5 sm:flex-row sm:px-8">
+      <div
+        data-slot="card-footer"
+        className="flex flex-col gap-3 border-t px-6 py-5 sm:flex-row sm:px-8"
+      >
         <Button
           type="submit"
           id="submit-button"

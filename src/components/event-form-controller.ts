@@ -8,7 +8,10 @@ export type EventFormFieldName =
 
 export type EventFormFeedbackType = 'idle' | 'loading' | 'success' | 'error';
 
-export function createEmptyEventFormErrors(): Record<EventFormFieldName, string> {
+export function createEmptyEventFormErrors(): Record<
+  EventFormFieldName,
+  string
+> {
   return {
     date: '',
     description: '',
@@ -19,7 +22,9 @@ export function createEmptyEventFormErrors(): Record<EventFormFieldName, string>
   };
 }
 
-export function getEventFormFeedbackClassName(feedbackType: EventFormFeedbackType): string {
+export function getEventFormFeedbackClassName(
+  feedbackType: EventFormFeedbackType,
+): string {
   if (feedbackType === 'idle') {
     return 'hidden rounded-md border px-4 py-3';
   }

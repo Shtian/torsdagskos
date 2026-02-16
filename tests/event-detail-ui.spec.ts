@@ -124,7 +124,9 @@ test.describe('Event Detail UI Migration', () => {
     expect(hasOverflow).toBe(false);
   });
 
-  test('renders RSVP groups with correct users and counts', async ({ page }) => {
+  test('renders RSVP groups with correct users and counts', async ({
+    page,
+  }) => {
     await cleanupTestData();
 
     const tomorrow = new Date();

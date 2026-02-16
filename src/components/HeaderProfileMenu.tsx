@@ -26,9 +26,8 @@ export default function HeaderProfileMenu({
       return;
     }
 
-    const firstMenuItem = rootRef.current?.querySelector<HTMLElement>(
-      '[role="menuitem"]',
-    );
+    const firstMenuItem =
+      rootRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
     firstMenuItem?.focus();
     setFocusFirstItemOnOpen(false);
   }, [isOpen, focusFirstItemOnOpen]);
@@ -138,7 +137,8 @@ export default function HeaderProfileMenu({
         hidden={!isOpen}
       >
         <div className="px-2 py-1.5 text-xs text-muted-foreground">
-          Logget inn som <span className="font-semibold text-foreground">{username}</span>
+          Logget inn som{' '}
+          <span className="font-semibold text-foreground">{username}</span>
         </div>
         <div className="my-1 h-px bg-border"></div>
         <a

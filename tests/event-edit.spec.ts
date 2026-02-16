@@ -299,23 +299,26 @@ test.describe('Event Edit', () => {
       mapLink: 'https://maps.google.com/?q=oslo',
     });
 
-    const updateResponse = await page.evaluate(async (payload) => {
-      const response = await fetch('/api/events/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    const updateResponse = await page.evaluate(
+      async (payload) => {
+        const response = await fetch('/api/events/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
 
-      const body = await response.json();
-      return { status: response.status, body };
-    }, {
-      eventId: event.id.toString(),
-      title: 'Unauthorized update attempt',
-      description: 'Should fail',
-      dateTime: futureDate.toISOString(),
-      location: 'Unauthorized location',
-      mapLink: null,
-    });
+        const body = await response.json();
+        return { status: response.status, body };
+      },
+      {
+        eventId: event.id.toString(),
+        title: 'Unauthorized update attempt',
+        description: 'Should fail',
+        dateTime: futureDate.toISOString(),
+        location: 'Unauthorized location',
+        mapLink: null,
+      },
+    );
 
     expect(updateResponse.status).toBe(403);
     expect(updateResponse.body).toMatchObject({ error: 'Forbidden' });

@@ -13,7 +13,9 @@ type PushSubscriptionPayload = ReturnType<PushSubscription['toJSON']>;
 const defaultButtonLabel = 'Be om varslingstillatelse';
 const loadingButtonLabel = 'Oppdaterer...';
 
-function getPermissionLabel(permission: NotificationPermission | string): string {
+function getPermissionLabel(
+  permission: NotificationPermission | string,
+): string {
   if (!permission) {
     return 'Ukjent';
   }
@@ -52,7 +54,9 @@ function getFeedbackClassName(type: FeedbackType): string {
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = `${base64String}${padding}`.replaceAll('-', '+').replaceAll('_', '/');
+  const base64 = `${base64String}${padding}`
+    .replaceAll('-', '+')
+    .replaceAll('_', '/');
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
 
@@ -98,7 +102,8 @@ async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration
     return null;
   }
 
-  const existingRegistration = await navigator.serviceWorker.getRegistration('/service-worker.js');
+  const existingRegistration =
+    await navigator.serviceWorker.getRegistration('/service-worker.js');
   if (existingRegistration) {
     return existingRegistration;
   }
@@ -147,7 +152,8 @@ export default function SettingsNotifications({
       return;
     }
 
-    const existingSubscription = await registration.pushManager.getSubscription();
+    const existingSubscription =
+      await registration.pushManager.getSubscription();
 
     if (!enabled) {
       if (existingSubscription) {
@@ -165,14 +171,14 @@ export default function SettingsNotifications({
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
+        applicationServerKey: urlBase64ToUint8Array(
+          vapidPublicKey,
+        ) as BufferSource,
       });
     }
 
     const serializedSubscription =
-      typeof subscription.toJSON === 'function'
-        ? subscription.toJSON()
-        : null;
+      typeof subscription.toJSON === 'function' ? subscription.toJSON() : null;
 
     await savePushSubscription(serializedSubscription);
   };
@@ -226,7 +232,9 @@ export default function SettingsNotifications({
             data-test-id="settings-permission-card"
             className="bg-muted/40 rounded-md border px-4 py-4"
           >
-            <dt className="mb-1 text-sm text-muted-foreground">Tillatelsesstatus</dt>
+            <dt className="mb-1 text-sm text-muted-foreground">
+              Tillatelsesstatus
+            </dt>
             <dd
               id="permission-status"
               className="m-0 text-lg font-semibold text-(--color-accent-dark)"
@@ -238,7 +246,9 @@ export default function SettingsNotifications({
             data-test-id="settings-preference-card"
             className="bg-muted/40 rounded-md border px-4 py-4"
           >
-            <dt className="mb-1 text-sm text-muted-foreground">Lagret preferanse</dt>
+            <dt className="mb-1 text-sm text-muted-foreground">
+              Lagret preferanse
+            </dt>
             <dd
               id="saved-preference"
               className="m-0 text-lg font-semibold text-(--color-accent-dark)"
@@ -262,7 +272,10 @@ export default function SettingsNotifications({
         </div>
       </div>
 
-      <div data-slot="card-footer" className="flex flex-col gap-3 border-t px-6 py-5 sm:flex-row sm:px-8">
+      <div
+        data-slot="card-footer"
+        className="flex flex-col gap-3 border-t px-6 py-5 sm:flex-row sm:px-8"
+      >
         <Button
           type="button"
           id="request-permission"

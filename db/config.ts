@@ -22,7 +22,10 @@ const Users = defineTable({
 const Events = defineTable({
   columns: {
     id: column.number({ primaryKey: true }),
-    ownerId: column.number({ references: () => Users.columns.id, optional: true }),
+    ownerId: column.number({
+      references: () => Users.columns.id,
+      optional: true,
+    }),
     title: column.text(),
     description: column.text(),
     dateTime: column.date(),

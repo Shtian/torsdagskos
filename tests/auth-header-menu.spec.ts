@@ -50,7 +50,9 @@ test.describe('Header profile menu - authenticated state', () => {
     await expect(accountButton).toBeFocused();
   });
 
-  test('closes menu when clicking outside the profile menu', async ({ page }) => {
+  test('closes menu when clicking outside the profile menu', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     const accountButton = page.getByRole('button', { name: 'Konto meny' });

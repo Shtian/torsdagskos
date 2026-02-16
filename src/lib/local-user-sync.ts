@@ -20,7 +20,11 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 export async function getLocalUserByClerkId(clerkUserId: string) {
-  return db.select().from(Users).where(eq(Users.clerkUserId, clerkUserId)).get();
+  return db
+    .select()
+    .from(Users)
+    .where(eq(Users.clerkUserId, clerkUserId))
+    .get();
 }
 
 export async function ensureLocalUser(
@@ -34,7 +38,8 @@ export async function ensureLocalUser(
   }
 
   const clerkUser =
-    options?.clerkUser ?? (await clerkClient(clerkContext).users.getUser(clerkUserId));
+    options?.clerkUser ??
+    (await clerkClient(clerkContext).users.getUser(clerkUserId));
 
   try {
     await db.insert(Users).values({
