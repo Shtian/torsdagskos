@@ -7,11 +7,12 @@ import {
   validateNotificationSummary,
 } from '../../../lib/api-validation';
 import { sendNewEventNotifications } from '../../../lib/event-notifications';
+import { ensureLocalUser } from '../../../lib/local-user-sync';
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async (context) => {
   try {
     // Ensure user is authenticated
-    const { userId } = locals.auth();
+    const { userId } = context.locals.auth();
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -23,7 +24,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     let body: unknown;
     try {
-      body = await request.json();
+      body = await context.request.json();
     } catch {
       return new Response(
         JSON.stringify(
@@ -56,8 +57,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
       title,
     } = parsedBody.data;
 
+    const owner = await ensureLocalUser(context, userId);
+
     // Insert event into database
     const result = await db.insert(Events).values({
+      ownerId: owner.id,
       title,
       description: description || '',
       dateTime: eventDate,

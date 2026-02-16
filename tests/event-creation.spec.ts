@@ -1,9 +1,20 @@
 import { test, expect } from './fixtures';
 import { gotoWithRetry } from './helpers/navigation-helpers';
 
+const hydratedNewEventForm =
+  '[data-new-event-form="true"][data-hydrated="true"]';
+
 test.describe('Event Creation', () => {
+  async function waitForNewEventFormHydration(
+    page: import('@playwright/test').Page,
+  ) {
+    await expect(page.locator(hydratedNewEventForm)).toBeVisible();
+  }
+
   test('should display event creation form', async ({ page }) => {
     await page.goto('/events/new');
+
+    await waitForNewEventFormHydration(page);
 
     // Check that form elements are visible
     await expect(page.getByTestId('new-event-shell')).toBeVisible();
@@ -37,6 +48,7 @@ test.describe('Event Creation', () => {
     page,
   }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     await page.route('**/api/events/create', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 600));
@@ -72,6 +84,7 @@ test.describe('Event Creation', () => {
     page,
   }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
     let createRequests = 0;
 
     await page.route('**/api/events/create', async (route) => {
@@ -113,6 +126,7 @@ test.describe('Event Creation', () => {
     page,
   }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     const eventTitle = `Test Event ${Date.now()}`;
     const eventDescription = 'This is a test event description';
@@ -156,6 +170,7 @@ test.describe('Event Creation', () => {
 
   test('should create event without optional fields', async ({ page }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     const eventTitle = `Minimal Event ${Date.now()}`;
     const eventLocation = 'Minimal Location';
@@ -184,6 +199,38 @@ test.describe('Event Creation', () => {
     await expect(
       page.getByRole('link', { name: /åpne i kart/i }),
     ).not.toBeVisible();
+  });
+
+  test('submits date/time using Europe/Oslo semantics', async ({ page }) => {
+    await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
+
+    let submittedDateTime: string | null = null;
+
+    await page.route('**/api/events/create', async (route) => {
+      const payload = route.request().postDataJSON() as { dateTime?: string };
+      submittedDateTime = payload.dateTime ?? null;
+
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'timezone payload captured' }),
+      });
+    });
+
+    await page.locator('#title').fill(`Timezone Event ${Date.now()}`);
+    await page.locator('#date').fill('2026-01-15');
+    await page.locator('#time').fill('19:00');
+    await page.locator('#location').fill('Oslo');
+
+    await page
+      .getByRole('button', { name: /opprett arrangement/i, exact: true })
+      .click();
+
+    await expect.poll(() => submittedDateTime).toBe('2026-01-15T18:00:00.000Z');
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /timezone payload captured/i,
+    );
   });
 
   test('should have Opprett arrangement button in header on homepage', async ({
@@ -217,6 +264,7 @@ test.describe('Event Creation', () => {
 
   test('should allow canceling event creation', async ({ page }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     // Fill some fields
     await page.locator('#title').fill('Test Event');
@@ -230,6 +278,7 @@ test.describe('Event Creation', () => {
 
   test('should show error message on API failure', async ({ page }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     // Mock API to return error
     await page.route('**/api/events/create', (route) => {
@@ -265,6 +314,7 @@ test.describe('Event Creation', () => {
     const eventTitle = `Homepage Test Event ${Date.now()}`;
 
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     // opprett arrangement
     await page.locator('#title').fill(eventTitle);

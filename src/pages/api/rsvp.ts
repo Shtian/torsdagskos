@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { db, Users, Rsvps, eq, and } from 'astro:db';
+import { db, Users, Rsvps, Events, eq, and } from 'astro:db';
 import {
   createValidationErrorPayload,
   validateRsvpApiRequest,
@@ -40,6 +40,42 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     const { eventId, status } = parsedBody.data;
+
+    const targetEvent = await db
+      .select()
+      .from(Events)
+      .where(eq(Events.id, eventId))
+      .get();
+
+    if (!targetEvent) {
+      return new Response(
+        JSON.stringify({
+          code: 'EVENT_NOT_FOUND',
+          error: 'Not Found',
+          eventId,
+          message: 'Event not found.',
+        }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    if (new Date(targetEvent.dateTime) < new Date()) {
+      return new Response(
+        JSON.stringify({
+          code: 'EVENT_CLOSED',
+          error: 'Conflict',
+          eventId,
+          message: 'Cannot RSVP to past events.',
+        }),
+        {
+          status: 409,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
 
     // Get current user's local database ID
     const currentUser = await db

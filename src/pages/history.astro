@@ -6,67 +6,106 @@
 
 
 
-import { clerkClient } from '@clerk/astro/server';
-import { db, Users, Events, Rsvps, eq } from 'astro:db';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { db, Events, Rsvps, eq } from 'astro:db';
 import Layout from '../layouts/Layout.astro';
+import { ensureLocalUser } from '@/lib/local-user-sync';
 
 const { userId } = Astro.locals.auth();
 
-let currentUser = userId
-  ? await db.select().from(Users).where(eq(Users.clerkUserId, userId)).get()
-  : null;
-
-// Keep this page resilient when users navigate here before homepage sync runs.
-if (!currentUser && userId) {
-  const clerkUser = await clerkClient(Astro).users.getUser(userId);
-
-  try {
-    await db.insert(Users).values({
-      clerkUserId: userId,
-      email: clerkUser.emailAddresses[0]?.emailAddress || '',
-      name:
-        `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
-        clerkUser.emailAddresses[0]?.emailAddress ||
-        'User',
-      createdAt: new Date(),
-    });
-  } catch (error) {
-    if (
-      !(error instanceof Error && error.message.includes('UNIQUE constraint'))
-    ) {
-      throw error;
-    }
-  }
-
-  currentUser = await db
-    .select()
-    .from(Users)
-    .where(eq(Users.clerkUserId, userId))
-    .get();
-}
+const currentUser = userId ? await ensureLocalUser(Astro, userId) : null;
 
 const historyItems = currentUser
-  ? await Promise.all(
-      (
-        await db
-          .select()
-          .from(Rsvps)
-          .where(eq(Rsvps.userId, currentUser.id))
-          .all()
-      ).map(async (rsvp) => {
-        const event = await db
-          .select()
-          .from(Events)
-          .where(eq(Events.id, rsvp.eventId))
-          .get();
-
-        return event ? { rsvp, event } : null;
-      }),
-    )
+  ? await db
+      .select({
+        rsvp: {
+          id: Rsvps.id,
+          userId: Rsvps.userId,
+          eventId: Rsvps.eventId,
+          status: Rsvps.status,
+          createdAt: Rsvps.createdAt,
+          updatedAt: Rsvps.updatedAt,
+        },
+        event: {
+          id: Events.id,
+          title: Events.title,
+          description: Events.description,
+          dateTime: Events.dateTime,
+          location: Events.location,
+          mapLink: Events.mapLink,
+          createdAt: Events.createdAt,
+          ownerId: Events.ownerId,
+        },
+      })
+      .from(Rsvps)
+      .leftJoin(Events, eq(Rsvps.eventId, Events.id))
+      .where(eq(Rsvps.userId, currentUser.id))
+      .all()
   : [];
 
 const _validHistoryItems = historyItems
-  .filter((item): item is NonNullable<typeof item> => item !== null)
+  .filter(
+    (
+      item,
+    ): item is (typeof historyItems)[number] & {
+      event: NonNullable<(typeof historyItems)[number]['event']>;
+    } => item.event !== null,
+  )
   .sort(
     (a, b) =>
       new Date(b.event.dateTime).getTime() -

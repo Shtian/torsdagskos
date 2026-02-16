@@ -1,4 +1,15 @@
 import { test, expect } from './fixtures';
+import type { Page } from '@playwright/test';
+
+async function openHeaderProfileMenu(page: Page) {
+  const accountButton = page.getByRole('button', { name: 'Konto meny' });
+  await expect(
+    page.locator('[data-header-profile-menu][data-hydrated="true"]'),
+  ).toBeVisible();
+  await expect(accountButton).toBeVisible();
+  await accountButton.focus();
+  await accountButton.press('Enter');
+}
 
 test.describe('Header profile menu - authenticated state', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
@@ -6,10 +17,7 @@ test.describe('Header profile menu - authenticated state', () => {
   test('shows profile dropdown items in required order', async ({ page }) => {
     await page.goto('/');
 
-    const accountButton = page.getByRole('button', { name: 'Konto meny' });
-    await expect(accountButton).toBeVisible();
-    await accountButton.focus();
-    await accountButton.press('Enter');
+    await openHeaderProfileMenu(page);
 
     const menuItems = page.getByRole('menuitem');
     await expect(menuItems).toHaveCount(2);
@@ -27,6 +35,9 @@ test.describe('Header profile menu - authenticated state', () => {
     await page.goto('/');
 
     const accountButton = page.getByRole('button', { name: 'Konto meny' });
+    await expect(
+      page.locator('[data-header-profile-menu][data-hydrated="true"]'),
+    ).toBeVisible();
     await accountButton.focus();
     await accountButton.press('Space');
 
@@ -39,12 +50,33 @@ test.describe('Header profile menu - authenticated state', () => {
     await expect(accountButton).toBeFocused();
   });
 
+  test('closes menu when clicking outside the profile menu', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const accountButton = page.getByRole('button', { name: 'Konto meny' });
+    await expect(
+      page.locator('[data-header-profile-menu][data-hydrated="true"]'),
+    ).toBeVisible();
+    await accountButton.click();
+
+    const profileItem = page.getByRole('menuitem', { name: 'Profil' });
+    await expect(profileItem).toBeVisible();
+
+    await page.getByRole('heading', { name: 'Torsdagskos' }).click();
+    await expect(profileItem).not.toBeVisible();
+  });
+
   test('renders log out action in authenticated profile menu', async ({
     page,
   }) => {
     await page.goto('/');
 
     const accountButton = page.getByRole('button', { name: 'Konto meny' });
+    await expect(
+      page.locator('[data-header-profile-menu][data-hydrated="true"]'),
+    ).toBeVisible();
     await accountButton.click();
     const logoutItem = page.getByRole('menuitem', { name: 'Logg ut' });
     await expect(logoutItem).toBeVisible();

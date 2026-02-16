@@ -1,328 +1,248 @@
 # Codebase Patterns
-- Use `pnpm lint` (`biome check .`) for local validation and reserve `pnpm lint:ci` (`biome ci .`) for CI workflows.
-- Full Playwright runs are most reliable with `pnpm test --workers=1` because many specs mutate shared DB state and can race in parallel.
-- When restyling `src/pages/settings.astro`, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` IDs stable because the page script and settings specs depend on them.
-- Keep event create/edit forms aligned on shadcn inline feedback (`data-test-id="form-feedback-panel"`) and assert panel text + submit busy/disabled states in Playwright instead of toast nodes.
-- For global theme/token assertions, use an `@unauth` Playwright spec on `/access-denied` and validate computed styles from `document.documentElement` and `document.body` to keep tests deterministic.
-- Keep a semantic heading element on `/access-denied`; theme and typography unauth specs read heading computed styles from that route.
-- Load Google Fonts once in `src/layouts/Layout.astro` and map them via global CSS font tokens (`--font-heading`, `--font-body`) so typography stays consistent across all routes.
-- When rendering React `Textarea` components from `.astro` pages, prefer `defaultValue` over children content to avoid accidental `"[object Object]"` rendering in SSR output.
-- For Playwright interactions with `ShadcnIslandDemo`, wait for `data-hydrated="true"` on `data-test-id="shadcn-island"` before tab/select/dialog/dropdown actions to avoid pre-hydration flakes.
-- Full Playwright runs can intermittently 401 in `tests/history.spec.ts` (`/api/test/current-user`) late in the suite; validate with an isolated rerun of that spec when this known auth-state flake appears.
-- In auth-sensitive Playwright helpers that call `/api/test/current-user` inside `page.evaluate()`, guard for occasional 401/non-JSON responses and retry before hard-failing.
-- Event detail RSVP UX now uses inline feedback (`data-test-id="rsvp-feedback-panel"` + `#rsvp-feedback`) and `aria-busy` button states; avoid toast-based assertions in RSVP tests.
-- For UI migrations, keep behavior coverage in existing specs and add focused `*-ui.spec.ts` shells/mobile tests so visual refactors do not weaken functional assertions.
-- For Norwegian localization stories, update accessible-name assertions and prefer test IDs for badge/count checks when translated labels overlap (for example `kommer` vs `kommer ikke`).
-- In long serial Playwright runs, use a small bounded `page.goto()` retry helper in navigation-heavy specs to reduce intermittent local dev-server detach/abort timeouts.
-- Event-detail RSVP buttons keep stable `aria-label` names while showing temporary loading text, so assert loading/error through feedback panel text plus button state attributes instead of role-name text changes.
-- After shadcn migration, remove unused Astro starter artifacts (`src/components/Welcome.astro`, `src/assets/*`) and stale global CSS selectors to avoid carrying duplicate legacy UI paths.
-- Keep migration documentation synchronized between `README.md` conventions and `docs/shadcn-migration-checklist.md` mapping/status whenever UI primitives or exceptions change.
-- Capture spacing work in `docs/spacing-audit-checklist.md` first and keep follow-up fixes tied to checklist IDs (`SP-###`) so multi-story spacing cleanup stays traceable.
-- For intermittent Playwright `page.goto()` detach/network abort flakes on local dev server, use a small bounded retry helper in the affected spec instead of increasing global timeouts.
-- In shared authenticated Playwright suites, avoid executing real logout actions with the default storage state; it can invalidate session assumptions for later specs. Prefer verifying menu action presence/order/keyboard behavior instead.
-- Shared Zod validation helpers should return `{ error: 'Validation failed' }` plus normalized `issues` and dot-path `fieldErrors` (using `_form` for root-level errors) so forms and APIs can share one error contract.
-- For client-side event create/edit validation, use `novalidate` plus shared Zod parsing and field error hooks (`data-test-id="field-error-<field>"`) so invalid submits show per-field feedback and can be asserted as API-free in Playwright.
-- For API routes with JSON bodies, parse JSON in a dedicated `try/catch` and return a `_form` validation payload on parse failure before schema validation to keep malformed payload handling consistent.
+- When introducing foreign-keyed ownership fields tied to Clerk identity, resolve `Users` by `clerkUserId` inside API routes and create the local user row on demand with unique-constraint race protection before writing the dependent record.
+- For owner-restricted writes, resolve the authenticated local user before authorization and gate on `Events.ownerId`; Clerk metadata (`role=admin` or `isAdmin=true`) is the admin bypass.
+- RSVP write routes should validate `Events` existence and time-window before touching `Rsvps`, and return structured 4xx payloads (`code`/`error`/`message`/`eventId`) for deterministic client and E2E handling.
+- Convert event form date/time inputs with an explicit Europe/Oslo wall-time helper before `toISOString()`; `new Date(\`\${date}T\${time}\`)` leaks browser locale and shifts stored event time.
+- For React-island interaction tests, wait for explicit hydration markers (`data-hydrated="true"`) before keyboard/click assertions to avoid pre-hydration flakes.
+- Keep `ShadcnIslandDemo` on `/demo/shadcn-island` (not `/`) and point island interaction tests to the demo route so homepage remains product-focused.
+- For settings notification island migrations, keep `#permission-status`, `#saved-preference`, `#request-permission`, and `#feedback` selectors stable and expose `[data-settings-notifications="true"][data-hydrated="true"]` for hydration-safe Playwright interactions.
+- For form-controller island migrations, expose a stable root selector plus hydration state (for example `[data-new-event-form="true"][data-hydrated="true"]`) so Playwright can synchronize before submits/assertions.
+- For create/edit form islands, centralize shared field-error state shape and feedback-panel class mapping in `src/components/event-form-controller.ts` to keep behavior parity across both routes.
+- For event-detail RSVP island flows, keep RSVP button data attributes (`data-rsvp-button`, `data-status`, `data-active`) stable and wait for `[data-event-rsvp="true"][data-hydrated="true"]` in Playwright before interaction assertions.
+- Keep homepage `EventCard` rendering server-only (no `client:*` hydration); in Playwright, verify cards are not wrapped by `astro-island` to guard performance regressions.
+- On homepage event listings, aggregate RSVP counts in one `groupBy(eventId, status)` query and map results per event; avoid per-event RSVP lookups in render paths.
+- On event detail pages, fetch RSVP + user display data with a single `leftJoin(Rsvps, Users)` query (or equivalent batched query) to avoid per-RSVP user lookups while preserving grouped RSVP rendering.
+- On history pages, load RSVP cards via one joined `Rsvps` + `Events` query scoped by `Rsvps.userId`, then filter null joined events before sorting/rendering.
+- For notification deduplication, prefetch `NotificationLog` user IDs once per `(eventId, type, channel)` before fan-out loops; avoid issuing log existence queries inside per-user send iterations.
+- Use `ensureLocalUser(contextOrAstro, userId)` from `src/lib/local-user-sync.ts` for create-on-read local user sync in both API routes and `.astro` pages; do not duplicate inline Clerk-to-Users insert/retry blocks.
 
-## 2026-02-11 16:34:47 CET - US-001
-- Implemented Astro React island support and shadcn scaffold foundations (React integration, aliasing, shadcn config, utility `cn`, and initial `Button` primitive).
-- Rendered a React island (`ShadcnIslandDemo`) from `src/pages/index.astro` with `client:load` to validate Astro+React integration in a real page.
-- Added Playwright coverage for the new UI integration in `tests/shadcn-island.spec.ts`.
-- Files changed: `astro.config.mjs`, `tsconfig.json`, `package.json`, `pnpm-lock.yaml`, `components.json`, `src/lib/utils.ts`, `src/components/ui/button.tsx`, `src/components/ShadcnIslandDemo.tsx`, `src/pages/index.astro`, `tests/shadcn-island.spec.ts`, `prd.json`, `progress.txt`.
+## Iteration Notes
+## [2026-02-14 21:28:30 CET] - US-001
+- Added event ownership support by introducing `Events.ownerId` as a `Users.id` foreign key in Astro DB schema.
+- Updated `/api/events/create` to ensure the authenticated Clerk user is present in local `Users`, then persist `ownerId` on new events.
+- Files changed: `db/config.ts`, `src/pages/api/events/create.ts`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Astro React TSX components require `@types/react` and `@types/react-dom` in this repo for `pnpm astro check` to pass.
-  - Existing test conventions and helper guidance in `tests/AGENTS.md` are accurate; new UI checks should follow `getByRole`/`getByTestId` patterns from there.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Astro DB schema evolution is handled directly in `db/config.ts`; there is no separate checked-in SQL migration directory in this repo.
+    - For auth-backed writes, API routes should not assume local `Users` rows already exist even for signed-in users.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Clerk-authenticated routes can race on first-time local user creation; guard inserts by tolerating `UNIQUE constraint` errors and re-querying.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/pages/api/events/create.ts` now owns event ownership assignment and is the reference path for future edit-authorization checks.
 ---
-## 2026-02-11 16:42:43 CET - US-002
-- Established a single-source global light-theme baseline in `src/styles/global.css` by formalizing semantic tokens for color, spacing, radius, typography, and elevation, and adding shadcn-compatible semantic aliases (`--background`, `--foreground`, `--card`, etc.).
-- Applied token-driven baseline styles to root elements (`html`, `body`, headings, media, links) to remove hardcoded base defaults and ensure consistent styling behavior across pages.
-- Added Playwright coverage in `tests/theme-baseline.spec.ts` to validate token presence and computed baseline styles on an unauthenticated route.
-- Files changed: `src/styles/global.css`, `tests/theme-baseline.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`, `ralph.sh`.
+## [2026-02-15 14:50:51 CET] - US-002
+- Enforced owner/admin authorization in `/api/events/update` by syncing the authenticated local user, checking Clerk admin metadata, and rejecting unauthorized edits with `403`.
+- Added Playwright coverage for non-owner edit rejection by creating an event with a different `ownerId` and asserting `/api/events/update` returns forbidden.
+- Extended test seeding helpers to support explicit event ownership (`ownerId`) for auth-sensitive scenarios.
+- Files changed: `src/pages/api/events/update.ts`, `src/pages/api/test/seed.ts`, `tests/helpers/api-helpers.ts`, `tests/event-edit.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Keep core semantic aliases (`--background`, `--foreground`, `--primary`, `--ring`) defined alongside legacy `--color-*` tokens so older pages and shadcn primitives can coexist during migration.
-  - Theme baseline tests are more stable when they run as `@unauth` against `/access-denied` and assert computed styles instead of auth-dependent page content.
-  - Full suite reliability remains best with `pnpm test --workers=1`; auth-dependent specs can fail intermittently under competing state.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Ownership authorization must be enforced in API routes even when UI hides edit actions.
+    - Seed helpers that expose ownership fields make auth edge-case E2E tests deterministic.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Authenticated Clerk sessions can exist before local `Users` rows; sync local users before ownership checks.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/event-edit.spec.ts` now contains a direct non-owner forbidden-path assertion for `/api/events/update`.
 ---
-## 2026-02-11 16:48:38 CET - US-003
-- Selected and integrated a polished Google Fonts pairing: `Lora` for headings and `Manrope` for body/UI text.
-- Loaded font assets globally in `src/layouts/Layout.astro` with `preconnect` + stylesheet link, and wired typography roles through global tokens in `src/styles/global.css`.
-- Documented the font choices and usage roles in `README.md`.
-- Added Playwright coverage in `tests/typography-fonts.spec.ts` and updated baseline typography assertion in `tests/theme-baseline.spec.ts`.
-- Files changed: `src/layouts/Layout.astro`, `src/styles/global.css`, `README.md`, `tests/theme-baseline.spec.ts`, `tests/typography-fonts.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-15 15:41:31 CET] - US-003
+- Implemented server-side RSVP target validation in `/api/rsvp` by checking event existence and rejecting past-event submissions before any RSVP insert/update.
+- Added structured error responses for invalid RSVP targets: `EVENT_NOT_FOUND` (404) and `EVENT_CLOSED` (409), each including `eventId`.
+- Added Playwright API tests covering unknown-event and past-event RSVP rejection paths for authenticated users.
+- Files changed: `src/pages/api/rsvp.ts`, `tests/rsvp-api.spec.ts`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Keep all font loading centralized in `src/layouts/Layout.astro` so every route inherits the same typography without per-page duplication.
-  - Font-family Playwright assertions should use `toContain()` for the selected family name, since rendered stacks include browser-specific fallbacks.
-- Run full Playwright verification with `pnpm test --workers=1` when validating UI stories to avoid parallel state races in this codebase.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - RSVP APIs should return machine-readable 4xx payloads so both UI scripts and Playwright API assertions can reliably branch on error type.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Authenticated E2E calls to `/api/rsvp` still depend on a local `Users` row; ensure the test user is synced before asserting downstream event-state validation.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/rsvp-api.spec.ts` is now the primary coverage for RSVP invalid-target behavior at the API layer.
 ---
-## 2026-02-11 16:59:55 CET - US-004
-- Added shadcn form primitives `Input`, `Label`, `Textarea`, and `Select`, plus a `src/components/ui/index.ts` barrel for consistent UI imports.
-- Replaced event creation form controls in `src/pages/events/new.astro` with the new primitives while preserving existing IDs/names and submit behavior.
-- Expanded the shadcn island demo to include a working `Select` and added Playwright assertions for the new select interaction and primitive slots.
-- Files changed: `package.json`, `pnpm-lock.yaml`, `src/components/ui/input.tsx`, `src/components/ui/label.tsx`, `src/components/ui/textarea.tsx`, `src/components/ui/select.tsx`, `src/components/ui/index.ts`, `src/components/ShadcnIslandDemo.tsx`, `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-15 15:49:56 CET] - US-005
+- Fixed create-event submit conversion to parse `date` + `time` as Europe/Oslo wall time before sending the API payload.
+- Added a reusable timezone helper for Oslo conversion and replaced the fragile `new Date(\`\${date}T\${time}\`)` path.
+- Added Playwright coverage that captures `/api/events/create` payload and asserts the submitted ISO datetime matches Oslo semantics.
+- Files changed: `src/lib/oslo-datetime.ts`, `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Import shared UI primitives from `@/components/ui` to keep migration imports consistent across pages and islands.
-  - For React form primitives rendered in Astro pages, preserve existing element IDs so current scripts and Playwright locators keep working without refactors.
-  - `data-slot` attributes on shadcn primitives provide stable selectors for focused UI tests when role/text assertions are not specific enough.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Event create/edit flows should share an explicit timezone parser so UI submission is deterministic across browser locales.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Browser-local `Date` parsing of `YYYY-MM-DDTHH:mm` is environment-dependent and can silently shift persisted event times.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/event-creation.spec.ts` now contains an API payload assertion pattern for timezone-sensitive form submissions.
 ---
-## 2026-02-12 09:55:00 CET - US-005
-- Added shadcn surface and feedback primitives: Card, Badge, Separator, and Skeleton components.
-- Created EventCard React component to replace legacy event card markup with shadcn primitives on homepage.
-- Enhanced ShadcnIslandDemo to showcase all four new components with interactive Skeleton toggle.
-- Replaced custom event card HTML with EventCard islands on homepage (both upcoming and past events).
-- Migrated RSVP count badges from custom styled spans to shadcn Badge components with semantic variants.
-- Added Separator component between "Upcoming Events" and "Past Events" sections.
-- Added comprehensive Playwright test coverage in `tests/surface-primitives.spec.ts` validating Card slots, Badge variants, Separator rendering, and Skeleton state toggling.
-- Files changed: `package.json`, `pnpm-lock.yaml`, `src/components/ui/badge.tsx`, `src/components/ui/card.tsx`, `src/components/ui/separator.tsx`, `src/components/ui/skeleton.tsx`, `src/components/ui/index.ts`, `src/components/EventCard.tsx`, `src/components/ShadcnIslandDemo.tsx`, `src/pages/index.astro`, `tests/surface-primitives.spec.ts`, `prd.json`, `progress.txt`.
+## [2026-02-15 15:59:55 CET] - US-006
+- Updated edit-event submit handling to parse `date` + `time` with the shared Europe/Oslo helper before sending `/api/events/update`.
+- Added Playwright coverage that intercepts `/api/events/update` and asserts the outbound `dateTime` ISO payload uses Oslo semantics.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (126 passed).
+- Files changed: `src/pages/events/[id]/edit.astro`, `tests/event-edit.spec.ts`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Use test fixtures `import { test, expect } from "./fixtures"` instead of manual sign-in in Playwright tests for authenticated routes.
-  - When wrapping Astro pages with React islands for shadcn components, use `client:load` directive on the component in `.astro` files.
-  - For EventCard components used as links, wrap shadcn Card with `<a>` element instead of making Card itself a link to preserve accessibility.
-  - Use semantic HTML (h2) for card titles instead of div-based CardTitle when heading role is required for existing test compatibility.
-  - Skeleton component requires explicit React import statement despite TSX file extension.
-  - shadcn Separator uses `role="none"` for decorative separators (default `decorative={true}`), not `role="separator"`.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Timezone-sensitive regression coverage is most reliable by intercepting API requests and asserting payload timestamps directly, not rendered UI times.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `createEvent(...)` test helper expects optional fields to be omitted rather than explicitly passed as `null` to satisfy its TypeScript shape.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/event-edit.spec.ts` now includes parity timezone payload validation for the edit flow (`/api/events/update`), mirroring the create-flow test strategy.
 ---
-## 2026-02-12 10:27:00 CET - US-006
-- Added shadcn interactive overlay primitives: Dialog, DropdownMenu, and Tabs components.
-- Installed lucide-react dependency for icon support in shadcn components.
-- Added ghost variant to Button component for icon-only button use cases.
-- Enhanced ShadcnIslandDemo with tab-based interface showcasing all three overlay components:
-  - Dialog with keyboard navigation (Escape to close, focus management)
-  - DropdownMenu with keyboard navigation (Arrow keys, Escape to close)
-  - Tabs with keyboard navigation (Arrow Left/Right, content switching)
-- Added comprehensive Playwright test coverage in `tests/overlay-primitives.spec.ts`:
-  - Tabs: rendering, switching, keyboard navigation
-  - Dialog: open/close, Escape key, button interactions
-  - DropdownMenu: open/close, Escape key, keyboard navigation, item selection
-- Updated existing tests to work with new demo structure (tab-based layout).
-- Files changed: `package.json`, `pnpm-lock.yaml`, `src/components/ShadcnIslandDemo.tsx`, `src/components/ui/button.tsx`, `src/components/ui/dialog.tsx`, `src/components/ui/dropdown-menu.tsx`, `src/components/ui/tabs.tsx`, `src/components/ui/index.ts`, `tests/overlay-primitives.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/surface-primitives.spec.ts`, `tests/events.spec.ts`, `prd.json`, `progress.txt`.
+## [2026-02-15 16:18:27 CET] - US-007
+- Migrated the desktop header profile dropdown from inline DOM scripting in `Layout.astro` to a typed React island component with keyboard/pointer accessibility behavior.
+- Added hydration-aware robustness to the new island (`data-hydrated` flag) and updated Playwright coverage for header profile menu interactions, including outside-click dismissal.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/HeaderProfileMenu.tsx`, `src/layouts/Layout.astro`, `tests/auth-header-menu.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - shadcn overlay components (Dialog, DropdownMenu, Tabs) require lucide-react for icons.
-  - Dialog and DropdownMenu from shadcn/ui have built-in keyboard navigation and accessibility.
-  - When restructuring React islands with tabs, update existing tests to navigate to the correct tab before assertions.
-  - The ghost button variant is useful for icon-only buttons in UI components like dropdown triggers.
-  - Radix UI primitives (used by shadcn) handle focus management and keyboard interactions automatically.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Desktop header account-menu behavior now lives in `src/components/HeaderProfileMenu.tsx`; layout should mount this island instead of adding inline event listeners.
+    - Hydration markers (`data-hydrated`) are useful for stable Playwright interactions with keyboard-first menu tests.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Keyboard-open assertions can race island hydration unless tests wait for a hydration-ready selector before pressing Enter/Space.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/auth-header-menu.spec.ts` now centralizes profile-menu opening in a hydration-aware helper and covers outside-click close behavior.
 ---
-## 2026-02-12 10:54:00 CET - US-007
-- Migrated app shell layout (header, footer, wrappers) to use shadcn component patterns and design tokens.
-- Replaced custom-styled navigation buttons with shadcn buttonVariants() applied directly to anchor elements, preserving all navigation functionality.
-- Updated header to use semantic shadcn tokens (bg-background, text-foreground, text-muted-foreground) for consistent theming.
-- Enhanced Button component with Slot.Root for proper asChild support (merges props/classes to child elements).
-- Set navigation buttons to lg size (h-11/44px) to meet touch-target accessibility requirements (44px minimum).
-- Created comprehensive Playwright test suite in tests/app-shell.spec.ts covering header rendering, responsive behavior, accessibility (skip link), and main content structure.
-- All app shell tests passing (5/5) and responsive touch-target test now passing.
-- Files changed: src/layouts/Layout.astro, src/components/ui/button.tsx, tests/app-shell.spec.ts, prd.json, progress.txt.
+## [2026-02-15 18:42:13 CET] - US-008
+- Migrated the new-event form controller from inline `DOMContentLoaded` script to a typed React island (`NewEventForm`) mounted with `client:load`.
+- Preserved existing validation, inline feedback states, and submit behavior (including Europe/Oslo conversion and redirect-on-success) while removing imperative DOM querying/listeners from `src/pages/events/new.astro`.
+- Added hydration-aware Playwright coverage for the new island root before form assertions.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/NewEventForm.tsx`, `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - When using shadcn Button with asChild in Astro templates, applying buttonVariants() directly to <a> elements works better than wrapping in React islands for static navigation.
-  - Navigation buttons need size="lg" (h-11/44px) to meet WCAG touch-target requirements on mobile (44px minimum).
-  - Use getByRole('banner') instead of locator('header') in tests to avoid matching Astro dev toolbar elements.
-  - Radix UI Slot.Root properly merges className and other props onto child elements when asChild={true}.
-  - Pre-existing test failures in overlay-primitives and surface-primitives specs (7 failures) are unrelated to app shell changes.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Form controller migrations are more stable when the island root exposes both a semantic marker (`data-new-event-form`) and `data-hydrated` for synchronization.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - In React islands, form `novalidate` must be expressed as `noValidate`; the lowercase HTML form fails TS checks in `.tsx`.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/components/NewEventForm.tsx` is now the single source of truth for create-event client validation/feedback/submission behavior.
 ---
-## 2026-02-12 11:38:37 CET - US-008
-- Migrated remaining homepage shell UI in `src/pages/index.astro` to shadcn-compatible surface/action patterns: tokenized card shells, shadcn-style separator, and `buttonVariants()`-driven duplicate action states while preserving event sort, links, and duplicate query behavior.
-- Added frontend Playwright coverage in `tests/homepage-ui.spec.ts` for populated and empty homepage states, including section shell rendering and duplicate-action behavior.
-- Stabilized React-island interaction tests by introducing a hydration marker (`data-hydrated`) in `ShadcnIslandDemo` and waiting for it before interaction in overlay/surface/island specs.
-- Files changed: `src/pages/index.astro`, `tests/homepage-ui.spec.ts`, `src/components/ShadcnIslandDemo.tsx`, `tests/overlay-primitives.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/surface-primitives.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-15 18:57:24 CET] - US-009
+- Migrated edit-event form interactions from inline `DOMContentLoaded` script to a typed React island (`EditEventForm`) mounted with `client:load` in `src/pages/events/[id]/edit.astro`.
+- Reused shared form-controller logic between new/edit flows by extracting common field-error initialization and feedback-panel class mapping into `src/components/event-form-controller.ts`.
+- Added hydration-aware Playwright synchronization for the edit form island (`[data-edit-event-form="true"][data-hydrated="true"]`) and updated test guidance.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/EditEventForm.tsx`, `src/components/NewEventForm.tsx`, `src/components/event-form-controller.ts`, `src/pages/events/[id]/edit.astro`, `tests/event-edit.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Wait for React island hydration (`data-hydrated="true"`) before interacting with tabbed Radix content in Playwright; otherwise hidden-panel controls can intermittently time out.
-  - Use direct-child selectors when asserting top-level `data-slot="card"` containers on pages that also embed card-based child components to avoid strict-locator collisions.
-  - Homepage migration can preserve existing test contracts by keeping `Upcoming Events` and `Past Events` heading semantics while changing only shell styling primitives.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Create/edit form controllers should share utility state helpers so validation feedback behavior stays identical across routes.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - String-wide replacements in specs can accidentally touch helper implementations; verify helper bodies after bulk edits.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/components/EditEventForm.tsx` is now the single source of truth for edit-event client validation/feedback/submission behavior.
 ---
-## 2026-02-12 11:59:15 CET - US-009
-- Migrated `src/pages/access-denied.astro` to a shadcn-compatible card shell and shared action styling via `buttonVariants`, while preserving the existing access-restricted messaging and sign-in navigation behavior.
-- Added frontend Playwright coverage in `tests/access-denied-ui.spec.ts` for baseline render, redirected `from` context rendering, and mobile overflow behavior.
-- Files changed: `src/pages/access-denied.astro`, `tests/access-denied-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-15 20:34:31 CET] - US-010
+- Migrated event-detail RSVP interactions from inline `DOMContentLoaded` scripting to a typed React island (`EventRsvpControls`) mounted with `client:load` in `src/pages/events/[id].astro`.
+- Replaced full-page reload behavior with optimistic/local RSVP state updates for active button state and RSVP counts, while keeping inline busy/error/success feedback accessible via the existing feedback panel contract.
+- Added hydration-aware RSVP coverage and no-navigation assertions in Playwright for event detail interactions.
+- Files changed: `src/components/EventRsvpControls.tsx`, `src/pages/events/[id].astro`, `tests/rsvp.spec.ts`, `tests/event-detail-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Typography/theme tests in this repo rely on `/access-denied` for unauthenticated assertions, so keep the invite-only title as a semantic heading element when restyling that page.
-  - For migrated Astro links styled with `buttonVariants`, assert role/name/href in Playwright instead of component-only `data-slot` attributes.
-  - Mobile regression checks for single-card pages are cheap and effective using viewport + horizontal overflow assertions.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Event-detail RSVP interactions should be implemented via `EventRsvpControls` with `[data-event-rsvp="true"][data-hydrated="true"]` synchronization in tests before clicking RSVP buttons.
+    - Prefer optimistic/local count updates over reloads for RSVP state changes; keep `data-rsvp-button` and `data-active` attributes stable to preserve existing spec selectors.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Full-suite Playwright runs can hit intermittent infra/network flakes (`ERR_NETWORK_IO_SUSPENDED`/detached frame timeouts); validate changed RSVP flows with focused spec reruns when diagnosing unrelated failures.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/components/EventRsvpControls.tsx` now owns detail-page RSVP client behavior, and `src/pages/events/[id].astro` only passes initial status/count props.
 ---
-## 2026-02-12 12:15:48 CET - US-010
-- Migrated `src/pages/sign-in.astro` wrapper UI to a shadcn-compatible card shell with shared tokenized hierarchy (kicker, title, description, content container) while preserving Clerk sign-in routing and authenticated redirect behavior.
-- Added frontend Playwright coverage in `tests/sign-in-ui.spec.ts` to verify migrated wrapper content, preserved Clerk sign-in UI visibility, sign-up navigation link, and mobile overflow safety.
-- Files changed: `src/pages/sign-in.astro`, `tests/sign-in-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-15 20:50:33 CET] - US-011
+- Migrated settings notification interactions from inline `@ts-nocheck` script to a typed React island (`SettingsNotifications`) mounted with `client:load` in `src/pages/settings.astro`.
+- Preserved existing notification selectors and feedback contract while keeping permission checks, preference persistence, and push subscription sync behavior in typed component logic.
+- Added hydration-aware Playwright synchronization for settings notification interactions and documented the pattern in test guidance.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/components/SettingsNotifications.tsx`, `src/pages/settings.astro`, `tests/settings.spec.ts`, `tests/settings-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - For Clerk auth wrapper migrations, keep the Clerk component server-rendered inside the Astro shell and only restyle the surrounding container to avoid auth-flow regressions.
-  - Pair wrapper assertions (`data-test-id`) with user-facing Clerk heading assertions so tests validate both local shell migration and external auth widget continuity.
-  - `pnpm test --workers=1` still shows a known unrelated auth flake in `tests/history.spec.ts`; `pnpm test tests/history.spec.ts --workers=1` passes in isolation.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Settings notification UI should be implemented in `src/components/SettingsNotifications.tsx` and mounted from `src/pages/settings.astro` with `client:load`.
+    - Hydration markers on settings island roots (`[data-settings-notifications="true"][data-hydrated="true"]`) make notification permission/submission assertions deterministic in Playwright.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `PushManager.subscribe` type checks can require a `BufferSource` cast for the VAPID key `Uint8Array` under current TS lib types.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/settings.spec.ts` and `tests/settings-ui.spec.ts` now wait for settings-island hydration before click/feedback assertions.
 ---
-## 2026-02-12 14:07:09 CET - US-011
-- Migrated `src/pages/sign-up.astro` wrapper UI to the shadcn-compatible card shell pattern used for auth pages, including tokenized hierarchy (kicker, title, description, content container) while preserving Clerk sign-up functionality and authenticated redirect behavior.
-- Added frontend Playwright coverage in `tests/sign-up-ui.spec.ts` to verify migrated shell content, preserved Clerk sign-up visibility, sign-in navigation link, and mobile overflow safety.
-- Files changed: `src/pages/sign-up.astro`, `tests/sign-up-ui.spec.ts`, `prd.json`, `progress.txt`.
+## [2026-02-15 21:32:24 CET] - US-012
+- Removed unnecessary homepage hydration for `EventCard` by dropping `client:load` from upcoming and past event lists in `src/pages/index.astro`.
+- Added Playwright coverage to assert populated homepage cards remain rendered and are not nested inside `astro-island`, protecting against accidental re-hydration.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/pages/index.astro`, `tests/homepage-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - For Clerk sign-up wrapper migrations, keep the Clerk component server-rendered and migrate only the surrounding Astro shell to avoid introducing auth flow regressions.
-  - Pair wrapper `data-test-id` assertions with user-facing Clerk heading assertions so tests validate both local shell migration and external auth UI continuity.
-  - Full-suite Playwright validation remains stable with `pnpm test --workers=1` in this repo.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Static homepage event cards should remain server-rendered to avoid unnecessary client bundle and hydration overhead.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - React components in Astro hydrate only when `client:*` is present; accidental directive reintroduction can silently regress performance.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/homepage-ui.spec.ts` now contains a regression assertion (`astro-island [data-test-id="event-card"]` count `0`) for hydration-free event cards.
 ---
-## 2026-02-12 14:43:53 CET - US-012
-- Migrated `src/pages/events/new.astro` to a shadcn-compatible card shell with tokenized header/content/footer structure, shared action styling via `buttonVariants`, and updated duplicate-event notice styling while preserving form field IDs, submit API contract, and redirect behavior.
-- Replaced legacy toast feedback on event creation with inline shadcn-style feedback states (`loading`, `success`, `error`) and ensured the submit control reflects disabled/busy/loading behavior during requests.
-- Updated frontend Playwright coverage for event creation and dependent flows to assert the new shell and inline feedback patterns (`tests/event-creation.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/duplicate-event.spec.ts`), and stabilized history auth-state checks with retry guarding in `tests/history.spec.ts`.
-- Added reusable Playwright guidance for auth-sensitive `/api/test/current-user` calls in `tests/AGENTS.md`.
-- Files changed: `src/pages/events/new.astro`, `tests/event-creation.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/duplicate-event.spec.ts`, `tests/history.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-15 21:37:20 CET] - US-013
+- Replaced homepage RSVP count N+1 queries with a single grouped aggregation query (`groupBy` on `eventId` + `status`) and a per-event count map.
+- Preserved `EventCard` RSVP count output contract (`going`, `maybe`, `notGoing`) while removing per-event database round trips.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (127 passed).
+- Files changed: `src/pages/index.astro`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Event form feedback in this codebase now uses inline status panels (`data-test-id="form-feedback-panel"`) instead of transient toast nodes; tests should assert user-visible panel text and submit button state.
-  - When UI copy changes for duplicate-event banners, prefer focused substring assertions on stable meaning rather than exact phrase variants to avoid brittle failures.
-  - Authenticated full-suite runs remain prone to intermittent `/api/test/current-user` 401 responses; handling retry in evaluate-based helpers substantially reduces flaky failures.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Astro DB supports efficient grouped count aggregation for RSVP summaries, which should be preferred over per-entity fetch loops in list routes.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - RSVP status values are stored as `going`/`maybe`/`not_going`; homepage view-model mapping still needs `notGoing` key for `EventCard` props.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/pages/index.astro` now centralizes homepage RSVP aggregation logic before upcoming/past event partitioning.
 ---
-## 2026-02-12 17:40:08 CET - US-013
-- Migrated `src/pages/events/[id]/edit.astro` to the shadcn card/form shell pattern used by event creation, replacing legacy form styling with shared `Button`, `Input`, `Label`, `Textarea`, and `buttonVariants` usage while preserving all existing field IDs, prefill behavior, and update API submission flow.
-- Replaced edit-page toast messages with inline shadcn-compatible feedback states (`loading`, `success`, `error`) using the shared `form-feedback-panel` pattern and preserved redirect behavior after successful event updates.
-- Added and updated Playwright coverage in `tests/event-edit.spec.ts` for migrated card shell structure, primitive slot rendering, success feedback path, and loading/disabled/error feedback behavior during save failures.
-- Files changed: `src/pages/events/[id]/edit.astro`, `tests/event-edit.spec.ts`, `prd.json`, `progress.txt`.
+## [2026-02-15 22:17:05 CET] - US-014
+- Reworked event-detail RSVP user loading in `src/pages/events/[id].astro` to use a joined RSVP+user query (`leftJoin`) instead of manual per-RSVP user mapping patterns.
+- Added Playwright regression coverage to ensure RSVP group headings/counts and grouped user lists remain correct after the data-fetch refactor.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/pages/events/[id].astro`, `tests/event-detail-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Keep create/edit event forms visually and behaviorally aligned by sharing the same shadcn card sections (`data-slot="card-header|content|footer"`) and inline feedback contract.
-  - For migrated update forms, assert inline feedback panel content and submit busy state transitions instead of waiting for transient success/error nodes.
-  - Preserve existing form field IDs when migrating to shadcn primitives so API and test contracts remain stable.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Event detail RSVP lists should source display data from a joined RSVP+Users fetch so group rendering remains correct without query fan-out.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Playwright strict mode can collide on substring name matches (for example `Going User` within `Not Going User`); use `getByText(value, { exact: true })` for person-name assertions.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `tests/event-detail-ui.spec.ts` now includes a dedicated RSVP grouping regression (`renders RSVP groups with correct users and counts`) tied to the event-detail data-loading path.
 ---
-## 2026-02-12 17:53:04 CET - US-014
-- Migrated `src/pages/events/[id].astro` to a shadcn-compatible event detail shell using tokenized card sections, `buttonVariants` actions, and consistent RSVP/status/count/list surface patterns while preserving all existing event data rendering and RSVP action contracts.
-- Replaced RSVP toast messaging with inline feedback states (`loading`, `success`, `error`) via `data-test-id="rsvp-feedback-panel"` and preserved button disable/busy + reload behavior after successful RSVP updates.
-- Added frontend Playwright coverage in `tests/event-detail-ui.spec.ts` for migrated shell rendering, past-event behavior, and mobile overflow safety; updated RSVP-related selectors in `tests/rsvp.spec.ts` and `tests/accessibility-polish.spec.ts` to assert inline feedback.
-- Files changed: `src/pages/events/[id].astro`, `tests/event-detail-ui.spec.ts`, `tests/rsvp.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-15 22:28:04 CET] - US-015
+- Replaced history page RSVP event loading N+1 pattern with a single joined query (`leftJoin` between `Rsvps` and `Events`) scoped to the current user.
+- Preserved rendering behavior by filtering rows where joined `event` is `null`, then sorting history entries by event datetime descending before display.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/pages/history.astro`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - For event detail migrations, keep RSVP controls on stable `data-rsvp-button`/`data-status`/`data-active` attributes so existing RSVP behavior and tests remain compatible while restyling.
-  - RSVP error/success checks should target the inline feedback panel (`data-test-id="rsvp-feedback-panel"`) and `#rsvp-feedback` message text rather than transient toast selectors.
-  - Reusing `buttonVariants` on Astro `<a>` and `<button>` elements keeps interaction styling aligned with shadcn without introducing extra client islands.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - History-route RSVP cards should be sourced from one joined RSVP+event query to avoid query fan-out and keep list rendering scalable.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - `leftJoin` keeps orphaned RSVP rows; explicitly filter out `event === null` before reading event fields to keep type safety and avoid runtime null access.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/pages/history.astro` now owns the canonical joined RSVP+event history loading path and downstream descending date sort.
 ---
-## 2026-02-12 18:01:57 CET - US-015
-- Migrated `src/pages/history.astro` to the shadcn-aligned surface/list shell with tokenized card wrappers for header, empty state, and RSVP history items while preserving all existing data loading, sorting, links, and status behavior.
-- Added frontend Playwright coverage in `tests/history-ui.spec.ts` for populated and empty migrated states plus mobile overflow safety on `/history`.
-- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite).
-- Files changed: `src/pages/history.astro`, `tests/history-ui.spec.ts`, `prd.json`, `progress.txt`.
+## [2026-02-16 08:42:53 CET] - US-016
+- Refactored notification deduplication to preload `NotificationLog` state before send fan-out loops for both push and reminder-email delivery paths.
+- Removed per-user log-existence queries inside notification loops by using precomputed user-id sets keyed by event/type/channel.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/lib/event-notifications.ts`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Keep history-page migration assertions split between behavior (`tests/history.spec.ts`) and shell/polish checks (`tests/history-ui.spec.ts`) so layout changes do not weaken data-contract coverage.
-  - Reusing shared card slot markers (`data-slot="card"`) on Astro pages provides stable, cross-page assertions for migration UI checks.
-  - Continue using the `/api/test/current-user` retry helper pattern in auth-dependent history tests to avoid known intermittent 401 flakes.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Notification send paths should query dedup log state once per event/type/channel and perform in-memory membership checks during user fan-out.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Keep dedup prefetch outside `users.map(...)`; moving it inside silently reintroduces N+1 queries even if logic remains functionally correct.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/lib/event-notifications.ts` now owns batched dedup logic for both `sendPushNotificationsToOptedInUsers` and `sendEventReminderNotifications`.
 ---
-## 2026-02-12 18:15:32 CET - US-016
-- Migrated `src/pages/settings.astro` to the shadcn-aligned shell pattern with tokenized card header/content/footer sections, shared back-link action styling, and status summary surfaces while preserving existing notification settings behavior.
-- Preserved settings notification contracts by keeping existing IDs and API calls intact (`/api/settings/notifications`, `/api/settings/push-subscription`) and updated inline feedback rendering to a dedicated shadcn-style panel (`data-test-id="settings-feedback-panel"`).
-- Added frontend Playwright coverage in `tests/settings-ui.spec.ts` for migrated shell rendering, notification status surfaces, inline feedback panel behavior, and mobile overflow safety.
-- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite).
-- Files changed: `src/pages/settings.astro`, `tests/settings-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-16 08:49:24 CET] - US-017
+- Removed `ShadcnIslandDemo` from the production homepage and kept homepage event sections/duplicate action behavior unchanged.
+- Added a dedicated demo route at `/demo/shadcn-island` to host the existing React island.
+- Updated Playwright specs for shadcn island interactions to use the dedicated demo route and added a homepage regression assertion that the demo island is absent.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/pages/index.astro`, `src/pages/demo/shadcn-island.astro`, `tests/shadcn-island.spec.ts`, `tests/overlay-primitives.spec.ts`, `tests/surface-primitives.spec.ts`, `tests/homepage-ui.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Keep settings-page script selector IDs (`#permission-status`, `#saved-preference`, `#request-permission`, `#feedback`) stable during UI refactors; both runtime behavior and Playwright coverage depend on them.
-  - For settings UI migration checks, pair existing behavior-focused specs (`tests/settings.spec.ts`) with a focused shell/mobile spec (`tests/settings-ui.spec.ts`) to avoid weakening API-behavior assertions.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Keep dev/demo component showcases on dedicated `/demo/*` routes so production pages stay focused and avoid extra client hydration in core flows.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Moving a hydrated island off a primary page requires updating all helper navigations in related Playwright specs, not just one test file.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - `src/pages/demo/shadcn-island.astro` is now the canonical route for shadcn primitive and island-interaction tests.
 ---
-## 2026-02-12 18:34:15 CET - US-017
-- Translated user-facing copy to Norwegian across the targeted non-API pages (`index`, `access-denied`, `sign-in`, `sign-up`, `events/new`, `events/[id]/edit`, `events/[id]`, `history`, `settings`) including inline validation/feedback states while preserving routes, payload contracts, and runtime behavior.
-- Localized shared shell/component UI text rendered on those pages (`src/layouts/Layout.astro`, `src/components/EventCard.tsx`, `src/components/ShadcnIslandDemo.tsx`) so header actions, badges, and demo interactions match Norwegian interface language.
-- Updated Playwright coverage to Norwegian accessible names and messages, fixed localization-related selector collisions, and kept behavior assertions intact across auth, event, RSVP, history, settings, responsive, and primitive suites.
-- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite, 111 passed).
-- Files changed: `src/pages/index.astro`, `src/pages/access-denied.astro`, `src/pages/sign-in.astro`, `src/pages/sign-up.astro`, `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `src/pages/events/[id].astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `src/layouts/Layout.astro`, `src/components/EventCard.tsx`, `src/components/ShadcnIslandDemo.tsx`, `tests/access-denied-ui.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/app-shell.spec.ts`, `tests/auth.spec.ts`, `tests/duplicate-event.spec.ts`, `tests/event-creation.spec.ts`, `tests/event-detail-ui.spec.ts`, `tests/event-edit.spec.ts`, `tests/events.spec.ts`, `tests/history-ui.spec.ts`, `tests/history.spec.ts`, `tests/overlay-primitives.spec.ts`, `tests/responsive.spec.ts`, `tests/rsvp.spec.ts`, `tests/settings.spec.ts`, `tests/settings-ui.spec.ts`, `tests/shadcn-island.spec.ts`, `tests/sign-in-ui.spec.ts`, `tests/sign-up-ui.spec.ts`, `tests/surface-primitives.spec.ts`, `tests/typography-fonts.spec.ts`, `tests/theme-baseline.spec.ts`, `tests/global.setup.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
+## [2026-02-16 08:58:55 CET] - US-018
+- Centralized local user create-on-read behavior into a shared helper (`ensureLocalUser` / `getLocalUserByClerkId`) in `src/lib/local-user-sync.ts`.
+- Replaced duplicated Clerk-to-`Users` sync blocks across event APIs, settings APIs, sync-user API, and page routes (`index`, `history`, `settings`) with the shared helper while preserving race-safe unique-constraint handling.
+- Ran required quality checks: `pnpm astro check` and `pnpm test` (128 passed).
+- Files changed: `src/lib/local-user-sync.ts`, `src/pages/api/events/create.ts`, `src/pages/api/events/update.ts`, `src/pages/api/settings/notifications.ts`, `src/pages/api/settings/push-subscription.ts`, `src/pages/api/sync-user.ts`, `src/pages/index.astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `prd.json`, `progress.txt`
 - **Learnings for future iterations**
-  - Localization refactors should update both static shell text and inline script-driven feedback text to keep accessibility names and error/loading assertions in sync.
-  - Badge/count assertions can become ambiguous after translation (substring overlap); use targeted test IDs (`rsvp-going`, `rsvp-maybe`, `rsvp-not-going`) instead of plain text matching.
-  - For external auth widgets (Clerk), keep assertions tolerant with regex around provider-rendered headings while asserting app-owned wrapper copy exactly.
----
-## 2026-02-12 20:38:00 CET - US-018
-- Removed deprecated legacy UI assets that are no longer used after shadcn migration: deleted `src/components/Welcome.astro`, `src/assets/astro.svg`, and `src/assets/background.svg`.
-- Removed unused legacy global CSS toast rules (`.toast-message`) from `src/styles/global.css` since UI feedback now uses inline shadcn-compatible panels.
-- Updated `README.md` project structure to reflect current app layout and remove references to deleted starter artifacts.
-- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite, 111 passed).
-- Files changed: `src/components/Welcome.astro`, `src/assets/astro.svg`, `src/assets/background.svg`, `src/styles/global.css`, `README.md`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - When a UI migration reaches parity, explicitly search for orphaned starter files and stale selectors (`rg`) and remove them in the same story to keep one authoritative UI path.
-  - Keep README structure snippets aligned with real repository contents when deleting legacy scaffolding so onboarding docs do not point to removed files.
----
-## 2026-02-12 20:42:53 CET - US-019
-- Added migration completion documentation in `docs/shadcn-migration-checklist.md` with explicit old-pattern to shadcn replacement mapping and completion status.
-- Updated `README.md` with shadcn usage conventions, migration completion references, and explicit approved exceptions/follow-up items.
-- Verified required quality checks with `pnpm astro check` and `pnpm test --workers=1` (full suite, 111 passed).
-- Files changed: `README.md`, `docs/shadcn-migration-checklist.md`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - Keep migration documentation split between quick-start conventions (`README.md`) and detailed replacement/status mapping (`docs/shadcn-migration-checklist.md`) so maintainers can update both without ambiguity.
-  - Record explicit exceptions (for example provider-rendered auth widgets) in migration docs to prevent future refactors from unintentionally breaking external integrations.
-  - When completing documentation-only stories, still run full required gates (`pnpm astro check`, `pnpm test --workers=1`) before marking story status as passed.
----
-## 2026-02-12 22:47:34 CET - US-001
-- Adopted BiomeJS as the project lint/format gate by adding `@biomejs/biome`, introducing `biome.json`, and wiring scripts for local checks (`pnpm lint` -> `biome check .`), CI checks (`pnpm lint:ci` -> `biome ci .`), and formatting (`pnpm format`, `pnpm format:check`).
-- Added PR lint workflow at `.github/workflows/biome.yml` to run Biome on pull requests, and updated `README.md` command docs for local vs CI Biome usage.
-- Enabled Biome v2.3 Astro/HTML and Tailwind compatibility in config (`html.experimentalFullSupportEnabled`, CSS `tailwindDirectives`) and applied repository-wide formatting for current files.
-- Verified required gates: `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, `pnpm test` (111 passed).
-- Files changed: `biome.json`, `.github/workflows/biome.yml`, `package.json`, `README.md`, `pnpm-lock.yaml`, `prd.json`, `progress.txt`, plus repository-wide Biome formatting updates across existing source and test files.
-- **Learnings for future iterations**
-  - Biome 2.3 Astro support requires explicit `html.experimentalFullSupportEnabled` to lint/format Astro/HTML files.
-  - Tailwind v4 `@theme` directives in CSS require enabling `css.parser.tailwindDirectives` in `biome.json`.
-  - Keep local and CI Biome commands split: `biome check` locally for iterative fixes, `biome ci` in CI for strict gating.
----
-## 2026-02-13 00:01:50 CET - US-002
-- Implemented semantic header navigation links in `src/layouts/Layout.astro` with an explicit `<nav aria-label="Hovednavigasjon">`, plain-text link styling, hover underline affordance, route-aware `aria-current="page"`, and persistent active underline indicators while keeping destinations unchanged (`/events/new`, `/history`, `/settings`).
-- Added Playwright coverage updates in `tests/app-shell.spec.ts` for semantic nav presence, active-link indicator assertions, and keyboard focus-visible styling checks; tightened header logo heading locator to avoid strict-mode collisions with similarly named content headings.
-- Stabilized flaky duplicate-event navigation assertions by adding a bounded retry helper for `page.goto()` in `tests/duplicate-event.spec.ts` to handle intermittent local dev-server aborts during long serial runs.
-- Verified required quality checks with `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, and `pnpm test --workers=1` (113 passed).
-- Files changed: `src/layouts/Layout.astro`, `tests/app-shell.spec.ts`, `tests/duplicate-event.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - Use `aria-current="page"` plus a persistent text-decoration class for active header links so visual active state and accessibility state stay in sync.
-  - In authenticated shell tests, scope generic heading locators to `role="banner"` and use `exact: true` when homepage content can contain similar heading text.
-  - A lightweight in-spec `page.goto()` retry helper is preferable to inflating global test timeouts when occasional detached-frame navigation flakes appear.
----
-## 2026-02-13 09:43:16 CET - US-003
-- Added an authenticated account dropdown in `src/layouts/Layout.astro` with an `Account` trigger and menu items `Profile`, `Settings`, and `Log out` in the required order.
-- Implemented accessible menu behavior for the header dropdown (menu semantics, Enter/Space open path via button semantics, Escape close support, outside-click close, and preserved keyboard focus patterns).
-- Added logged-out header state in `src/layouts/Layout.astro` that shows only a `Login` action link.
-- Added a protected profile page at `src/pages/profile.astro` and wired the new `Profile` menu destination.
-- Added/updated Playwright coverage for the new header auth menu flows in `tests/auth-header-menu.spec.ts` and aligned dependent shell/auth/responsive tests (`tests/app-shell.spec.ts`, `tests/auth.spec.ts`, `tests/responsive.spec.ts`).
-- Verified quality gates: `pnpm lint`, `pnpm astro check`, and `pnpm test` (117 passed).
-- Files changed: `src/layouts/Layout.astro`, `src/pages/profile.astro`, `tests/auth-header-menu.spec.ts`, `tests/app-shell.spec.ts`, `tests/auth.spec.ts`, `tests/responsive.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - Header auth-menu tests are most stable when they assert item order, semantics, and keyboard interactions directly, and avoid forcing session-destructive logout flows in the shared authenticated suite.
-  - When introducing authenticated account actions in the shared layout, update existing shell/auth/responsive specs in the same story to keep baseline assertions aligned with the new header interaction model.
-  - Keep authenticated/unauthenticated header behavior explicitly covered in dedicated specs (`@unauth` + authenticated describe blocks) so account-state regressions are caught early.
----
-## 2026-02-13 13:40:39 CET - US-004
-- Completed an app-wide spacing audit covering primary routes and shared shell/navigation surfaces, with desktop and mobile observations documented per area.
-- Added a tracked, actionable spacing checklist in `docs/spacing-audit-checklist.md` with concrete issue IDs (`SP-001` to `SP-008`), target files/components, and preserved spacing conventions.
-- Added documentation discoverability updates in `README.md` and resolved a pre-existing layout type mismatch in `src/layouts/Layout.astro` (`navLinks` icon narrowing) so required quality gates pass.
-- Verified required quality checks with `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, and `pnpm test --workers=1` (117 passed).
-- Files changed: `docs/spacing-audit-checklist.md`, `README.md`, `src/layouts/Layout.astro`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - For spacing-only stories, capture an audit first with route-level desktop/mobile notes and explicit fix IDs before implementation work begins.
-  - `Layout.astro` nav link literals should use explicit icon literal typing (`'clock' | 'settings'`) to keep Astro prop inference compatible with typed React island props.
-  - Keep spacing cleanup scoped to existing tokens/utilities and use checklist IDs in PR notes/tests so cross-route refactors remain reviewable.
----
-## 2026-02-13 21:35:18 CET - US-005
-- Applied spacing fixes from `docs/spacing-audit-checklist.md` across shared layouts and key views: removed homepage double outer padding, normalized authenticated shell wrappers (`mt-6 sm:mt-10`, zero extra horizontal shell padding inside `Layout` main), aligned auth wrapper top spacing, added missing profile shell wrapper, and standardized key card paddings (`px-6 sm:px-8`) where shells should match.
-- Harmonized header/mobile-menu spacing rhythm while preserving accessibility touch targets (`min-h-11 min-w-11`) by tightening nav/action spacing in `src/layouts/Layout.astro` and `src/components/HeaderMobileSheet.tsx`.
-- Added Playwright spacing coverage in `tests/spacing-consistency-ui.spec.ts` for authenticated and unauthenticated shells (mobile + desktop computed style checks), and stabilized existing flaky specs with bounded `goto` retries and response-synchronized assertions across affected tests.
-- Verified required quality gates: `pnpm lint`, `pnpm astro check`, and `pnpm test --workers=1` (120 passed).
-- Files changed: `src/pages/index.astro`, `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `src/pages/events/[id].astro`, `src/pages/history.astro`, `src/pages/settings.astro`, `src/pages/profile.astro`, `src/pages/sign-in.astro`, `src/pages/sign-up.astro`, `src/pages/access-denied.astro`, `src/layouts/Layout.astro`, `src/components/HeaderMobileSheet.tsx`, `docs/spacing-audit-checklist.md`, `tests/spacing-consistency-ui.spec.ts`, `tests/accessibility-polish.spec.ts`, `tests/event-creation.spec.ts`, `tests/events.spec.ts`, `tests/helpers/api-helpers.ts`, `tests/overlay-primitives.spec.ts`, `tests/responsive.spec.ts`, `tests/rsvp.spec.ts`, `tests/theme-baseline.spec.ts`, `tests/AGENTS.md`, `progress.txt`, `prd.json`.
-- **Learnings for future iterations**
-  - Keep page-level spacing regressions deterministic by asserting computed shell spacing (`margin-top` and horizontal padding) via stable `data-test-id` shell hooks at both mobile and desktop breakpoints.
-  - For RSVP error-path tests, synchronize assertions with the `/api/rsvp` response and validate inline feedback panel content; role-name loading assertions are brittle because button `aria-label` values remain constant.
-  - Reusing a local bounded `gotoWithRetry` helper in long serial suites materially improves reliability for intermittent local dev-server navigation failures without increasing global timeouts.
----
-## 2026-02-13 21:41:12 CET - US-006
-- Added shared Zod-based validation primitives in `src/lib/validation.ts`, including a typed `parseWithSchema()` helper and `normalizeValidationError()` for consistent parse and error normalization behavior.
-- Standardized a reusable validation error contract with top-level `error: 'Validation failed'`, dot-path `fieldErrors`, and structured `issues` metadata suitable for form and API boundaries.
-- Added unit coverage in `src/lib/validation.test.ts` for successful parsing, nested field error normalization, and root-level (`_form`) error mapping.
-- Verified required quality gates: `pnpm lint`, `pnpm astro check`, `pnpm test:unit`, and `pnpm test --workers=1` (120 passed).
-- Files changed: `package.json`, `pnpm-lock.yaml`, `src/lib/validation.ts`, `src/lib/validation.test.ts`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - Use `parseWithSchema()` instead of direct `safeParse` in new form/API validation to keep success/failure handling and response shaping consistent.
-  - Keep error paths in dot notation (for example `event.title`) and reserve `_form` for payload-wide failures to simplify UI field mapping.
-  - Preserve the top-level `error` string in validation responses to stay aligned with existing API error handling conventions in this codebase.
----
-## 2026-02-13 22:28:51 CET - US-007
-- Added shared form schemas in `src/lib/event-form-validation.ts` using Zod + `parseWithSchema()` for create/edit event payloads, including Norwegian field-specific validation messages and typed create/update validators.
-- Updated event create/edit pages to use explicit client-side Zod validation before submit logic, render field-level errors (`data-test-id="field-error-*"`), keep inline feedback panel behavior, and block invalid submissions from reaching API routes.
-- Added Playwright coverage for invalid form submissions in `tests/event-creation.spec.ts` and `tests/event-edit.spec.ts`, asserting user-facing field errors and that no request is sent to `/api/events/create` or `/api/events/update` when validation fails.
-- Files changed: `src/lib/event-form-validation.ts`, `src/pages/events/new.astro`, `src/pages/events/[id]/edit.astro`, `tests/event-creation.spec.ts`, `tests/event-edit.spec.ts`, `tests/AGENTS.md`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - Shared form validators should normalize all input values through one schema entrypoint before UI submit state changes, so invalid states never trigger loading/busy transitions.
-  - Pair form-level feedback (`form-feedback-panel`) with per-field error hooks (`field-error-*`) to keep validation UX clear and make Playwright assertions deterministic.
-  - When validating submit blocking behavior, intercept the API route and assert request count remains zero in addition to visible error messaging.
----
-## 2026-02-14 08:29:23 CET - US-008
-- Added shared API-boundary Zod validation in `src/lib/api-validation.ts` for event create/update and RSVP payloads, plus reusable malformed-JSON payload handling and notification summary schema checks.
-- Refactored `src/pages/api/events/create.ts`, `src/pages/api/events/update.ts`, and `src/pages/api/rsvp.ts` to validate incoming payloads before business logic, return normalized `{ error: 'Validation failed', fieldErrors, issues }` responses on bad input, and guard notification summary shape mismatches with controlled fallbacks instead of uncaught failures.
-- Added unit coverage in `src/lib/api-validation.test.ts` for request coercion/normalization, invalid payload error shape, RSVP enum rejection, notification summary validation, and form-level JSON parse error payload creation.
-- Verified quality gates with `pnpm lint`, `pnpm astro check`, and `pnpm test` (121 passed).
-- Files changed: `src/lib/api-validation.ts`, `src/lib/api-validation.test.ts`, `src/pages/api/events/create.ts`, `src/pages/api/events/update.ts`, `src/pages/api/rsvp.ts`, `prd.json`, `progress.txt`.
-- **Learnings for future iterations**
-  - Keep API route validation in shared helpers (`src/lib/api-validation.ts`) so request contracts stay aligned across endpoints and tests.
-  - Treat malformed JSON as a form-level validation issue (`_form`) and return the shared validation error contract instead of route-specific ad-hoc strings.
-  - Validate downstream service summaries (for example notification counts) before including them in API responses to prevent internal shape drift from leaking as runtime exceptions.
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Local user sync is now a shared service concern in `src/lib/local-user-sync.ts`; feature code should call the helper instead of re-implementing sync logic.
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Settings APIs should call `ensureLocalUser(...)` first, then perform explicit `update(Users)` writes for notification/subscription fields so behavior is consistent for both first-time and existing users.
+  - Useful context (e.g., "the evaluation panel is in component X")
+    - Event create/update ownership paths now rely on the same local-user sync helper, making auth and ownership behavior consistent across route types.
 ---

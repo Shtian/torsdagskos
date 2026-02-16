@@ -1,21 +1,15 @@
 {
   "project": "Torsdagskos",
-  "branchName": "ralph/biome-header-spacing-zod",
-  "description": "Adopt BiomeJS, refine header navigation UX, normalize spacing, and add scoped Zod validation for forms and API boundaries.",
+  "branchName": "ralph/code-review-remediation-2026-02-14",
+  "description": "Address code review findings by fixing auth and timezone bugs, replacing fragile manual DOM scripts with typed React islands, and removing data-access/performance bottlenecks.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Adopt BiomeJS as the lint and format gate",
-      "description": "As a developer, I want BiomeJS configured as the single lint/format tool so code quality checks are consistent and faster.",
+      "title": "Add event ownership support for authorization",
+      "description": "As a developer, I want events to record ownership so edit permissions can be enforced server-side.",
       "acceptanceCriteria": [
-        "Add and configure BiomeJS for this project",
-        "Expose Biome scripts in package scripts for lint and format checks",
-        "Remove or align conflicting lint/format tooling so only one gate is active",
-        "Update developer docs with Biome commands",
-        "biome check passes",
-        "add workflow file for linting on pull requests that runs 'biome ci .'",
-        "astro check passes",
-        "unit tests pass",
+        "Add an event owner reference in the events schema and corresponding migration",
+        "Existing event create flow persists owner information for new records",
         "Typecheck passes"
       ],
       "priority": 1,
@@ -24,19 +18,12 @@
     },
     {
       "id": "US-002",
-      "title": "Convert header navigation to semantic link affordances",
-      "description": "As a user, I want header navigation to look and behave like links so available navigation actions are immediately clear.",
+      "title": "Enforce event edit authorization in update API",
+      "description": "As an authenticated user, I want only authorized users to edit events so event data cannot be changed by unrelated users.",
       "acceptanceCriteria": [
-        "Header navigation actions render as semantic anchor links",
-        "Navigation links use plain-text styling with underline on hover",
-        "Current route has a persistent active indicator",
-        "Visible keyboard focus styles are present for all header links",
-        "Navigation destinations remain unchanged",
-        "biome check passes",
-        "astro check passes",
-        "unit tests pass",
-        "playwright tests pass for changed header navigation flows",
-        "Verify in browser using dev-browser skill",
+        "Update endpoint rejects unauthorized edits with a 403 response",
+        "Authorized owner/admin edit requests still succeed",
+        "Tests pass",
         "Typecheck passes"
       ],
       "priority": 2,
@@ -45,19 +32,13 @@
     },
     {
       "id": "US-003",
-      "title": "Add authenticated profile dropdown in the header",
-      "description": "As a logged-in user, I want a header profile dropdown so I can quickly access account actions.",
+      "title": "Validate RSVP target event state server-side",
+      "description": "As a user, I want RSVP submissions to fail predictably for invalid or closed events so API behavior is consistent.",
       "acceptanceCriteria": [
-        "Authenticated header state shows a profile menu trigger",
-        "Dropdown contains exactly Profile, Settings, and Log out in that order",
-        "Dropdown supports keyboard interaction for Enter, Space, and Escape",
-        "Log out ends the session and updates header state",
-        "Logged-out header state shows only the Login link",
-        "biome check passes",
-        "astro check passes",
-        "unit tests pass",
-        "playwright tests pass for auth header menu flows",
-        "Verify in browser using dev-browser skill",
+        "RSVP API verifies that the target event exists before insert/update",
+        "RSVP API rejects RSVPs for past events with a controlled 4xx response",
+        "Invalid event IDs return a structured error payload",
+        "Tests pass",
         "Typecheck passes"
       ],
       "priority": 3,
@@ -66,36 +47,27 @@
     },
     {
       "id": "US-004",
-      "title": "Audit spacing inconsistencies and document actionable fixes",
-      "description": "As a developer, I want an app-wide spacing audit so fixes can be applied consistently without introducing a new spacing scale.",
+      "title": "Use Clerk-native sign-out instead of manual cookie deletion",
+      "description": "As a user, I want logout to consistently terminate my session so auth state remains reliable across routes.",
       "acceptanceCriteria": [
-        "Review all primary routes and key feature views for spacing inconsistencies",
-        "Produce a tracked checklist of concrete spacing issues with target files/components",
-        "Audit confirms existing spacing/token conventions to preserve",
-        "Include desktop and mobile breakpoint observations in the checklist",
-        "biome check passes",
-        "astro check passes",
-        "unit tests pass",
-        "Typecheck passes"
+        "Manual cookie deletion logout logic is removed from header implementations",
+        "Header logout actions use Clerk-supported sign-out flow",
+        "Authenticated logout redirects to sign-in and clears session state",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
       "passes": true,
-      "notes": ""
+      "notes": "fix already made"
     },
     {
       "id": "US-005",
-      "title": "Apply spacing fixes across shared layouts and key views",
-      "description": "As a user, I want consistent spacing across common layouts and high-traffic pages so the interface feels polished and predictable.",
+      "title": "Fix create-event timezone conversion to Europe/Oslo",
+      "description": "As an event creator, I want submitted date/time values interpreted in Europe/Oslo so stored event times are correct regardless of browser locale.",
       "acceptanceCriteria": [
-        "Fix all items from the spacing audit checklist in scoped shared layouts and key views",
-        "Do not introduce a new spacing scale; use existing tokens/conventions only",
-        "Header, forms, lists, and content sections keep layout behavior without regressions",
-        "Responsive checks pass for primary desktop and mobile breakpoints",
-        "biome check passes",
-        "astro check passes",
-        "unit tests pass",
-        "playwright tests pass for affected layout flows",
-        "Verify in browser using dev-browser skill",
+        "Create-event submit flow converts date and time inputs using explicit Europe/Oslo semantics",
+        "Stored ISO datetime values match expected Oslo local time",
+        "Tests pass",
         "Typecheck passes"
       ],
       "priority": 5,
@@ -104,15 +76,12 @@
     },
     {
       "id": "US-006",
-      "title": "Create shared Zod validation primitives and error mapping",
-      "description": "As a developer, I want shared Zod schema and error helpers so form and API validation can stay consistent.",
+      "title": "Fix edit-event timezone conversion to Europe/Oslo",
+      "description": "As an event editor, I want updated date/time values interpreted in Europe/Oslo so edited event times remain accurate.",
       "acceptanceCriteria": [
-        "Add reusable validation module(s) for schema parsing and normalized error output",
-        "Define a consistent validation error shape aligned with existing project conventions",
-        "Add unit tests for shared validation helpers",
-        "biome check passes",
-        "astro check passes",
-        "unit tests pass",
+        "Edit-event submit flow converts date and time inputs using explicit Europe/Oslo semantics",
+        "Updated ISO datetime values match expected Oslo local time",
+        "Tests pass",
         "Typecheck passes"
       ],
       "priority": 6,
@@ -121,20 +90,14 @@
     },
     {
       "id": "US-007",
-      "title": "Add Zod validation to scoped forms",
-      "description": "As a user, I want invalid form input blocked with clear field errors so I can correct issues before submitting.",
+      "title": "Migrate desktop profile menu script to React island",
+      "description": "As a user, I want account menu interactions to be robust and accessible without fragile manual DOM listeners.",
       "acceptanceCriteria": [
-        "Apply explicit Zod schemas to the agreed in-scope forms",
-        "Invalid submissions are blocked before submit logic continues",
-        "Field-level, user-friendly validation messages are displayed",
-        "Valid submissions continue to work without regression",
-        "Validation logic uses shared helpers where applicable",
-        "biome check passes",
-        "astro check passes",
-        "unit tests pass",
-        "playwright tests pass for updated form flows",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
+        "Desktop profile menu is implemented as a typed React island",
+        "Menu behavior preserves keyboard and pointer accessibility",
+        "Inline imperative script for profile menu is removed from layout",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
       "passes": true,
@@ -142,20 +105,162 @@
     },
     {
       "id": "US-008",
-      "title": "Add Zod validation at scoped API boundaries",
-      "description": "As a developer, I want API request and response payloads validated so invalid data is rejected early and consistently.",
+      "title": "Migrate new-event form controller to React island",
+      "description": "As a user, I want new-event validation and submit behavior managed in one typed component so form behavior is less fragile.",
       "acceptanceCriteria": [
-        "Validate in-scope incoming API payloads with Zod before business logic",
-        "Add response or consumed payload validation where applicable in scope",
-        "Validation failures return controlled, consistent error responses",
-        "Schema mismatches do not surface as uncaught exceptions",
-        "Existing in-scope API flows remain green in tests",
-        "biome check passes",
-        "astro check passes",
-        "unit tests pass",
-        "Typecheck passes"
+        "New-event form interactions are implemented in a typed React island",
+        "Client-side validation and inline feedback behavior remain equivalent",
+        "Imperative DOMContentLoaded script is removed from new-event page",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Migrate edit-event form controller to React island",
+      "description": "As a user, I want edit-event validation and submit behavior to share robust typed logic with reduced duplication.",
+      "acceptanceCriteria": [
+        "Edit-event form interactions are implemented in a typed React island",
+        "Shared logic is reused between new and edit form controllers where appropriate",
+        "Imperative DOMContentLoaded script is removed from edit-event page",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Migrate RSVP interaction script to React island",
+      "description": "As a user, I want RSVP updates to feel responsive without full-page reloads or brittle manual button state restoration.",
+      "acceptanceCriteria": [
+        "Event detail RSVP actions are handled by a typed React island",
+        "RSVP updates use optimistic/local state and do not call window.location.reload",
+        "Inline feedback and busy state behavior remains accessible",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Migrate settings notification script to typed island",
+      "description": "As a user, I want notification permission and subscription management to use typed, maintainable UI logic.",
+      "acceptanceCriteria": [
+        "Settings page notification interactions are moved to a typed React island",
+        "`@ts-nocheck` is removed from the settings interaction implementation",
+        "Push subscription and preference APIs continue to be called correctly",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Remove unnecessary EventCard hydration",
+      "description": "As a user, I want event list pages to load faster by avoiding client hydration for static card content.",
+      "acceptanceCriteria": [
+        "EventCard rendering on index page no longer uses client hydration directives",
+        "Event cards preserve existing link and content behavior",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Replace homepage RSVP counting N+1 queries",
+      "description": "As a developer, I want homepage RSVP counts fetched via aggregation so page load scales with event volume.",
+      "acceptanceCriteria": [
+        "Homepage fetches RSVP counts with grouped aggregation instead of one query per event",
+        "Displayed RSVP counts remain unchanged for each event card",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Replace event-detail RSVP user lookup N+1 queries",
+      "description": "As a developer, I want event detail RSVP user data loaded without per-row queries so the route is more efficient and reliable.",
+      "acceptanceCriteria": [
+        "Event detail fetches RSVP users via join or batched query strategy",
+        "RSVP group lists and counts remain correct",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Replace history event lookup N+1 queries",
+      "description": "As a developer, I want history items loaded without per-RSVP event queries so the history route scales better.",
+      "acceptanceCriteria": [
+        "History page loads RSVP+event data using join or batched fetch strategy",
+        "History ordering and displayed fields remain unchanged",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Prefetch notification log state to remove send-time N+1 checks",
+      "description": "As a developer, I want notification dedup checks performed in batch so reminder and push delivery loops avoid per-user existence queries.",
+      "acceptanceCriteria": [
+        "Notification send logic preloads existing log entries for target event/type/channel",
+        "Per-user notification loops no longer execute one log-existence query each",
+        "Notification dedup behavior remains correct",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Move ShadcnIslandDemo out of production homepage",
+      "description": "As a user, I want the homepage focused on product content so demo components do not add noise in the primary flow.",
+      "acceptanceCriteria": [
+        "ShadcnIslandDemo is removed from production homepage",
+        "Demo remains available on a dedicated development/demo route",
+        "Homepage functional behavior remains unchanged",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Centralize local user-sync behavior",
+      "description": "As a developer, I want one reusable user-sync path so create-on-read logic is consistent across routes and APIs.",
+      "acceptanceCriteria": [
+        "Extract shared user-sync helper/service used by pages and API routes",
+        "Duplicate ad-hoc user creation blocks are removed from in-scope files",
+        "Behavior remains safe under concurrent requests",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 18,
       "passes": true,
       "notes": ""
     }

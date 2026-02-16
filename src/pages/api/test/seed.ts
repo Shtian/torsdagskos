@@ -70,6 +70,8 @@ export const POST: APIRoute = async ({ request }) => {
         const [event] = await db
           .insert(Events)
           .values({
+            ownerId:
+              typeof data.ownerId === 'number' ? data.ownerId : undefined,
             title: data.title,
             description: data.description,
             dateTime: new Date(data.dateTime),

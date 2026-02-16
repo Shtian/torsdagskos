@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
-import { db, Users, eq } from 'astro:db';
-import { clerkClient } from '@clerk/astro/server';
+import { ensureLocalUser } from '../../lib/local-user-sync';
 
 export const POST: APIRoute = async (context) => {
   const { userId } = context.locals.auth();
@@ -13,27 +12,7 @@ export const POST: APIRoute = async (context) => {
   }
 
   try {
-    const user = await clerkClient(context).users.getUser(userId);
-
-    // Check if user exists in local database
-    const existingUser = await db
-      .select()
-      .from(Users)
-      .where(eq(Users.clerkUserId, userId))
-      .get();
-
-    if (!existingUser) {
-      // Sync user to local database
-      await db.insert(Users).values({
-        clerkUserId: userId,
-        email: user.emailAddresses[0]?.emailAddress || '',
-        name:
-          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-          user.emailAddresses[0]?.emailAddress ||
-          'User',
-        createdAt: new Date(),
-      });
-    }
+    await ensureLocalUser(context, userId);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

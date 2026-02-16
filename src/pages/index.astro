@@ -1,8 +1,15 @@
 ---
+
+
+
+
+
+
+
 import Layout from '../layouts/Layout.astro';
-import ShadcnIslandDemo from '../components/ShadcnIslandDemo';
 import { EventCard } from '../components/EventCard';
 import { buttonVariants } from '@/components/ui/button';
+import { ensureLocalUser } from '@/lib/local-user-sync';
 
 
 
@@ -10,45 +17,16 @@ import { buttonVariants } from '@/components/ui/button';
 
 
 
-import { db, Users, Events, Rsvps, eq } from 'astro:db';
-import { clerkClient } from '@clerk/astro/server';
+import { db, Events, Rsvps, count } from 'astro:db';
 
 // Get authenticated user
 const { userId } = Astro.locals.auth();
 
-let user = null;
-
-// Sync user to local database if not exists
-if (userId) {
-  user = await clerkClient(Astro).users.getUser(userId);
-
-  const existingUser = await db
-    .select()
-    .from(Users)
-    .where(eq(Users.clerkUserId, userId))
-    .get();
-
-  if (!existingUser) {
-    try {
-      await db.insert(Users).values({
-        clerkUserId: userId,
-        email: user.emailAddresses[0]?.emailAddress || '',
-        name:
-          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-          user.emailAddresses[0]?.emailAddress ||
-          'User',
-        createdAt: new Date(),
-      });
-    } catch (error) {
-      // Ignore unique constraint errors - user was already created by concurrent request
-      if (
-        !(error instanceof Error && error.message.includes('UNIQUE constraint'))
-      ) {
-        throw error;
-      }
-    }
-  }
+if (!userId) {
+  return Astro.redirect('/sign-in');
 }
+
+await ensureLocalUser(Astro, userId);
 
 // Fetch all events
 const allEvents = await db.select().from(Events).all();
@@ -62,32 +40,37 @@ const mostRecentEvent =
       )[0]
     : null;
 
-// Get RSVP counts for each event
-const eventsWithRsvps = await Promise.all(
-  allEvents.map(async (event) => {
-    const rsvps = await db
-      .select()
-      .from(Rsvps)
-      .where(eq(Rsvps.eventId, event.id))
-      .all();
+const defaultRsvpCounts = () => ({ going: 0, maybe: 0, notGoing: 0 });
 
-    const rsvpCounts = { going: 0, maybe: 0, notGoing: 0 };
-    for (const rsvp of rsvps) {
-      if (rsvp.status === 'going') {
-        rsvpCounts.going += 1;
-      } else if (rsvp.status === 'maybe') {
-        rsvpCounts.maybe += 1;
-      } else if (rsvp.status === 'not_going') {
-        rsvpCounts.notGoing += 1;
-      }
-    }
+// Fetch RSVP counts in one grouped query to avoid per-event database round trips.
+const groupedRsvpCounts = await db
+  .select({
+    eventId: Rsvps.eventId,
+    status: Rsvps.status,
+    total: count(),
+  })
+  .from(Rsvps)
+  .groupBy(Rsvps.eventId, Rsvps.status)
+  .all();
 
-    return {
-      ...event,
-      rsvpCounts,
-    };
-  }),
-);
+const rsvpCountsByEvent = new Map<number, ReturnType<typeof defaultRsvpCounts>>();
+
+for (const row of groupedRsvpCounts) {
+  const counts = rsvpCountsByEvent.get(row.eventId) ?? defaultRsvpCounts();
+  if (row.status === 'going') {
+    counts.going = row.total;
+  } else if (row.status === 'maybe') {
+    counts.maybe = row.total;
+  } else if (row.status === 'not_going') {
+    counts.notGoing = row.total;
+  }
+  rsvpCountsByEvent.set(row.eventId, counts);
+}
+
+const eventsWithRsvps = allEvents.map((event) => ({
+  ...event,
+  rsvpCounts: rsvpCountsByEvent.get(event.id) ?? defaultRsvpCounts(),
+}));
 
 // Separate into upcoming and past events (Europe/Oslo timezone)
 const now = new Date();
@@ -125,8 +108,6 @@ function formatEventDate(date: Date): string {
     class="mx-auto mt-6 w-full max-w-[75rem] pb-8 sm:mt-10"
     data-test-id="homepage-shell"
   >
-    <ShadcnIslandDemo client:load />
-
     <section class="space-y-4" data-test-id="homepage-upcoming">
       <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
         <div
@@ -177,7 +158,6 @@ function formatEventDate(date: Date): string {
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {upcomingEvents.map(event => (
                 <EventCard
-                  client:load
                   id={event.id}
                   title={event.title}
                   dateTime={formatEventDate(event.dateTime)}
@@ -206,7 +186,6 @@ function formatEventDate(date: Date): string {
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {pastEvents.map(event => (
                   <EventCard
-                    client:load
                     id={event.id}
                     title={event.title}
                     dateTime={formatEventDate(event.dateTime)}

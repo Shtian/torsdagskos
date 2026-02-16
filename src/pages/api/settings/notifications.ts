@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { clerkClient } from '@clerk/astro/server';
 import { db, Users, eq } from 'astro:db';
+import { ensureLocalUser } from '../../../lib/local-user-sync';
 
 export const POST: APIRoute = async (context) => {
   const { userId } = context.locals.auth();
@@ -23,31 +23,12 @@ export const POST: APIRoute = async (context) => {
       });
     }
 
-    const existingUser = await db
-      .select()
-      .from(Users)
-      .where(eq(Users.clerkUserId, userId))
-      .get();
+    const localUser = await ensureLocalUser(context, userId);
 
-    if (!existingUser) {
-      const clerkUser = await clerkClient(context).users.getUser(userId);
-
-      await db.insert(Users).values({
-        clerkUserId: userId,
-        email: clerkUser.emailAddresses[0]?.emailAddress || '',
-        name:
-          `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
-          clerkUser.emailAddresses[0]?.emailAddress ||
-          'User',
-        browserNotificationsEnabled: enabled,
-        createdAt: new Date(),
-      });
-    } else {
-      await db
-        .update(Users)
-        .set({ browserNotificationsEnabled: enabled })
-        .where(eq(Users.id, existingUser.id));
-    }
+    await db
+      .update(Users)
+      .set({ browserNotificationsEnabled: enabled })
+      .where(eq(Users.id, localUser.id));
 
     return new Response(
       JSON.stringify({

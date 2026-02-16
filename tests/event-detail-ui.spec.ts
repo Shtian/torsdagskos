@@ -1,5 +1,14 @@
 import { test, expect } from './fixtures';
-import { createTestEvent, cleanupTestData } from './helpers/api-helpers';
+import {
+  createTestEvent,
+  createTestRsvp,
+  createTestUser,
+  cleanupTestData,
+} from './helpers/api-helpers';
+
+function uniqueEmail(base: string): string {
+  return `${base}+${Date.now()}+${Math.random().toString(36).slice(2)}@example.com`;
+}
 
 test.describe('Event Detail UI Migration', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
@@ -21,6 +30,9 @@ test.describe('Event Detail UI Migration', () => {
     });
 
     await page.goto(`/events/${event.id}`);
+    await expect(
+      page.locator('[data-event-rsvp="true"][data-hydrated="true"]'),
+    ).toBeVisible();
 
     await expect(page.getByTestId('event-detail-shell')).toBeVisible();
     await expect(
@@ -110,5 +122,85 @@ test.describe('Event Detail UI Migration', () => {
       () => document.documentElement.scrollWidth > window.innerWidth,
     );
     expect(hasOverflow).toBe(false);
+  });
+
+  test('renders RSVP groups with correct users and counts', async ({
+    page,
+  }) => {
+    await cleanupTestData();
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const event = await createTestEvent({
+      title: 'Detail RSVP Grouping Event',
+      description: 'Validates grouped RSVP user rendering',
+      dateTime: tomorrow,
+      location: 'Oslo',
+    });
+
+    const goingUser = await createTestUser({
+      clerkUserId: `detail-going-${Date.now()}`,
+      email: uniqueEmail('detail-going'),
+      name: 'Going User',
+    });
+    const maybeUser = await createTestUser({
+      clerkUserId: `detail-maybe-${Date.now()}`,
+      email: uniqueEmail('detail-maybe'),
+      name: 'Maybe User',
+    });
+    const notGoingUser = await createTestUser({
+      clerkUserId: `detail-not-going-${Date.now()}`,
+      email: uniqueEmail('detail-not-going'),
+      name: 'Not Going User',
+    });
+    const noResponseUser = await createTestUser({
+      clerkUserId: `detail-no-response-${Date.now()}`,
+      email: uniqueEmail('detail-no-response'),
+      name: 'No Response User',
+    });
+
+    await createTestRsvp({
+      eventId: event.id,
+      userId: goingUser.id,
+      status: 'going',
+    });
+    await createTestRsvp({
+      eventId: event.id,
+      userId: maybeUser.id,
+      status: 'maybe',
+    });
+    await createTestRsvp({
+      eventId: event.id,
+      userId: notGoingUser.id,
+      status: 'not_going',
+    });
+
+    await page.goto(`/events/${event.id}`);
+    await expect(
+      page.locator('[data-event-rsvp="true"][data-hydrated="true"]'),
+    ).toBeVisible();
+
+    await expect(
+      page.getByRole('heading', { name: 'Kommer (1)', level: 3 }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Kanskje (1)', level: 3 }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Kommer ikke (1)', level: 3 }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Ingen respons \(\d+\)/, level: 3 }),
+    ).toBeVisible();
+
+    await expect(page.getByText(goingUser.name, { exact: true })).toBeVisible();
+    await expect(page.getByText(maybeUser.name, { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(notGoingUser.name, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(noResponseUser.name, { exact: true }),
+    ).toBeVisible();
   });
 });

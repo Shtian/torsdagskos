@@ -1,0 +1,20 @@
+---
+
+
+
+
+
+
+
+import Layout from '../../layouts/Layout.astro';
+import ShadcnIslandDemo from '../../components/ShadcnIslandDemo';
+---
+
+<Layout
+  title="Shadcn Island Demo - Torsdagskos"
+  description="Utviklingsside for shadcn React-island demo."
+>
+  <div class="mx-auto mt-6 w-full max-w-[75rem] pb-8 sm:mt-10">
+    <ShadcnIslandDemo client:load />
+  </div>
+</Layout>

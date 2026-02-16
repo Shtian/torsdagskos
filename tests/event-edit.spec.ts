@@ -1,7 +1,9 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import {
   cleanupTestData,
   createEvent,
+  createTestUser,
   createTestEvent,
 } from './helpers/api-helpers';
 
@@ -32,6 +34,17 @@ function toOsloTimeInputValue(date: Date): string {
   const minute = parts.find((part) => part.type === 'minute')?.value;
 
   return `${hour}:${minute}`;
+}
+
+function uniqueEmail(base: string): string {
+  return `${base}+${Date.now()}+${Math.random().toString(36).substring(7)}@example.com`;
+}
+
+async function gotoEditEventPage(page: Page, eventId: number) {
+  await page.goto(`/events/${eventId}/edit`);
+  await expect(
+    page.locator('[data-edit-event-form="true"][data-hydrated="true"]'),
+  ).toBeVisible();
 }
 
 test.describe('Event Edit', () => {
@@ -81,7 +94,7 @@ test.describe('Event Edit', () => {
       mapLink,
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
 
     await expect(page.getByTestId('edit-event-shell')).toBeVisible();
     await expect(
@@ -121,7 +134,7 @@ test.describe('Event Edit', () => {
       mapLink: 'https://maps.google.com/?q=original',
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
     let updateRequests = 0;
 
     await page.route('**/api/events/update', async (route) => {
@@ -176,7 +189,7 @@ test.describe('Event Edit', () => {
     const updatedLocation = 'Updated location';
     const updatedMapLink = 'https://maps.google.com/?q=updated';
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
 
     await page.locator('#title').fill(updatedTitle);
     await page.locator('#description').fill(updatedDescription);
@@ -205,6 +218,112 @@ test.describe('Event Edit', () => {
     ).toHaveAttribute('href', updatedMapLink);
   });
 
+  test('submits edited date/time using Europe/Oslo semantics', async ({
+    page,
+  }) => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 5);
+    futureDate.setHours(18, 0, 0, 0);
+
+    const { eventId } = await createEvent(page, {
+      title: `Timezone Edit Event ${Date.now()}`,
+      description: 'Timezone edit baseline',
+      dateTime: futureDate.toISOString(),
+      location: 'Oslo',
+    });
+
+    await gotoEditEventPage(page, eventId);
+
+    let submittedDateTime: string | null = null;
+
+    await page.route('**/api/events/update', async (route) => {
+      const payload = route.request().postDataJSON() as { dateTime?: string };
+      submittedDateTime = payload.dateTime ?? null;
+
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'timezone payload captured' }),
+      });
+    });
+
+    await page.locator('#date').fill('2026-01-15');
+    await page.locator('#time').fill('19:00');
+    await page.getByRole('button', { name: 'Lagre endringer' }).click();
+
+    await expect.poll(() => submittedDateTime).toBe('2026-01-15T18:00:00.000Z');
+    await expect(page.getByTestId('form-feedback-panel')).toContainText(
+      /timezone payload captured/i,
+    );
+  });
+
+  test('rejects update API requests when authenticated user is not owner', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const clerkUserId = await page.evaluate(async () => {
+      const response = await fetch('/api/test/current-user');
+      const data = await response.json();
+      if (response.status === 404 && data.userId) {
+        return data.userId as string;
+      }
+      if (response.ok) {
+        return data.clerkUserId as string;
+      }
+      throw new Error(`Unexpected response: ${response.status}`);
+    });
+
+    await createTestUser({
+      clerkUserId,
+      email: uniqueEmail('authenticated-editor'),
+      name: 'Authenticated Editor',
+    });
+
+    const owner = await createTestUser({
+      clerkUserId: `event_owner_${Date.now()}`,
+      email: uniqueEmail('event-owner'),
+      name: 'Event Owner',
+    });
+
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7);
+
+    const event = await createTestEvent({
+      ownerId: owner.id,
+      title: `Owner Locked Event ${Date.now()}`,
+      description: 'Only owner should be able to edit this event',
+      dateTime: futureDate,
+      location: 'Oslo',
+      mapLink: 'https://maps.google.com/?q=oslo',
+    });
+
+    const updateResponse = await page.evaluate(
+      async (payload) => {
+        const response = await fetch('/api/events/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const body = await response.json();
+        return { status: response.status, body };
+      },
+      {
+        eventId: event.id.toString(),
+        title: 'Unauthorized update attempt',
+        description: 'Should fail',
+        dateTime: futureDate.toISOString(),
+        location: 'Unauthorized location',
+        mapLink: null,
+      },
+    );
+
+    expect(updateResponse.status).toBe(403);
+    expect(updateResponse.body).toMatchObject({ error: 'Forbidden' });
+  });
+
   test('shows loading and disabled submit state while saving changes', async ({
     page,
   }) => {
@@ -219,7 +338,7 @@ test.describe('Event Edit', () => {
       mapLink: 'https://maps.google.com/?q=loading-edit',
     });
 
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoEditEventPage(page, eventId);
 
     await page.route('**/api/events/update', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 600));

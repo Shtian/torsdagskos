@@ -1,5 +1,13 @@
 import { test, expect } from './fixtures';
 
+async function waitForSettingsNotificationsHydration(
+  page: import('@playwright/test').Page,
+) {
+  await expect(
+    page.locator('[data-settings-notifications="true"][data-hydrated="true"]'),
+  ).toBeVisible();
+}
+
 test.describe('Innstillinger page', () => {
   test.use({ storageState: './playwright/.clerk/user.json' });
 
@@ -41,6 +49,7 @@ test.describe('Innstillinger page', () => {
     });
 
     await page.goto('/settings');
+    await waitForSettingsNotificationsHydration(page);
     await expect(page.locator('#permission-status')).toHaveText('Standard');
   });
 
@@ -69,6 +78,7 @@ test.describe('Innstillinger page', () => {
     });
 
     await page.goto('/settings');
+    await waitForSettingsNotificationsHydration(page);
 
     await Promise.all([
       page.waitForResponse(
@@ -122,6 +132,7 @@ test.describe('Innstillinger page', () => {
     });
 
     await page.goto('/settings');
+    await waitForSettingsNotificationsHydration(page);
 
     await Promise.all([
       page.waitForResponse(

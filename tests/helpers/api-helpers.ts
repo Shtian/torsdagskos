@@ -27,6 +27,7 @@ interface User {
 
 interface Event {
   id: number;
+  ownerId?: number;
   title: string;
   description: string;
   dateTime: Date;
@@ -81,6 +82,7 @@ export async function createTestUser(data: {
 }
 
 export async function createTestEvent(data: {
+  ownerId?: number;
   title: string;
   description: string;
   dateTime: Date;

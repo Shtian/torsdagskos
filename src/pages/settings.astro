@@ -1,55 +1,22 @@
 ---
+
+
+
+
+
+
+
 import Layout from '../layouts/Layout.astro';
-import { Button } from '@/components/ui';
 import { buttonVariants } from '@/components/ui/button';
-
-
-
-
-
-
-
-import { clerkClient } from '@clerk/astro/server';
-import { db, Users, eq } from 'astro:db';
+import SettingsNotifications from '@/components/SettingsNotifications';
+import { ensureLocalUser } from '@/lib/local-user-sync';
 
 const { userId } = Astro.locals.auth();
 if (!userId) {
   return Astro.redirect('/sign-in');
 }
 
-const clerkUser = await clerkClient(Astro).users.getUser(userId);
-
-let currentUser = await db
-  .select()
-  .from(Users)
-  .where(eq(Users.clerkUserId, userId))
-  .get();
-
-if (!currentUser) {
-  try {
-    await db.insert(Users).values({
-      clerkUserId: userId,
-      email: clerkUser.emailAddresses[0]?.emailAddress || '',
-      name:
-        `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
-        clerkUser.emailAddresses[0]?.emailAddress ||
-        'User',
-      createdAt: new Date(),
-    });
-  } catch (error) {
-    if (
-      !(error instanceof Error && error.message.includes('UNIQUE constraint'))
-    ) {
-      throw error;
-    }
-  }
-
-  currentUser = await db
-    .select()
-    .from(Users)
-    .where(eq(Users.clerkUserId, userId))
-    .get();
-}
+const currentUser = await ensureLocalUser(Astro, userId);
 
 const notificationsEnabled = currentUser?.browserNotificationsEnabled ?? false;
 const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -73,235 +40,11 @@ const vapidPublicKey = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || '';
         </p>
       </div>
 
-      <div data-slot="card-content" class="space-y-6 px-6 py-6 sm:px-8">
-        <dl class="grid gap-4 sm:grid-cols-2">
-          <div data-test-id="settings-permission-card" class="bg-muted/40 rounded-md border px-4 py-4">
-            <dt class="mb-1 text-sm text-muted-foreground">Tillatelsesstatus</dt>
-            <dd id="permission-status" class="m-0 text-lg font-semibold text-(--color-accent-dark)">Sjekker...</dd>
-          </div>
-          <div data-test-id="settings-preference-card" class="bg-muted/40 rounded-md border px-4 py-4">
-            <dt class="mb-1 text-sm text-muted-foreground">Lagret preferanse</dt>
-            <dd id="saved-preference" class="m-0 text-lg font-semibold text-(--color-accent-dark)" data-enabled={String(notificationsEnabled)}>
-              {notificationsEnabled ? 'Aktivert' : 'Deaktivert'}
-            </dd>
-          </div>
-        </dl>
-
-        <div
-          id="settings-feedback-panel"
-          data-test-id="settings-feedback-panel"
-          class="hidden rounded-md border px-4 py-3"
-          role="status"
-          aria-live="polite"
-        >
-          <p id="feedback" class="m-0 text-sm text-foreground"></p>
-        </div>
-      </div>
-
-      <div data-slot="card-footer" class="flex flex-col gap-3 border-t px-6 py-5 sm:flex-row sm:px-8">
-        <Button
-          type="button"
-          id="request-permission"
-          className="min-h-11 min-w-11 h-auto cursor-pointer px-6 py-3 text-base sm:w-auto"
-        >
-          Be om varslingstillatelse
-        </Button>
-      </div>
+      <SettingsNotifications
+        client:load
+        initialNotificationsEnabled={notificationsEnabled}
+        vapidPublicKey={vapidPublicKey}
+      />
     </article>
   </section>
 </Layout>
-
-<script define:vars={{ vapidPublicKey }}>
-  // @ts-nocheck
-  const permissionStatus = document.getElementById('permission-status');
-  const savedPreference = document.getElementById('saved-preference');
-  const requestButton = document.getElementById('request-permission');
-  const feedbackPanel = document.getElementById('settings-feedback-panel');
-  const feedback = document.getElementById('feedback');
-  const supportsPush = 'serviceWorker' in navigator && 'PushManager' in window;
-
-  /** @type {(permission: string) => string} */
-  const capitalize = (permission) => {
-    if (!permission) return 'Ukjent';
-    if (permission === 'default') return 'Standard';
-    if (permission === 'granted') return 'Tillatt';
-    if (permission === 'denied') return 'Avvist';
-    return permission.charAt(0).toUpperCase() + permission.slice(1);
-  }
-
-  /** @type {(message: string, type: 'success' | 'error') => void} */
-  const setFeedback = (message, type) => {
-    if (!feedback || !feedbackPanel) return;
-    feedback.textContent = message;
-
-    const baseClasses = 'block rounded-md border px-4 py-3';
-    feedbackPanel.classList.remove('hidden');
-
-    if (type === 'success') {
-      feedbackPanel.className = `${baseClasses} border-emerald-200 bg-emerald-50`;
-      feedbackPanel.setAttribute('role', 'status');
-      feedbackPanel.setAttribute('aria-live', 'polite');
-    } else {
-      feedbackPanel.className = `${baseClasses} border-destructive/30 bg-destructive/10`;
-      feedbackPanel.setAttribute('role', 'alert');
-      feedbackPanel.setAttribute('aria-live', 'assertive');
-    }
-  }
-
-  function setPermissionDisplay() {
-    if (!permissionStatus || !requestButton) {
-      return;
-    }
-
-    if (!('Notification' in window)) {
-      requestButton.setAttribute('disabled', 'true');
-      permissionStatus.textContent = 'Ikke støttet';
-      setFeedback('Denne nettleseren støtter ikke varsler.', 'error');
-      return;
-    }
-
-    permissionStatus.textContent = capitalize(Notification.permission);
-  }
-
-  /** @type {(enabled: boolean) => Promise<unknown>} */
-  const savePreference = async (enabled) => {
-    const response = await fetch('/api/settings/notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ enabled }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Kunne ikke lagre varslingspreferanse');
-    }
-
-    return response.json();
-  }
-
-  /** @type {(subscription: unknown | null) => Promise<unknown>} */
-  const savePushSubscription = async (subscription) => {
-    const response = await fetch('/api/settings/push-subscription', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ subscription }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Kunne ikke lagre push-abonnement');
-    }
-
-    return response.json();
-  }
-
-  /** @type {(base64String: string) => Uint8Array} */
-  const urlBase64ToUint8Array = (base64String) => {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replaceAll('-', '+').replaceAll('_', '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-
-    return outputArray;
-  }
-
-  const getServiceWorkerRegistration = async () => {
-    if (!('serviceWorker' in navigator)) {
-      return null;
-    }
-
-    const existingRegistration = await navigator.serviceWorker.getRegistration('/service-worker.js');
-    if (existingRegistration) {
-      return existingRegistration;
-    }
-
-    return navigator.serviceWorker.register('/service-worker.js');
-  }
-
-  /** @type {(enabled: boolean) => Promise<void>} */
-  const syncPushSubscription = async (enabled) => {
-    if (!supportsPush) {
-      return;
-    }
-
-    const registration = await getServiceWorkerRegistration();
-    if (!registration) {
-      return;
-    }
-
-    const existingSubscription = await registration.pushManager.getSubscription();
-
-    if (!enabled) {
-      if (existingSubscription) {
-        await existingSubscription.unsubscribe();
-      }
-      await savePushSubscription(null);
-      return;
-    }
-
-    if (!vapidPublicKey) {
-      return;
-    }
-
-    let subscription = existingSubscription;
-    if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-      });
-    }
-
-    const serializedSubscription = typeof subscription.toJSON === 'function'
-      ? subscription.toJSON()
-      : subscription;
-
-    await savePushSubscription(serializedSubscription);
-  }
-
-  setPermissionDisplay();
-
-  requestButton?.addEventListener('click', async () => {
-    if (!('Notification' in window)) {
-      setFeedback('Varsler støttes ikke i denne nettleseren.', 'error');
-      return;
-    }
-
-    requestButton.setAttribute('disabled', 'true');
-    requestButton.setAttribute('aria-busy', 'true');
-    requestButton.textContent = 'Oppdaterer...';
-    setFeedback('Oppdaterer varslingsinnstillinger...', 'success');
-
-    try {
-      const permission = await Notification.requestPermission();
-      setPermissionDisplay();
-
-      const enabled = permission === 'granted';
-      await syncPushSubscription(enabled);
-      await savePreference(enabled);
-
-      if (savedPreference) {
-        savedPreference.textContent = enabled ? 'Aktivert' : 'Deaktivert';
-        savedPreference.setAttribute('data-enabled', String(enabled));
-      }
-
-      if (enabled) {
-        setFeedback('Nettleslervarsler aktivert.', 'success');
-      } else {
-        setFeedback('Nettleslervarsler er deaktivert i denne nettleseren.', 'success');
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Kunne ikke oppdatere varslingsinnstillinger. Prøv igjen.';
-      setFeedback(message, 'error');
-    } finally {
-      requestButton.removeAttribute('disabled');
-      requestButton.removeAttribute('aria-busy');
-      requestButton.textContent = 'Be om varslingstillatelse';
-    }
-  });
-</script>

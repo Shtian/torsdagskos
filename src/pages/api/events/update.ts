@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { clerkClient } from '@clerk/astro/server';
 import { db, Events, eq } from 'astro:db';
 import {
   createValidationErrorPayload,
@@ -7,10 +8,11 @@ import {
   validateUpdateEventApiRequest,
 } from '../../../lib/api-validation';
 import { sendEventUpdateNotifications } from '../../../lib/event-notifications';
+import { ensureLocalUser } from '../../../lib/local-user-sync';
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async (context) => {
   try {
-    const { userId } = locals.auth();
+    const { userId } = context.locals.auth();
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -20,7 +22,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     let body: unknown;
     try {
-      body = await request.json();
+      body = await context.request.json();
     } catch {
       return new Response(
         JSON.stringify(
@@ -65,6 +67,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
           headers: { 'Content-Type': 'application/json' },
         },
       );
+    }
+
+    const clerkUser = await clerkClient(context).users.getUser(userId);
+
+    const isAdmin =
+      clerkUser.publicMetadata?.role === 'admin' ||
+      clerkUser.privateMetadata?.role === 'admin' ||
+      clerkUser.unsafeMetadata?.role === 'admin' ||
+      clerkUser.publicMetadata?.isAdmin === true ||
+      clerkUser.privateMetadata?.isAdmin === true ||
+      clerkUser.unsafeMetadata?.isAdmin === true;
+
+    const currentUser = await ensureLocalUser(context, userId, { clerkUser });
+
+    const isOwner = existingEvent.ownerId === currentUser.id;
+    if (!isOwner && !isAdmin) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const updatedEvent = {
