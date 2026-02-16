@@ -1,6 +1,9 @@
 import { test, expect } from './fixtures';
 import { createTestEvent } from './helpers/api-helpers';
 
+const hydratedNewEventForm = '[data-new-event-form="true"][data-hydrated="true"]';
+const hydratedRsvpControls = '[data-event-rsvp="true"][data-hydrated="true"]';
+
 test.describe('Accessibility polish', () => {
   test('should expose page titles and meta descriptions', async ({ page }) => {
     await page.goto('/');
@@ -51,6 +54,7 @@ test.describe('Accessibility polish', () => {
     page,
   }) => {
     await page.goto('/events/new');
+    await expect(page.locator(hydratedNewEventForm)).toBeVisible();
 
     await page.route('**/api/events/create', async (route) => {
       await page.waitForTimeout(400);
@@ -106,6 +110,7 @@ test.describe('Accessibility polish', () => {
     });
 
     await page.goto(`/events/${event.id}`);
+    await expect(page.locator(hydratedRsvpControls)).toBeVisible();
 
     await page.route('**/api/rsvp', async (route) => {
       await page.waitForTimeout(400);

@@ -1,13 +1,19 @@
 import { test, expect } from './fixtures';
 import { gotoWithRetry } from './helpers/navigation-helpers';
 
+const hydratedNewEventForm = '[data-new-event-form="true"][data-hydrated="true"]';
+
 test.describe('Event Creation', () => {
+  async function waitForNewEventFormHydration(
+    page: import('@playwright/test').Page,
+  ) {
+    await expect(page.locator(hydratedNewEventForm)).toBeVisible();
+  }
+
   test('should display event creation form', async ({ page }) => {
     await page.goto('/events/new');
 
-    await expect(
-      page.locator('[data-new-event-form="true"][data-hydrated="true"]'),
-    ).toBeVisible();
+    await waitForNewEventFormHydration(page);
 
     // Check that form elements are visible
     await expect(page.getByTestId('new-event-shell')).toBeVisible();
@@ -41,6 +47,7 @@ test.describe('Event Creation', () => {
     page,
   }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     await page.route('**/api/events/create', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 600));
@@ -76,6 +83,7 @@ test.describe('Event Creation', () => {
     page,
   }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
     let createRequests = 0;
 
     await page.route('**/api/events/create', async (route) => {
@@ -117,6 +125,7 @@ test.describe('Event Creation', () => {
     page,
   }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     const eventTitle = `Test Event ${Date.now()}`;
     const eventDescription = 'This is a test event description';
@@ -160,6 +169,7 @@ test.describe('Event Creation', () => {
 
   test('should create event without optional fields', async ({ page }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     const eventTitle = `Minimal Event ${Date.now()}`;
     const eventLocation = 'Minimal Location';
@@ -192,6 +202,7 @@ test.describe('Event Creation', () => {
 
   test('submits date/time using Europe/Oslo semantics', async ({ page }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     let submittedDateTime: string | null = null;
 
@@ -252,6 +263,7 @@ test.describe('Event Creation', () => {
 
   test('should allow canceling event creation', async ({ page }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     // Fill some fields
     await page.locator('#title').fill('Test Event');
@@ -265,6 +277,7 @@ test.describe('Event Creation', () => {
 
   test('should show error message on API failure', async ({ page }) => {
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     // Mock API to return error
     await page.route('**/api/events/create', (route) => {
@@ -300,6 +313,7 @@ test.describe('Event Creation', () => {
     const eventTitle = `Homepage Test Event ${Date.now()}`;
 
     await page.goto('/events/new');
+    await waitForNewEventFormHydration(page);
 
     // opprett arrangement
     await page.locator('#title').fill(eventTitle);
